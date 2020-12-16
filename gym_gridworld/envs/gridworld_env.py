@@ -8,13 +8,16 @@ from gym.utils import seeding
 import numpy as np
 from PIL import Image as Image
 import matplotlib.pyplot as plt
+import random
+from pdb import set_trace
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
 COLORS = {0:[0.0,0.0,0.0], 1:[0.5,0.5,0.5], \
-          2:[0.0,0.0,1.0], 3:[0.0,1.0,0.0], \
+          2:[1.0,0.0,0.0], 3:[0.0,1.0,0.0], \
           4:[1.0,0.0,0.0], 6:[1.0,0.0,1.0], \
-          7:[1.0,1.0,0.0]}
+          7:[1.0,1.0,0.0], 8: [1.0,0.0,0.0],
+          9:[1.0,0.0,0.0], 10: [1.0,0.0,0.0]}
 
 class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -25,6 +28,7 @@ class GridworldEnv(gym.Env):
         self.inv_actions = [0, 2, 1, 4, 3]
         self.action_space = spaces.Discrete(5)
         self.action_pos_dict = {0: [0,0], 1:[-1, 0], 2:[1,0], 3:[0,-1], 4:[0,1]}
+        self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
  
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
@@ -32,8 +36,13 @@ class GridworldEnv(gym.Env):
     
         ''' initialize system state ''' 
         this_file_path = os.path.dirname(os.path.realpath(__file__))
-        self.grid_map_path = os.path.join(this_file_path, 'plan5.txt')        
+        self.grid_map_path = os.path.join(this_file_path, 'plan0.txt')# + str(random.randint(0,9)) + '.txt')        
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
+
+        ''' Reset agent location '''
+        new_agent_loc = self.agent_start_locs[random.randint(0,3)]
+        self.start_grid_map[new_agent_loc[0], new_agent_loc[1]] = 4
+
         self.current_grid_map = copy.deepcopy(self.start_grid_map)  # current grid map
         self.observation = self._gridmap_to_observation(self.start_grid_map)
         self.grid_map_shape = self.start_grid_map.shape
@@ -104,6 +113,15 @@ class GridworldEnv(gym.Env):
             return (self.observation, 0, False, info)
 
     def reset(self):
+        ''' Reset grid state '''
+        this_file_path = os.path.dirname(os.path.realpath(__file__))
+        self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')      
+        self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
+
+        ''' Reset target location '''
+        new_agent_loc = self.agent_start_locs[random.randint(0,3)]
+        self.start_grid_map[new_agent_loc[0], new_agent_loc[1]] = 4
+        
         self.agent_state = copy.deepcopy(self.agent_start_state)
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
@@ -113,18 +131,28 @@ class GridworldEnv(gym.Env):
     def _read_grid_map(self, grid_map_path):
         with open(grid_map_path, 'r') as f:
             grid_map = f.readlines()
+        #     grid_map_array = []
+        #     for row in grid_map:
+        #         result = [int(x) for x in row.split(' ')]
+        #         grid_map_array.append(result)
+        # grid_map_array = np.reshape(grid_map_array, (len(grid_map_array[0]), len(grid_map_array[0])))
         grid_map_array = np.array(
-            list(map(
-                lambda x: list(map(
-                    lambda y: int(y),
-                    x.split(' ')
-                )),
-                grid_map
-            ))
+           list(map(
+               lambda x: list(map(
+                   lambda y: int(y),
+                   x.split(' ')
+               )),
+              grid_map
+           ))
         )
         return grid_map_array
 
     def _get_agent_start_target_state(self, start_grid_map):
+        '''
+        Return agent (=4) starting location and current goal (=3) location. If 4 and 3 dont' exist, throw error. 
+
+        '''
+
         start_state = None
         target_state = None
         start_state = list(map(
