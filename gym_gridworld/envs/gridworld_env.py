@@ -36,7 +36,7 @@ class GridworldEnv(gym.Env):
     
         ''' initialize system state ''' 
         this_file_path = os.path.dirname(os.path.realpath(__file__))
-        self.grid_map_path = os.path.join(this_file_path, 'plan0.txt')# + str(random.randint(0,9)) + '.txt')        
+        self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')     
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
 
         ''' Reset agent location '''
@@ -113,14 +113,14 @@ class GridworldEnv(gym.Env):
             return (self.observation, 0, False, info)
 
     def reset(self):
-        ''' Reset grid state '''
+        ''' Reset grid state and agent location '''
         this_file_path = os.path.dirname(os.path.realpath(__file__))
         self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')      
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
 
-        ''' Reset target location '''
         new_agent_loc = self.agent_start_locs[random.randint(0,3)]
         self.start_grid_map[new_agent_loc[0], new_agent_loc[1]] = 4
+        self.agent_start_state, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
         
         self.agent_state = copy.deepcopy(self.agent_start_state)
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
