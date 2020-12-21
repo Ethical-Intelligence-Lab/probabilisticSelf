@@ -10,6 +10,7 @@ from PIL import Image as Image
 import matplotlib.pyplot as plt
 import random
 from pdb import set_trace
+import pickle
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
@@ -29,6 +30,11 @@ class GridworldEnv(gym.Env):
         self.action_space = spaces.Discrete(5)
         self.action_pos_dict = {0: [0,0], 1:[-1, 0], 2:[1,0], 3:[0,-1], 4:[0,1]}
         self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
+        self.trial_counter = 0
+        self.steps = []
+        self.step_counter = 0
+        self.player = 'None'
+        self.num_plays = 3
  
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
@@ -64,12 +70,17 @@ class GridworldEnv(gym.Env):
             self._render()
 
     def step(self, action):
+        self.trial_counter +=1
+        self.step_counter += 1
+        
         ''' return next observation, reward, finished, success '''
         action = int(action)
         info = {}
         info['success'] = False
         nxt_agent_state = (self.agent_state[0] + self.action_pos_dict[action][0],
                             self.agent_state[1] + self.action_pos_dict[action][1])
+        #self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4)))
+        #self.available_states = np.transpose(np.nonzero(self.current_grid_map == 0))
         if action == 0: # stay in place
             info['success'] = True
             return (self.observation, 0, False, info) 
@@ -112,7 +123,20 @@ class GridworldEnv(gym.Env):
             info['success'] = True
             return (self.observation, 0, False, info)
 
-    def reset(self):
+    def reset(self):        
+        self.steps.append(self.step_counter)
+        self.step_counter = 0
+        if self.verbose == True:
+            print('steps array: ', self.steps)
+            print('trial counter: ', self.trial_counter)
+        
+        #save data after n games completed
+        if len(self.steps) % 100 == 0:
+            self.num_plays += 1
+            with open('data/' + self.player + '_' + str(self.num_plays) + '_lr_0.00025_' + '.pkl', 'wb') as f:
+                pickle.dump(self.steps[2:], f)
+                set_trace()
+
         ''' Reset grid state and agent location '''
         this_file_path = os.path.dirname(os.path.realpath(__file__))
         self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')      
@@ -147,14 +171,20 @@ class GridworldEnv(gym.Env):
         )
         return grid_map_array
 
+    # def _get_game_state(self):
+    #     '''
+    #     Return whether the level has ended.
+    #     '''
+    #     return self.reset
+
     def _get_agent_start_target_state(self, start_grid_map):
         '''
         Return agent (=4) starting location and current goal (=3) location. If 4 and 3 dont' exist, throw error. 
-
         '''
 
         start_state = None
         target_state = None
+        agent_states = []
         start_state = list(map(
             lambda x:x[0] if len(x) > 0 else None,
             np.where(start_grid_map == 4)
@@ -163,6 +193,9 @@ class GridworldEnv(gym.Env):
             lambda x:x[0] if len(x) > 0 else None,
             np.where(start_grid_map == 3)
         ))
+        self.agent_states = np.transpose(np.nonzero((start_grid_map == 8) | (start_grid_map == 4)))
+        self.available_states = np.transpose(np.nonzero(start_grid_map == 0))
+
         if start_state == [None, None] or target_state == [None, None]:
             sys.exit('Start or target state not specified')
         return start_state, target_state
@@ -227,6 +260,10 @@ class GridworldEnv(gym.Env):
             self.reset()
             self._render()
         return True
+
+    def get_grid_state(self):
+        ''' get current grid state '''
+        return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.agent_state
     
     def get_agent_state(self):
         ''' get current agent state '''

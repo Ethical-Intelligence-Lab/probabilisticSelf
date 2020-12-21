@@ -1,7 +1,0 @@
-import gym
-import gym_gridworld
-env = gym.make('gridworld-v0')
-env.verbose = True
-_ = env.reset()
-for (i in 1:20000):
-    _ = env.step(env.action_space.sample())
