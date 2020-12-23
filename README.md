@@ -23,7 +23,6 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         source env/bin/activate
         ```
 - (3) Install packages `pip install -r requirements.txt` 
-- (4) Clone tfutils `git clone https://github.com/megsano/tfutils.git; cd tfutils; git checkout -t origin/interaction_utils; python3 setup.py install`
 
 ##  Human player
         ```
