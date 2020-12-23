@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import random
 from pdb import set_trace
 import pickle
+import sys
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
@@ -132,13 +133,14 @@ class GridworldEnv(gym.Env):
             print('trial counter: ', self.trial_counter)
         
         #save data after n games completed
-        if len(self.steps) % 100 == 0:
+        if len(self.steps) % 101 == 0:
             #self.num_plays += 1
             #with open('data/' + self.player + '_' + str(self.num_plays) + '.pkl', 'wb') as f:
             with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
-                pickle.dump(self.steps[2:], f)
-                set_trace()
-
+                pickle.dump(self.steps[1:], f)
+                print('*******CONGRATS, YOU ARE DONE!************')
+                sys.exit(0)
+                
         ''' Reset grid state and agent location '''
         this_file_path = os.path.dirname(os.path.realpath(__file__))
         self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')      

@@ -64,7 +64,7 @@ for i in range(n_timesteps): #25000
             env.reset()
     elif args.player == 'human':
         while True:
-            prelim_action = input('Enter next action: ')
+            prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
             if prelim_action in ['w', 'a', 's', 'd']: 
                 action = key_converter(prelim_action)
                 break
