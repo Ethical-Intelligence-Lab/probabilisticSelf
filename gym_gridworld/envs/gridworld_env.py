@@ -34,7 +34,7 @@ class GridworldEnv(gym.Env):
         self.steps = []
         self.step_counter = 0
         self.player = 'None'
-        self.num_plays = 3
+        #self.num_plays = 0
  
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
@@ -125,6 +125,7 @@ class GridworldEnv(gym.Env):
 
     def reset(self):        
         self.steps.append(self.step_counter)
+        #self.exp_neptune.log_metric('steps', self.step_counter)
         self.step_counter = 0
         if self.verbose == True:
             print('steps array: ', self.steps)
@@ -132,8 +133,9 @@ class GridworldEnv(gym.Env):
         
         #save data after n games completed
         if len(self.steps) % 100 == 0:
-            self.num_plays += 1
-            with open('data/' + self.player + '_' + str(self.num_plays) + '_lr_0.00025_' + '.pkl', 'wb') as f:
+            #self.num_plays += 1
+            #with open('data/' + self.player + '_' + str(self.num_plays) + '.pkl', 'wb') as f:
+            with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
                 pickle.dump(self.steps[2:], f)
                 set_trace()
 
