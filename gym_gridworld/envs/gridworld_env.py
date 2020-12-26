@@ -30,23 +30,35 @@ class GridworldEnv(gym.Env):
         self.inv_actions = [0, 2, 1, 4, 3]
         self.action_space = spaces.Discrete(5)
         self.action_pos_dict = {0: [0,0], 1:[-1, 0], 2:[1,0], 3:[0,-1], 4:[0,1]}
-        self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
         self.trial_counter = 0
         self.steps = []
         self.step_counter = 0
-        self.player = 'None'
+        self.level_counter = 0
+        self.log_neptune = False
         #self.num_plays = 0
  
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
     
+    def make_game(self, difficulty, player, exp_name, singleAgent, verbose):
+        self.difficulty = difficulty
+        self.player = player
+        self.exp_name = exp_name
+        self.singleAgent = singleAgent
+        self.verbose = verbose
+
+        if difficulty == 'easy':
+            self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
+        elif difficulty == 'hard':
+            self.agent_start_locs = [[3,3], [3,13], [13,3], [13,13]]
+
         ''' initialize system state ''' 
         this_file_path = os.path.dirname(os.path.realpath(__file__))
-        self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')     
+        self.grid_map_path = os.path.join(this_file_path, 'game_easy/plan' + str(random.randint(0,9)) + '.txt')     
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
 
-        ''' Reset agent location '''
+        ''' reset agent location '''
         new_agent_loc = self.agent_start_locs[random.randint(0,3)]
         self.start_grid_map[new_agent_loc[0], new_agent_loc[1]] = 4
 
@@ -60,7 +72,6 @@ class GridworldEnv(gym.Env):
 
         ''' set other parameters '''
         self.restart_once_done = False  # restart or not once done
-        self.verbose = False # to show the environment or not
 
         GridworldEnv.num_env += 1
         self.this_fig_num = GridworldEnv.num_env 
@@ -124,30 +135,38 @@ class GridworldEnv(gym.Env):
             info['success'] = True
             return (self.observation, 0, False, info)
 
-    def reset(self):        
+    def reset(self):      
+        if self.log_neptune:
+            self.exp_neptune.log_metric('steps', self.step_counter)
+
+        self.level_counter += 1
         self.steps.append(self.step_counter)
-        #self.exp_neptune.log_metric('steps', self.step_counter)
         self.step_counter = 0
-        if self.verbose == True:
-            print('steps array: ', self.steps)
-            print('trial counter: ', self.trial_counter)
-        
+        #if self.verbose == True:
+        print('steps array: ', self.steps)
+        print('trial counter: ', self.trial_counter)
+        print('level: ', self.level_counter)
         #save data after n games completed
-        if len(self.steps) % 101 == 0:
+        if len(self.steps) % 100 == 0:
             #self.num_plays += 1
             #with open('data/' + self.player + '_' + str(self.num_plays) + '.pkl', 'wb') as f:
             with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
-                pickle.dump(self.steps[1:], f)
+                pickle.dump(self.steps[2:], f)
                 print('*******CONGRATS, YOU ARE DONE!************')
                 sys.exit(0)
                 
         ''' Reset grid state and agent location '''
         this_file_path = os.path.dirname(os.path.realpath(__file__))
-        self.grid_map_path = os.path.join(this_file_path, 'plan' + str(random.randint(0,9)) + '.txt')      
+        self.grid_map_path = os.path.join(this_file_path, 'game_easy/plan' + str(random.randint(0,9)) + '.txt')      
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
+
+        if self.singleAgent == True:
+            for loc in self.agent_start_locs:
+                self.start_grid_map[loc[0], loc[1]] = 0
 
         new_agent_loc = self.agent_start_locs[random.randint(0,3)]
         self.start_grid_map[new_agent_loc[0], new_agent_loc[1]] = 4
+        #self.start_grid_map[1,1] = 4
         self.agent_start_state, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
         
         self.agent_state = copy.deepcopy(self.agent_start_state)
