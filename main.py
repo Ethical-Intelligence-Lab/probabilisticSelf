@@ -3,15 +3,15 @@ import sys
 import argparse
 from self_model import Self_class
 
-import gym
+import gym_l.gym as gym
 import gym_gridworld
 import pickle
 from utils.keys import key_converter
 
-from baselines.stable_baselines.common.vec_env import DummyVecEnv
-from baselines.stable_baselines.deepq.policies import MlpPolicy
-from baselines.stable_baselines import DQN
-from baselines.stable_baselines.common.callbacks import BaseCallback
+from baselines_l.stable_baselines.common.vec_env import DummyVecEnv
+from baselines_l.stable_baselines.deepq.policies import MlpPolicy
+from baselines_l.stable_baselines import DQN
+from baselines_l.stable_baselines.common.callbacks import BaseCallback
 
 from utils.neptune_creds import *
 from params.default_params import default_params, update_params, get_cmd_line_args
@@ -26,7 +26,6 @@ if __name__ == '__main__':
     # Initilize env and Self Class
     env_id = 'gridworld-v0'
     env = gym.make('gridworld-v0') #'CartPole-v1' #'FetchSlide-v1'
-    
     env.make_game(difficulty=P['difficulty'], player=P['player'], exp_name=P['exp_name'], singleAgent=P['singleAgent'], verbose = P['verbose'])
     self_class = Self_class() #adapt to take different games as inputs
 
@@ -41,18 +40,18 @@ if __name__ == '__main__':
         env.log_neptune = True
         env.exp_neptune = exp_neptune
     
-    # Model params
+    # Main loop
     obs = env.reset()
     steps = []
     step_counter = 0
     n_timesteps = 25000
-    for i in range(n_timesteps): #25000
+    for i in range(n_timesteps): 
         if P['player'] == 'dqn_training':
-            model = DQN("MlpPolicy", env, verbose=1, learning_rate=P['learning_rate'], gamma=P['gamma'], target_network_update_freq = P['target_network_update_freq'])
+            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], target_network_update_freq = P['target_network_update_freq'])
             model.learn(total_timesteps=n_timesteps)
             model.save("models/deepq_gridworld")
         elif P['player'] == 'dqn_trained':
-            model = DQN.load("models/deepq_gridworld", env, verbose=1)
+            model = DQN.load("models/deepq_gridworld", env, verbose=P['verbose'])
             action, _states = model.predict(obs)
             obs, reward, done, info = env.step(action)
             env._render()

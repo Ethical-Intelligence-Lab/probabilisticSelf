@@ -7,7 +7,7 @@ class Self_class():
     def __init__(self):
         self.me = None
         self.tried_keys = []
-        self.keys = [1, 2, 3, 4] #U, D, L, R
+        self.keys = [0, 1, 2, 3] #U, D, L, R
         self.last_grid = []
     
     def predict(self, env):
@@ -29,38 +29,37 @@ class Self_class():
                 dist_horiz = target[1] - SELF[1]
 
                 if dist_vertical > 0:
-                    return key_converter(2)
-                elif dist_vertical < 0:
                     return key_converter(1)
+                elif dist_vertical < 0:
+                    return key_converter(0)
                 elif dist_horiz > 0:
                     if dist_horiz == 1:
                         self.last_grid = []
                         self.tried_keys = []
-                    return (key_converter(4))
+                    return (key_converter(3))
                 elif dist_horiz < 0:
                     if dist_horiz == -1:
                         self.last_grid = []
                         self.tried_keys = []
-                    return (key_converter(3))
+                    return (key_converter(2))
 
         # (2) ...else, pick the option most likely to localize the self
         print('FINDING THE SELF!')
 
-        # Get indeces of blocks around agents
+        # Get indeces of blocks around agents (regardless of their contents)
         for i, agent in enumerate(agents):
             around[i].append(grid[agent[0]-1, agent[1]])
             around[i].append(grid[agent[0]+1, agent[1]])
             around[i].append(grid[agent[0], agent[1]-1])
             around[i].append(grid[agent[0], agent[1]+1])
+        around = np.array(around) 
+        zeros = np.transpose(np.nonzero(around == 0)) #which blocks have zeros
+        unique, counts = np.unique(zeros[:,1], return_counts=True) #which available direction is shared with most agents
 
-        around = np.array(around) #options around each agent
-        zeros = np.transpose(np.nonzero(around == 0)) #zeros around each agent
-        unique, counts = np.unique(zeros[:,1], return_counts=True) #which direction is shared with most agent
-
-        #dont' consider options that have already been tried
+        #don't consider options that have already been tried (delete them from consideration)
         if len(self.tried_keys) > 0:
              for key in self.tried_keys:
-                last_key_i = np.where(unique==key -1)
+                last_key_i = np.where(unique==key)
                 unique = np.delete(unique, last_key_i)
                 counts = np.delete(counts, last_key_i)
 

@@ -14,7 +14,7 @@ default_params = {
           'batch_size': 32, #32
           'double_q': True, #True
           'learning_starts': 1000, #1000
-          'target_network_update_freq': 8000, #500
+          'target_network_update_freq': 500, #500
           'prioritized_replay': False, #False
           'prioritized_replay_alpha': 0.6, #0.6
           'prioritized_replay_beta0': 0.4, #0.4
@@ -22,7 +22,7 @@ default_params = {
           'prioritized_replay_eps': 1e-06, #1e-06
           'param_noise': False, #False
           'n_cpu_tf_sess': None, #None
-          'verbose': 1, #1
+          'verbose': 0, #1
           'tensorboard_log': None, #None
           '_init_setup_model': True, #True
           'policy_kwargs': None, #None
@@ -35,8 +35,9 @@ default_params = {
           'player': 'random',
           'exp_name': 'test', 
           'verbose': False,
+          'singleLocation': False,
 
-          # data params
+          # data params !add 'data_save_dir'
           'log_neptune': False
         }      
 
