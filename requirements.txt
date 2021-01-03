@@ -33,7 +33,6 @@ monotonic==1.5
 mpi4py==3.0.3
 msgpack==1.0.2
 neptune-client==0.4.129
-NEURON==7.6
 numpy==1.18.5
 numpy-indexed==0.3.5
 oauthlib==3.1.0
@@ -66,7 +65,6 @@ tensorboard==1.15.0
 tensorflow==1.15.0
 tensorflow-estimator==1.15.1
 termcolor==1.1.0
-tfutils==0.1.dev1
 tornado==5.1.1
 typing-extensions==3.7.4.3
 urllib3==1.26.2
