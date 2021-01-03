@@ -43,9 +43,13 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         ```
         #You may also run into a “Python is not installed as a framework” error, see: https://stackoverflow.com/questions/31373163/anaconda-runtime-error-python-is-not-installed-as-a-framework/41433353
 
-##  Human player
+##  Playing the script 
+
+    - Basic command to play the script using default params (see params/default_params.py):
         ```
-        python main.py -p human -exp [your initials here]
+        python main.py 
         ```
-    - You should see a window open. Make sure it is visible at the same time as your terminal. 
-    - Enter keys in your terminal to move the agent: w = up, s = down, a = left, d = right. Hit 'enter' after each choice. Complete 100 levels. The script will exit upon completion.
+    - To watch the game as it plays and toggle player and game type:
+        ```
+        python main.py -verbose 1 -player human -game_type contingency
+        ```

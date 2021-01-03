@@ -14,6 +14,7 @@ import pickle
 import itertools
 import sys
 import collections
+import json
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
@@ -27,44 +28,47 @@ class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0 
     def __init__(self):
-        self._seed = 0
+        self._seed = 1
         self.actions = [0, 1, 2, 3]
-        #self.inv_actions = [2, 1, 4, 3]
         self.action_space = spaces.Discrete(4)
         self.action_pos_dict = [[-1,0], [1,0], [0,-1], [0,1]]
         self.total_steps_counter = 0
         self.steps = []
         self.step_counter = 0
         self.level_counter = 0
-        self.log_neptune = False
-        self.singleLocation = False
-        self.n_levels = 100
-        self.shuffle_keys = True
- 
+        self.data = {'game_type': [], 'player': [], 'map': [], 'level': [], 'self_start_loc': [], 'ns_start_locs': [],
+                     'reward_loc': [], 'self_actions': [], 'self_locs': [], 'ns_locs': [], 'wall_interactions': [],
+                     'ns_interactions': [], 'steps': []}
+
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
     
-    def make_game(self, difficulty, player, exp_name, singleAgent, verbose):
+    def make_game(self, P):
         '''
-        Initialize env properties, given game difficulty, player, and no. agents
+        Initialize env properties, given game type, player, and no. agents
         Normally the contents of this function would be in init, but we can't add arguments to openai's init method. 
         '''
-
-        self.difficulty = difficulty
-        self.player = player
-        self.exp_name = exp_name
-        self.singleAgent = singleAgent
-        self.verbose = verbose
+        self.metadata = P
+        self.metadata['env_seed'] = self._seed
+        self.game_type = P['game_type']
+        self.player = P['player']
+        self.exp_name = P['exp_name']
+        self.singleAgent = P['singleAgent']
+        self.verbose = P['verbose']
+        self.log_neptune = P['log_neptune']
+        self.single_loc = P['single_loc']
+        self.n_levels = P['n_levels']
+        self.shuffle_keys = P['shuffle_keys']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
 
-        ''' set difficulty-specific env config '''
-        if self.difficulty == 'easy':
+        ''' set game_type-specific env config '''
+        if self.game_type == 'logic':
             self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
-            self.grid_map_path = os.path.join(self.this_file_path, self.difficulty + '/plan' + str(random.randint(0,9)) + '.txt')    
-        elif self.difficulty == 'hard':
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')    
+        elif self.game_type == 'contingency':
             self.agent_start_locs = [[6,6], [6,14], [14,6], [14,14]]
-            self.grid_map_path = os.path.join(self.this_file_path, self.difficulty + '/plan0.txt')
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             self.perim = 3
             #self.oscil_dirs = [1,0,0]
             self.oscil_dirs = [random.randint(0,1), random.randint(0,1), random.randint(0,1)] #whether to oscil ud (0) or lr (1)
@@ -83,8 +87,8 @@ class GridworldEnv(gym.Env):
         self.grid_map_shape = self.start_grid_map.shape
 
         ''' agent state: start, target, current state '''
-        self.agent_start_state, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
-        self.s_state = copy.deepcopy(self.agent_start_state)
+        self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
+        self.s_state = copy.deepcopy(self.self_start_state)
 
         ''' set other parameters '''
         self.restart_once_done = False  # restart or not once done
@@ -98,13 +102,13 @@ class GridworldEnv(gym.Env):
             self._render()
 
     def step(self, action):
-        if self.difficulty == 'easy':
-            new_obs, rew, done, info = self.step_easy(action)
-        elif self.difficulty == 'hard':
-            new_obs, rew, done, info = self.step_hard(action)
+        if self.game_type == 'logic':
+            new_obs, rew, done, info = self.step_logic(action)
+        elif self.game_type == 'contingency':
+            new_obs, rew, done, info = self.step_contingency(action)
         return new_obs, rew, done, info
 
-    def step_easy(self, action):
+    def step_logic(self, action):
         self.total_steps_counter +=1
         self.step_counter += 1
         
@@ -113,9 +117,14 @@ class GridworldEnv(gym.Env):
         info = {}
         info['success'] = False
 
+        ''' append level-specific data '''
+        self.level_self_actions.append(action)
+        self.level_s_locs.append(self.s_state)
+        self.level_ns_locs.append(self.ns_states)
+
         # Update agent position(s)
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
-                            self.s_state[1] + self.action_pos_dict[action][1])
+                       self.s_state[1] + self.action_pos_dict[action][1])
 
         # Get next observation, reward, win state, and info
         # if action == 0: # stay in place
@@ -130,8 +139,8 @@ class GridworldEnv(gym.Env):
         
         # successful behavior
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
-        new_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
-        if (new_color == 0):
+        new_s_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
+        if (new_s_color == 0):
             if org_s_color == 4:
                 self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
@@ -139,12 +148,16 @@ class GridworldEnv(gym.Env):
                 self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color-4 
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
             self.s_state = copy.deepcopy(nxt_s_state)
-        elif (new_color == 1) | (new_color == 8): # gray or red (non-self agent)
+        elif (new_s_color == 1) | (new_s_color == 8): # gray or red (non-self agent)
+            if new_s_color == 1:
+                self.wall_interactions += 1
+            elif new_s_color == 8:
+                self.ns_interactions += 1
             info['success'] = False
             return (self.observation, 0, False, info)
-        elif new_color == 2 or new_color == 3:
+        elif new_s_color == 2 or new_s_color == 3:
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
-            self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_color+4
+            self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color+4
             self.s_state = copy.deepcopy(nxt_s_state)
         self.observation = self._gridmap_to_observation(self.current_grid_map)
         self._render()
@@ -161,7 +174,7 @@ class GridworldEnv(gym.Env):
             info['success'] = True
             return (self.observation, 0, False, info)
 
-    def step_hard(self, action):
+    def step_contingency(self, action):
         self.total_steps_counter +=1
         self.step_counter += 1
         info = {}
@@ -171,6 +184,12 @@ class GridworldEnv(gym.Env):
 
         ''' next self position and colors '''
         action = int(action)
+        self.level_self_actions.append(action)
+
+        ''' append level-specific data '''
+        self.level_self_actions.append(action)
+        self.level_s_locs.append(self.s_state)
+        self.level_ns_locs.append(self.ns_states)
 
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
@@ -203,6 +222,7 @@ class GridworldEnv(gym.Env):
                 self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0        
                 self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8       
                 self.ns_states[i] = copy.deepcopy(nxt_ns_states[i]) #only update agent state if grid is changed; on per agent basis
+                self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
 
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
         new_s_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
@@ -234,6 +254,10 @@ class GridworldEnv(gym.Env):
 
             self.s_state = copy.deepcopy(nxt_s_state)
         elif (new_s_color == 1) | (new_s_color == 8): # gray or red (non-self agent)
+            if new_s_color == 1:
+                self.wall_interactions += 1
+            elif new_s_color == 8:
+                self.ns_interactions += 1
             info['success'] = False
             return (self.observation, 0, False, info)
         elif new_s_color == 2 or new_s_color == 3:
@@ -266,29 +290,67 @@ class GridworldEnv(gym.Env):
                              ]
 
     def reset(self):      
+        ''' save data '''
+        if self.level_counter > 0:
+            self.data['game_type'].append(self.game_type)
+            self.data['player'].append(self.player)
+            self.data['map'].append(self.start_grid_map.tolist())
+            self.data['level'].append(self.level_counter)
+            self.data['self_start_loc'].append(np.transpose(self.self_start_state).tolist())  #
+            self.data['ns_start_locs'].append(self.ns_start_states) 
+            self.data['reward_loc'].append(np.transpose(self.agent_target_state).tolist())
+            self.data['self_actions'].append(self.level_self_actions)
+            self.data['self_locs'].append(np.transpose(self.level_s_locs).tolist())
+            self.data['ns_locs'].append(self.level_ns_locs) 
+            self.data['wall_interactions'].append(self.wall_interactions)
+            self.data['ns_interactions'].append(self.ns_interactions)
+            self.data['steps'].append(self.step_counter)
+
         if self.log_neptune:
-            self.exp_neptune.log_metric('steps', self.step_counter)
+            #self.exp_neptune.log_metric('steps', self.step_counter)
+            self.exp_neptune.log_text(self.data)
 
         ''' print some metrics '''
+        self.level_self_actions = [] #clear actions for this level
+        self.level_s_locs = []
+        self.level_ns_locs = []
+        self.wall_interactions = 0
+        self.ns_interactions = 0
+
         self.level_counter += 1
-        self.steps.append(self.step_counter)
         self.step_counter = 0
         print('level: ', self.level_counter)
-        print('steps array: ', self.steps)
+        print('steps array: ', self.data['steps'])
         print('total steps: ', self.total_steps_counter)
         
         ''' save data when all levels are completed '''
-        if len(self.steps) % self.n_levels == 0:
-            with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
-                pickle.dump(self.steps[2:], f)
-                print('*******CONGRATS, YOU DID IT!************')
-                sys.exit(0)
+        if  self.level_counter == self.n_levels + 1:
+            final_data = {}
+            final_data['data'] = self.data
+            final_data['metadata'] = self.metadata
+            
+            #with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
+            #    pickle.dump(self.steps[2:], f)
+            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed), 'w') as fp: 
+                json.dump(final_data, fp)
+                print('*******CONGRATS, YOU FINISHED ' + str(self._seed) + '!************')
+                self._seed += 1
+                #reset variables
+                self.data = {'game_type': [], 'player': [], 'map': [], 'level': [], 'self_start_loc': [], 'ns_start_locs': [],
+                'reward_loc': [], 'self_actions': [], 'self_locs': [], 'ns_locs': [], 'wall_interactions': [],
+                'ns_interactions': [], 'steps': []}
+                self.level_counter = 0
+                self.level_self_actions = [] #clear actions for this level
+                self.level_s_locs = []
+                self.level_ns_locs = []
+                self.steps = []
+                #sys.exit(0)
         
         ''' get new self location '''
-        if self.difficulty == 'easy':
-            self.grid_map_path = os.path.join(self.this_file_path, self.difficulty + '/plan' + str(random.randint(0,9)) + '.txt')    
-        elif self.difficulty == 'hard':
-            self.grid_map_path = os.path.join(self.this_file_path, self.difficulty + '/plan0.txt')  
+        if self.game_type == 'logic':
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')    
+        elif self.game_type == 'contingency':
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')  
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
 
@@ -300,19 +362,19 @@ class GridworldEnv(gym.Env):
         ''' reset grid state and agent location '''
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
         new_s_loc = self.agent_start_locs[random.randint(0,3)]
-        if self.singleLocation == True:
+        if self.single_loc == True:
             self.start_grid_map[self.agent_start_locs[0]] = 4
         else:
             self.start_grid_map[new_s_loc[0], new_s_loc[1]] = 4
         
         ''' update states '''
-        self.agent_start_state, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
-        self.s_state = copy.deepcopy(self.agent_start_state)
+        self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
+        self.s_state = copy.deepcopy(self.self_start_state)
         self.ns_states = np.transpose(np.nonzero((self.start_grid_map == 8))).tolist()
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
-        if self.difficulty == 'hard':
+        if self.game_type == 'contingency':
             self.get_ns_limits() #get new oscillation limits for non-self agents
 
         self.current_grid_map
@@ -356,7 +418,7 @@ class GridworldEnv(gym.Env):
 
         if start_state == [None, None] or target_state == [None, None]:
             sys.exit('Start or target state not specified')
-        return start_state, target_state
+        return start_state, self.ns_states, target_state
 
     def _gridmap_to_observation(self, grid_map, obs_shape=None):
         if obs_shape is None:
@@ -383,19 +445,19 @@ class GridworldEnv(gym.Env):
     def change_start_state(self, sp):
         ''' change agent start state '''
         ''' Input: sp: new start state '''
-        if self.agent_start_state[0] == sp[0] and self.agent_start_state[1] == sp[1]:
+        if self.self_start_state[0] == sp[0] and self.self_start_state[1] == sp[1]:
             _ = self.reset()
             return True
         elif self.start_grid_map[sp[0], sp[1]] != 0:
             return False
         else:
-            s_pos = copy.deepcopy(self.agent_start_state)
+            s_pos = copy.deepcopy(self.self_start_state)
             self.start_grid_map[s_pos[0], s_pos[1]] = 0
             self.start_grid_map[sp[0], sp[1]] = 4
             self.current_grid_map = copy.deepcopy(self.start_grid_map)
-            self.agent_start_state = [sp[0], sp[1]]
+            self.self_start_state = [sp[0], sp[1]]
             self.observation = self._gridmap_to_observation(self.current_grid_map)
-            self.s_state = copy.deepcopy(self.agent_start_state)
+            self.s_state = copy.deepcopy(self.self_start_state)
             self.reset()
             self._render()
         return True
@@ -413,7 +475,7 @@ class GridworldEnv(gym.Env):
             self.current_grid_map = copy.deepcopy(self.start_grid_map)
             self.agent_target_state = [tg[0], tg[1]]
             self.observation = self._gridmap_to_observation(self.current_grid_map)
-            self.s_state = copy.deepcopy(self.agent_start_state)
+            self.s_state = copy.deepcopy(self.self_start_state)
             self.reset()
             self._render()
         return True
@@ -428,7 +490,7 @@ class GridworldEnv(gym.Env):
 
     def get_start_state(self):
         ''' get current start state '''
-        return self.agent_start_state
+        return self.self_start_state
 
     def get_target_state(self):
         ''' get current target state '''
