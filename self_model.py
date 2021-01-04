@@ -9,8 +9,16 @@ class Self_class():
         self.tried_keys = []
         self.keys = [0, 1, 2, 3] #U, D, L, R
         self.last_grid = []
+        self.last_action = None
     
     def predict(self, env):
+        if env.game_type == 'logic':
+            action = self.predict_logic(env)
+        if env.game_type == 'contingency':
+            action = self.predict_contingency(env)
+        return action
+
+    def predict_logic(self, env):
         # Get state
         grid, avail, agents, target, SELF = env.get_grid_state()
         around = [[],[],[],[]]
@@ -68,4 +76,31 @@ class Self_class():
         self.last_grid = copy.deepcopy(grid)
 
         return key_converter(action) #use this to index next key
+
+    def predict_contingency(self, env):
+        # Get env state
+        grid, avail, agents, target, SELF = env.get_grid_state()
+        print('agents: ', agents)
+        print('self: ', SELF)
+        set_trace()
         
+        if self.last_action == None:
+            self.last_grid = copy.deepcopy(grid)
+            self.last_avail = copy.deepcopy(avail)
+            self.last_agents = copy.deepcopy(agents)
+            self.last_s = copy.deepcopy(SELF)
+            self.last_action = key_converter(env.action_space.sample())
+            print('first action: ', self.last_action)
+            return self.last_action
+
+        # get direction in which agents moved
+        dirs = agents - self.last_agents
+        #count number of directions = self.last_action
+
+        # if more than one agent moved in the direction you chose
+            # save those agents as ones as candidates, and choose action in different dimension. 
+            # self is the only agent of these candidates that responded to the new instruction. 
+        # Navigate self to the goal (using the old code?)
+             
+            
+

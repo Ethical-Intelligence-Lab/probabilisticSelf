@@ -30,18 +30,24 @@ default_params = {
           'seed': None, #None
           
           # env params
+          'env_id': 'gridworld-v0',
           'singleAgent': False,
-          'difficulty': 'easy',
-          'player': 'random',
+          'game_type': 'logic', #logic or contingency
+          'player': 'random', #random, human, dqn_training, self_class
           'exp_name': 'test', 
           'verbose': False,
-          'singleLocation': False,
+          'single_loc': False,
+          'n_levels': 100,
+          'shuffle_keys': False,
 
           # data params !add 'data_save_dir'
-          'log_neptune': False
+          'log_neptune': False,
+          'data_save_dir': None
         }      
 
 def update_params(params, arguments):
+    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
+
     for arg in arguments.keys():
       if arguments[arg] != None:
         params[arg] = arguments[arg]

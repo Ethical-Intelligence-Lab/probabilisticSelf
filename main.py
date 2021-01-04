@@ -19,14 +19,15 @@ import neptune
 
 if __name__ == '__main__':
 
-    # Get cmd line arguments, and integrate with default params
+    # Get cmd line arguments, and integrate with default paramss
     cmd_line_args = get_cmd_line_args(default_params) #process any inputted arguments
     P = update_params(default_params, cmd_line_args) #update default params with (optional) input arguments
 
     # Initilize env and Self Class
-    env_id = 'gridworld-v0'
-    env = gym.make('gridworld-v0') #'CartPole-v1' #'FetchSlide-v1'
-    env.make_game(difficulty=P['difficulty'], player=P['player'], exp_name=P['exp_name'], singleAgent=P['singleAgent'], verbose = P['verbose'])
+    env_id = P['env_id']
+    env = gym.make(P['env_id']) #'CartPole-v1' #'FetchSlide-v1'
+    env.make_game(P)
+
     self_class = Self_class() #adapt to take different games as inputs
 
     # Data logging to neptune AI
@@ -44,7 +45,7 @@ if __name__ == '__main__':
     obs = env.reset()
     steps = []
     step_counter = 0
-    n_timesteps = 25000
+    n_timesteps = 1000000 #25000
     for i in range(n_timesteps): 
         if P['player'] == 'dqn_training':
             model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], target_network_update_freq = P['target_network_update_freq'])
@@ -59,6 +60,7 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(env.action_space.sample()) 
             env._render()
             if done:
+                print('done')
                 env.reset()
         elif P['player'] == 'human':
             while True:
