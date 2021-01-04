@@ -28,7 +28,7 @@ class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0 
     def __init__(self):
-        self._seed = 0
+        self._seed = 1
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
         self.action_pos_dict = [[-1,0], [1,0], [0,-1], [0,1]]
@@ -51,6 +51,7 @@ class GridworldEnv(gym.Env):
         '''
         self.metadata = P
         self._seed = P['seed']
+
         self.metadata['env_seed'] = P['seed']
         self.game_type = P['game_type']
         self.player = P['player']

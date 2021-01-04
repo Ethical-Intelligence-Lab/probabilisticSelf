@@ -52,6 +52,8 @@ def update_params(params, arguments):
       if arguments[arg] != None:
         params[arg] = arguments[arg]
 
+    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
+
     return params
 
 def get_cmd_line_args(params):

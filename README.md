@@ -56,3 +56,4 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 
 (5) Data
 - Available in the project's OSF repository. Simply unzip the .zip folder in the project repo, such that the 'data' directory is visible. 
+
