@@ -28,7 +28,7 @@ class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0 
     def __init__(self):
-        self._seed = 1
+        self._seed = 0
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
         self.action_pos_dict = [[-1,0], [1,0], [0,-1], [0,1]]
@@ -50,7 +50,7 @@ class GridworldEnv(gym.Env):
         Normally the contents of this function would be in init, but we can't add arguments to openai's init method. 
         '''
         self.metadata = P
-        self._seed = P['seed']
+        self._seed = int(P['seed'])
 
         self.metadata['env_seed'] = P['seed']
         self.game_type = P['game_type']
@@ -336,7 +336,6 @@ class GridworldEnv(gym.Env):
             with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed), 'w') as fp: 
                 json.dump(final_data, fp)
                 print('*******CONGRATS, YOU FINISHED ' + str(self._seed) + '!************')
-                set_trace()
                 self._seed += 1
                 if self._seed == 10:
                     sys.exit()
