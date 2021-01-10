@@ -8,50 +8,76 @@ class Self_class():
         self.me = None
         self.tried_keys = []
         self.keys = [0, 1, 2, 3] #U, D, L, R
+        self.action_ref = [[-1,0], [1,0], [0,-1], [0,1]]
+        self.prev_move_dirs = [[],[],[],[]]
+        self.prev_actions = []
         self.last_grid = []
-        self.last_action = None
-    
+        self.prev_action = None
+        self.candidates = []
+        self.action_counter = 0
+        self.prev_candidates = []
+        self.movements = []
+        self.mode = 'self_discovery'
+
+    def get_candidates(self, cur_agents):
+        self.candidates = []
+        last_action = self.action_ref[self.prev_action]
+        # Get direction in which agents moved
+        for i, loc in enumerate(cur_agents):
+            self.movements.append([cur_agents[i][0] - self.prev_agents[i][0], 
+                                cur_agents[i][1] - self.prev_agents[i][1]
+                            ])
+        
+        # Consider as candidates only agents who moved in same direction as your action
+        for i, move in enumerate(self.movements):
+            if move == last_action:                
+                self.candidates.append(i)
+
+    def navigate(self, target, SELF):
+        dist_vertical = target[0] - SELF[0]
+        dist_horiz = target[1] - SELF[1]
+
+        if dist_vertical > 0:
+            return key_converter(1)
+        elif dist_vertical < 0:
+            return key_converter(0)
+        elif dist_horiz > 0:
+            if dist_horiz == 1:
+                self.last_grid = []
+                self.tried_keys = []
+            return (key_converter(3))
+        elif dist_horiz < 0:
+            if dist_horiz == -1:
+                self.last_grid = []
+                self.tried_keys = []
+            return (key_converter(2))
+
     def predict(self, env):
         if env.game_type == 'logic':
             action = self.predict_logic(env)
         if env.game_type == 'contingency':
-            action = self.predict_contingency(env)
+            if env.shuffle_keys == False:
+                action = self.predict_contingency(env)
+            else:
+                action = self.predict_shuffled(env)
         return action
 
     def predict_logic(self, env):
         # Get state
-        grid, avail, agents, target, SELF = env.get_grid_state()
+        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
         around = [[],[],[],[]]
         around_clear = [[],[],[],[]]
 
-        # (1) If any avatar is closer to the target, move that one
-        #distances = [np.sqrt((target[1]-arr1[1])**2 + (target[0]-arr1[1])**2) for arr1 in agents] #get euclideant distance
-
-        #distance = np.sqrt((target[1]-SELF[1])**2 + (target[0]-SELF[0])**2) #get euclidean distance
-
+        ''' (1) If any avatar is closer to the target, move that one '''
         if(len(self.last_grid) > 0):
             diff = grid - self.last_grid
             if(sum(diff.flatten() != 0)):
                 print('navigating the self!')
-                dist_vertical = target[0] - SELF[0]
-                dist_horiz = target[1] - SELF[1]
+                action = self.navigate(target, SELF)
 
-                if dist_vertical > 0:
-                    return key_converter(1)
-                elif dist_vertical < 0:
-                    return key_converter(0)
-                elif dist_horiz > 0:
-                    if dist_horiz == 1:
-                        self.last_grid = []
-                        self.tried_keys = []
-                    return (key_converter(3))
-                elif dist_horiz < 0:
-                    if dist_horiz == -1:
-                        self.last_grid = []
-                        self.tried_keys = []
-                    return (key_converter(2))
-
-        # (2) ...else, pick the option most likely to localize the self
+                return action 
+                
+        ''' (2) ...else, pick the option most likely to localize the self '''
         print('FINDING THE SELF!')
 
         # Get indeces of blocks around agents (regardless of their contents)
@@ -78,29 +104,210 @@ class Self_class():
         return key_converter(action) #use this to index next key
 
     def predict_contingency(self, env):
+        self.action_counter += 1
+
         # Get env state
-        grid, avail, agents, target, SELF = env.get_grid_state()
-        print('agents: ', agents)
-        print('self: ', SELF)
-        set_trace()
+        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+
+        # Whenever environment resets, we start in self discovery mode
+        if len(self.last_grid) == 0:
+            self.mode = 'self_discovery'
+            self.prev_action = None
+            self.prev_candidates = []
+
+        self.last_grid = copy.deepcopy(grid)
         
-        if self.last_action == None:
-            self.last_grid = copy.deepcopy(grid)
-            self.last_avail = copy.deepcopy(avail)
-            self.last_agents = copy.deepcopy(agents)
-            self.last_s = copy.deepcopy(SELF)
-            self.last_action = key_converter(env.action_space.sample())
-            print('first action: ', self.last_action)
-            return self.last_action
+        # Get current sorted agents
+        cur_agents = []
+        cur_agents.extend(non_self)
+        cur_agents.append(SELF)
+        self.movements = []
+        self.candidates = []
 
-        # get direction in which agents moved
-        dirs = agents - self.last_agents
-        #count number of directions = self.last_action
+        if self.mode == 'navigation':
+            print("*** Navigating ***")
+            action = self.navigate(target, SELF)
+            return action
 
-        # if more than one agent moved in the direction you chose
-            # save those agents as ones as candidates, and choose action in different dimension. 
-            # self is the only agent of these candidates that responded to the new instruction. 
-        # Navigate self to the goal (using the old code?)
-             
+        # (1) First action.. 
+        elif self.prev_action == None:
+            print('*** Taking first action ***')
+            self.prev_agents = copy.deepcopy(cur_agents)
+            self.prev_action = 0 # move up (note: it's arbitrary which direction we move first)
+            return self.prev_action
+
+        # (2) Not the first action
+        elif (self.prev_action != None):
+            print('*** Getting self candidates ***')
+            self.get_candidates(cur_agents)
+
+            # (3) If only one agent moved in direction of keypress, navigate it to the reward 
+            if (len(self.candidates) == 1):
+                if (self.candidates[0] == 3):
+                    print('*** Found myself! Navigating to the reward ***')
+                    self.mode = 'navigation'
+                    self.prev_action = self.navigate(target, SELF)
+                    self.prev_candidates = copy.deepcopy(self.candidates)
+                    self.candidates = []
+                    return self.prev_action
+
+            elif len(self.candidates) > 1:
+                # (4) If > 1 agent moved in directon of keypress, take action in a different dimension 
+                if len(self.prev_candidates) == 0:
+                    print('*** Found > 1 self candidate. Taking another action ***')
+                    self.prev_candidates = copy.deepcopy(self.candidates)
+                    self.candidates = []
+                    self.prev_agents = copy.deepcopy(cur_agents)
+                    self.prev_action = 2 # move left (different dimension from first move)
+                    return self.prev_action #go up
+
+                # (5) Otherwise, the self is the only agent among the candidates that moved in the direction of the keypress 
+                elif len(self.prev_candidates) > 0:
+                    print('*** Eliminating candidates. ***')
+                    self.get_candidates(cur_agents)
+                    candidate = set(self.candidates).intersection(self.prev_candidates)
+                    final_candidate = candidate.pop()
+                    if final_candidate == 3:
+                         self.prev_action = self.navigate(target, SELF)
+                         self.mode = 'navigation'
+                         return self.prev_action
+
+    def predict_shuffled(self, env):
+        self.action_counter += 1
+        print('action counter: ', self.action_counter)
+
+        # Get env state
+        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+
+        # Whenever environment resets, we set self.mode to 'self discovery'
+        if len(self.last_grid) == 0:
+            self.mode = 'self_discovery'
+            self.prev_action = None
+            self.prev_candidates = []
+            self.prev_move_dirs =  [[],[],[],[]]
+            self.action_counter = 1
+        self.last_grid = copy.deepcopy(grid)
+        
+        # Get current sorted agents
+        cur_agents = []
+        cur_agents.extend(non_self)
+        cur_agents.append(SELF)
+        self.movements = []
+        self.candidates = []
+
+        # (1) First action.. 
+        if (self.mode == 'self_discovery') & (self.prev_action == None):
+            print('*** Taking first action ***')
+            self.prev_actions = []
+            self.prev_agents = copy.deepcopy(cur_agents)
+            self.prev_action = 0 # (note: it's arbitrary which direction we move first)
+            self.prev_actions.append(self.prev_action)
+            return self.prev_action
+
+        # (2) Subsequent actions
+        elif (self.mode == 'self_discovery') & (self.prev_action != None):
+            print('*** Taking action #' + str(self.action_counter))
+ 
+            # Get direction in which agents moved
+            self.update_steps(cur_agents)  
+            self.prev_agents = copy.deepcopy(cur_agents)
+
+            if self.action_counter == 2:
+                self.prev_action = 1
+                self.prev_actions.append(self.prev_action)
+                return self.prev_action
             
+            # if you took more than 2 actions, see if the actions spanned different dimensions
+            elif self.action_counter == 3:
+                for i, entry in enumerate(self.dir_summary):
+                    if (1 in entry) & (0 in entry) & (i == 3):
+                        self.mode = 'navigation'
+                        print('*** Navigating ***')
+                        self.prev_action = self.navigate_shuffled(target, SELF)
+
+                if self.mode == 'self_discovery': 
+                    print('keep eliminating')
+                    self.prev_action = 2
+            
+            # after aking 3 actions, we must have sampled two dimensions
+            elif self.action_counter == 4: 
+                assert (1 in self.dir_summary[3]) & (0 in self.dir_summary[3])
+                self.mode = 'navigation'
+                self.prev_action = self.navigate_shuffled(target, SELF)
+
+            #self.update_steps(cur_agents)
+            self.prev_agents = copy.deepcopy(cur_agents)
+            self.prev_actions.append(self.prev_action)    
+            return self.prev_action
+        
+        elif self.mode == 'navigation':
+            self.update_steps(cur_agents)  
+            self.prev_agents = copy.deepcopy(cur_agents)
+            self.prev_action = self.navigate_shuffled(target, SELF)
+            self.prev_actions.append(self.prev_action)  
+            return self.prev_action
+
+    def update_steps(self, cur_agents):
+        # Save directions in which agents moved
+        for i, loc in enumerate(cur_agents):
+            self.prev_move_dirs[i].append([cur_agents[i][0] - self.prev_agents[i][0], 
+                                            cur_agents[i][1] - self.prev_agents[i][1]
+                                         ])   
+        
+        print('prev move dirs: ', self.prev_move_dirs[3])
+        print('prev actions: ', self.prev_actions)
+        
+        # Summarize the dimensions sampled by these actions
+        if len(self.prev_actions) >= 2:
+            self.dir_summary = [[],[],[],[]]
+            for i, direction in enumerate(self.prev_move_dirs):
+                for k in range(0, self.action_counter-1):
+                    indeces = [i for i, e in enumerate(direction[k]) if e != 0]
+                    if(len(indeces) > 0):
+                        self.dir_summary[i].append(indeces[0]) 
+                    elif(len(indeces) == 0):
+                        self.dir_summary[i].append(3) 
+
+    def navigate_shuffled(self, target, SELF):
+        print('navigating with shuffled keys')
+
+        self.shuffle_key_dict = {}
+        for i, action in enumerate(self.prev_actions):
+            self.shuffle_key_dict[str(self.prev_move_dirs[3][i])] = self.prev_actions[i]
+
+        print('prev move dirs: ', self.prev_move_dirs[3])
+        print('direction summary: ', self.prev_actions)
+        print('shuffled key dict: ', self.shuffle_key_dict)
+
+        dist_vertical = target[0] - SELF[0]
+        dist_horiz = target[1] - SELF[1]
+
+        if dist_vertical > 0: key = 1 #down
+        elif dist_vertical < 0: key = 0 #up
+        elif dist_horiz > 0: 
+            key = 3 #right
+            if dist_horiz == 1:
+                self.last_grid = []
+        elif dist_horiz < 0: 
+            key = 2 #left
+            if dist_horiz == -1:
+                self.last_grid = []
+        else: 
+            print('something went wrong')
+        
+        print('dist vertical: ', dist_vertical)
+        print('dist horizontal: ', dist_horiz)
+        print('key: ', key)
+        print('key code: ', self.action_ref[key])
+
+        if str(self.action_ref[key]) in self.shuffle_key_dict:
+            cur_key = self.shuffle_key_dict[str(self.action_ref[key])]
+        else:            
+            print('key not in dictionary!')
+            cur_key = max(self.prev_actions) + 1
+        return key_converter(cur_key)
+
+
+            
+
 

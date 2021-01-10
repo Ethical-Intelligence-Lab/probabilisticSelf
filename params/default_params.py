@@ -27,7 +27,7 @@ default_params = {
           '_init_setup_model': True, #True
           'policy_kwargs': None, #None
           'full_tensorboard_log': False, #False
-          'seed': None, #None
+          'seed': 0, #None
           
           # env params
           'env_id': 'gridworld-v0',

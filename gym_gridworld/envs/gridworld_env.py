@@ -28,6 +28,7 @@ class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0 
     def __init__(self):
+        print('initializing environment')
         self._seed = 0
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
@@ -49,6 +50,7 @@ class GridworldEnv(gym.Env):
         Initialize env properties, given game type, player, and no. agents
         Normally the contents of this function would be in init, but we can't add arguments to openai's init method. 
         '''
+
         self.metadata = P
         self._seed = int(P['seed'])
 
@@ -63,6 +65,9 @@ class GridworldEnv(gym.Env):
         self.n_levels = P['n_levels']
         self.shuffle_keys = P['shuffle_keys']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
+
+        if self.verbose:
+            print('making environment')
 
         ''' set game_type-specific env config '''
         if self.game_type == 'logic':
@@ -104,6 +109,8 @@ class GridworldEnv(gym.Env):
             self._render()
 
     def step(self, action):
+        if self.verbose:
+            print('taking a step')
         if self.game_type == 'logic':
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type == 'contingency':
@@ -224,7 +231,6 @@ class GridworldEnv(gym.Env):
                 self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0        
                 self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8       
                 self.ns_states[i] = copy.deepcopy(nxt_ns_states[i]) #only update agent state if grid is changed; on per agent basis
-                self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
 
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
         new_s_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
@@ -255,6 +261,7 @@ class GridworldEnv(gym.Env):
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
 
             self.s_state = copy.deepcopy(nxt_s_state)
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
         elif (new_s_color == 1) | (new_s_color == 8): # gray or red (non-self agent)
             if new_s_color == 1:
                 self.wall_interactions += 1
@@ -265,8 +272,8 @@ class GridworldEnv(gym.Env):
         elif new_s_color == 2 or new_s_color == 3:
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
             self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color+4
-
             self.s_state = copy.deepcopy(nxt_s_state)
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
         self.observation = self._gridmap_to_observation(self.current_grid_map)
         self._render()
         if nxt_s_state[0] == self.agent_target_state[0] and nxt_s_state[1] == self.agent_target_state[1] :
@@ -291,7 +298,9 @@ class GridworldEnv(gym.Env):
                               [agent[0], agent[1]+self.perim]
                              ]
 
-    def reset(self):      
+    def reset(self):   
+        if self.verbose:
+            print('reset environment')   
         ''' save data '''
         if self.level_counter > 0:
             self.data['game_type'].append(self.game_type)
@@ -415,7 +424,8 @@ class GridworldEnv(gym.Env):
         target_state = list(map(
             lambda x:x[0] if len(x) > 0 else None,
             np.where(start_grid_map == 3)
-        ))
+        ))    
+        
         self.agent_states = np.transpose(np.nonzero((start_grid_map == 8) | (start_grid_map == 4)))
         self.ns_states = np.transpose(np.nonzero((start_grid_map == 8))).tolist()
         self.available_states = np.transpose(np.nonzero(start_grid_map == 0))
@@ -486,7 +496,7 @@ class GridworldEnv(gym.Env):
 
     def get_grid_state(self):
         ''' get current grid state '''
-        return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.s_state
+        return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.ns_states, self.s_state
     
     def get_agent_state(self):
         ''' get current agent state '''
