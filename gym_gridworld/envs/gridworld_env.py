@@ -342,7 +342,7 @@ class GridworldEnv(gym.Env):
             
             #with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
             #    pickle.dump(self.steps[2:], f)
-            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed), 'w') as fp: 
+            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed) + ".json", 'w')  as fp:
                 json.dump(final_data, fp)
                 print('*******CONGRATS, YOU FINISHED ' + str(self._seed) + '!************')
                 self._seed += 1
