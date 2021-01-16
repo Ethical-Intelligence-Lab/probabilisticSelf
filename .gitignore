@@ -1,5 +1,16 @@
+#directories
+env/
+models/
+data/
+
+#file extentions
+.zip
+.pdf
+.jpg
+.svg
 .idea
+
+#repos
 baselines_l
 gym_l
-data
 __pycache__
