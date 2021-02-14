@@ -334,11 +334,13 @@ class GridworldEnv(gym.Env):
 
             # move non selves without colliding to anything
             cc = [0] * 4
+            stay = False
             while next_color == 1 or next_color == 3 or next_color == 8:
                 action = random.randint(0, 3)
 
                 if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
                     nxt_ns_states[i] = self.ns_states[i]
+                    stay = True
                     break
 
                 if cc[action] == 0:  # if current action is not tried before
@@ -347,8 +349,9 @@ class GridworldEnv(gym.Env):
                                                        nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
             # Update ns positions
-            nxt_ns_states[i][0] = nxt_ns_states[i][0] + self.action_pos_dict[action][0]
-            nxt_ns_states[i][1] = nxt_ns_states[i][1] + self.action_pos_dict[action][1]
+            if stay is False:
+                nxt_ns_states[i][0] = nxt_ns_states[i][0] + self.action_pos_dict[action][0]
+                nxt_ns_states[i][1] = nxt_ns_states[i][1] + self.action_pos_dict[action][1]
             new_ns_colors[i] = self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]]
 
             ''' update grid locations of non-self agents '''
