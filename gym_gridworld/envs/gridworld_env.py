@@ -294,7 +294,7 @@ class GridworldEnv(gym.Env):
 
     ''' change the self to another possible self every 5 steps '''
     def change_agent(self):
-        if self.step_counter % 5 != 0:
+        if self.step_counter % 7 != 0:
             return
         rand_num = random.randint(0,2)
         temp = self.s_state
