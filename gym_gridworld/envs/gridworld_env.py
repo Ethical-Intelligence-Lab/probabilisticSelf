@@ -26,7 +26,7 @@ COLORS = {0:[0.0,0.0,0.0], 1:[0.5,0.5,0.5], \
 
 class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
-    num_env = 0 
+    num_env = 0
     def __init__(self):
         print('initializing environment')
         self._seed = 0
@@ -44,7 +44,7 @@ class GridworldEnv(gym.Env):
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
-    
+
     def make_game(self, P):
         '''
         Initialize env properties, given game type, player, and no. agents
@@ -72,8 +72,8 @@ class GridworldEnv(gym.Env):
         ''' set game_type-specific env config '''
         if self.game_type == 'logic':
             self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
-            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')    
-        elif self.game_type == 'contingency':
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')
+        elif self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.agent_start_locs = [[6,6], [6,14], [14,6], [14,14]]
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             self.perim = 3
@@ -81,8 +81,8 @@ class GridworldEnv(gym.Env):
             self.oscil_dirs = [random.randint(0,1), random.randint(0,1), random.randint(0,1)] #whether to oscil ud (0) or lr (1)
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
-            
-        ''' initialize system state ''' 
+
+        ''' initialize system state '''
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
 
         ''' reset agent location '''
@@ -101,7 +101,7 @@ class GridworldEnv(gym.Env):
         self.restart_once_done = False  # restart or not once done
 
         GridworldEnv.num_env += 1
-        self.this_fig_num = GridworldEnv.num_env 
+        self.this_fig_num = GridworldEnv.num_env
         if self.verbose == 1:
             self.fig = plt.figure(self.this_fig_num)
             plt.show(block=False)
@@ -115,12 +115,14 @@ class GridworldEnv(gym.Env):
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type == 'contingency':
             new_obs, rew, done, info = self.step_contingency(action)
+        elif self.game_type == 'change_agent':
+            new_obs, rew, done, info = self.step_change_agent(action)
         return new_obs, rew, done, info
 
     def step_logic(self, action):
-        self.total_steps_counter +=1
+        self.total_steps_counter += 1
         self.step_counter += 1
-        
+
         ''' return next observation, reward, finished, success '''
         action = int(action)
         info = {}
@@ -145,7 +147,7 @@ class GridworldEnv(gym.Env):
         if nxt_s_state[1] < 0 or nxt_s_state[1] >= self.grid_map_shape[1]:
             info['success'] = False
             return (self.observation, 0, False, info)
-        
+
         # successful behavior
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
         new_s_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
@@ -154,7 +156,7 @@ class GridworldEnv(gym.Env):
                 self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
             elif org_s_color == 6 or org_s_color == 7:
-                self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color-4 
+                self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color-4
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
             self.s_state = copy.deepcopy(nxt_s_state)
         elif (new_s_color == 1) | (new_s_color == 8): # gray or red (non-self agent)
@@ -207,29 +209,30 @@ class GridworldEnv(gym.Env):
         nxt_ns_actions = [random.sample(osc_directions,1)[0], random.sample(osc_directions,1)[0], random.sample(osc_directions,1)[0]]
         nxt_ns_states = copy.deepcopy(self.ns_states)
         for i, agent in enumerate(self.ns_states):
+
             if self.oscil_dirs[i] == 0: #if agent oscillates up-down
-                nxt_ns_states[i][0] = self.ns_states[i][0] + nxt_ns_actions[i] 
+                nxt_ns_states[i][0] = self.ns_states[i][0] + nxt_ns_actions[i]
                 if nxt_ns_states[i] == [self.ns_lim[i][0][0] - 1, self.ns_lim[i][0][1]]: #if equal to upper limit
                     nxt_ns_states[i][0] = nxt_ns_states[i][0] + 2
                 if nxt_ns_states[i] == [self.ns_lim[i][1][0] + 1, self.ns_lim[i][1][1]]: #if equal to lower limit
-                    nxt_ns_states[i][0] = nxt_ns_states[i][0] - 2 
+                    nxt_ns_states[i][0] = nxt_ns_states[i][0] - 2
                 new_ns_colors[i] = self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]]
 
             elif self.oscil_dirs[i] == 1: #ditto, if agent oscillates left-right
-                nxt_ns_states[i][1] = self.ns_states[i][1] + nxt_ns_actions[i] 
+                nxt_ns_states[i][1] = self.ns_states[i][1] + nxt_ns_actions[i]
                 if nxt_ns_states[i] == [self.ns_lim[i][2][0], self.ns_lim[i][2][1] - 1]: #if equal to left limit
                     nxt_ns_states[i][1] = nxt_ns_states[i][1] + 2
                 if nxt_ns_states[i] == [self.ns_lim[i][3][0], self.ns_lim[i][3][1] + 1]: #if equal to right limit
-                    nxt_ns_states[i][1] = nxt_ns_states[i][1] - 2 
+                    nxt_ns_states[i][1] = nxt_ns_states[i][1] - 2
                 new_ns_colors[i] = self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]]
-            
+
             ''' update grid locations of non-self agents '''
             #since we determine next position for ns first, we need to also check if self is planning to enter a common square
             #also need to check that we're not entering the self's current state, in case the self decides not to move
             num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
             if (new_ns_colors[i] != 4) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
-                self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0        
-                self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8       
+                self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0
+                self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8
                 self.ns_states[i] = copy.deepcopy(nxt_ns_states[i]) #only update agent state if grid is changed; on per agent basis
 
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
@@ -247,9 +250,9 @@ class GridworldEnv(gym.Env):
         if nxt_s_state[1] < 0 or nxt_s_state[1] >= self.grid_map_shape[1]: #stay in place
             info['success'] = False
             return (self.observation, 0, False, info)
-        
+
         ''' successful behavior: update self grid state'''
-        if new_s_color == 0: 
+        if new_s_color == 0:
             if org_s_color == 4:
                 num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
                 self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
@@ -257,11 +260,11 @@ class GridworldEnv(gym.Env):
 
             elif org_s_color == 6 or org_s_color == 7:
                 num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
-                self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color-4 
+                self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color-4
                 self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
 
             self.s_state = copy.deepcopy(nxt_s_state)
-            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4)))
         elif (new_s_color == 1) | (new_s_color == 8): # gray or red (non-self agent)
             if new_s_color == 1:
                 self.wall_interactions += 1
@@ -273,7 +276,7 @@ class GridworldEnv(gym.Env):
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
             self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color+4
             self.s_state = copy.deepcopy(nxt_s_state)
-            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))) 
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4)))
         self.observation = self._gridmap_to_observation(self.current_grid_map)
         self._render()
         if nxt_s_state[0] == self.agent_target_state[0] and nxt_s_state[1] == self.agent_target_state[1] :
@@ -289,18 +292,147 @@ class GridworldEnv(gym.Env):
             info['success'] = True
             return (self.observation, 0, False, info)
 
+    ''' change the self to another possible self every 5 steps '''
+    def change_agent(self):
+        if self.step_counter % 5 != 0:
+            return
+        rand_num = random.randint(0,2)
+        temp = self.s_state
+        self.current_grid_map[temp[0], temp[1]] = 0
+        self.s_state = list(self.ns_states[rand_num])
+        print("AGENT CHANGED. Current agent: ", self.s_state)
+        self.current_grid_map[self.s_state[0], self.s_state[1]] = 4
+
+        self.ns_states[rand_num] = list(temp)
+
+    def step_change_agent(self, action):
+        self.change_agent()
+        self.total_steps_counter += 1
+        self.step_counter += 1
+        info = {}
+        info['success'] = False
+        new_ns_colors = [0, 0, 0]
+
+        ''' next self position and colors '''
+        action = int(action)
+        self.level_self_actions.append(action)
+
+        ''' append level-specific data '''
+        self.level_self_actions.append(action)
+        self.level_s_locs.append(self.s_state)
+        self.level_ns_locs.append(self.ns_states)
+
+        nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
+                       self.s_state[1] + self.action_pos_dict[action][1])
+
+        nxt_ns_states = copy.deepcopy(self.ns_states)
+        for i, agent in enumerate(self.ns_states):
+
+            action = random.randint(0, 3)
+            next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                               nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+            # move non selves without colliding to anything
+            cc = [0] * 4
+            while next_color == 1 or next_color == 3 or next_color == 8:
+                action = random.randint(0, 3)
+
+                if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
+                    nxt_ns_states[i] = self.ns_states[i]
+                    break
+
+                if cc[action] == 0:  # if current action is not tried before
+                    cc[action] = cc[action] + 1
+                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+            # Update ns positions
+            nxt_ns_states[i][0] = nxt_ns_states[i][0] + self.action_pos_dict[action][0]
+            nxt_ns_states[i][1] = nxt_ns_states[i][1] + self.action_pos_dict[action][1]
+            new_ns_colors[i] = self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]]
+
+            ''' update grid locations of non-self agents '''
+            # since we determine next position for ns first, we need to also check if self is planning to enter a common square
+            # also need to check that we're not entering the self's current state, in case the self decides not to move
+            num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
+            if (new_ns_colors[i] != 4) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
+                self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0
+                self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8
+                self.ns_states[i] = copy.deepcopy(
+                    nxt_ns_states[i])  # only update agent state if grid is changed; on per agent basis
+
+        org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
+        new_s_color = self.current_grid_map[nxt_s_state[0], nxt_s_state[1]]
+
+        ''' unsuccessful behavior: self has no action, or attempts to move out-of-bounds. Do nothing '''
+        # if action == 0: # stay in place
+        #     self.observation = self._gridmap_to_observation(self.current_grid_map)
+        #     self._render()
+        #     info['success'] = True
+        #     return (self.observation, 0, False, info)
+        if nxt_s_state[0] < 0 or nxt_s_state[0] >= self.grid_map_shape[0]:  # stay in place
+            info['success'] = False
+            return (self.observation, 0, False, info)
+        if nxt_s_state[1] < 0 or nxt_s_state[1] >= self.grid_map_shape[1]:  # stay in place
+            info['success'] = False
+            return (self.observation, 0, False, info)
+
+        ''' successful behavior: update self grid state'''
+        if new_s_color == 0:
+            if org_s_color == 4:
+                num_prev_agents = len(
+                    np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
+                self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
+                self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
+
+            elif org_s_color == 6 or org_s_color == 7:
+                num_prev_agents = len(
+                    np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
+                self.current_grid_map[self.s_state[0], self.s_state[1]] = org_s_color - 4
+                self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = 4
+
+            self.s_state = copy.deepcopy(nxt_s_state)
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4)))
+        elif (new_s_color == 1) | (new_s_color == 8):  # gray or red (non-self agent)
+            if new_s_color == 1:
+                self.wall_interactions += 1
+            elif new_s_color == 8:
+                self.ns_interactions += 1
+            info['success'] = False
+            return (self.observation, 0, False, info)
+        elif new_s_color == 2 or new_s_color == 3:
+            self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
+            self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color + 4
+            self.s_state = copy.deepcopy(nxt_s_state)
+            self.agent_states = np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4)))
+        self.observation = self._gridmap_to_observation(self.current_grid_map)
+        self._render()
+        if nxt_s_state[0] == self.agent_target_state[0] and nxt_s_state[1] == self.agent_target_state[1]:
+            target_observation = copy.deepcopy(self.observation)
+            if self.restart_once_done:
+                self.observation = self.reset()
+                info['success'] = True
+                return (self.observation, 1, True, info)
+            else:
+                info['success'] = True
+                return (target_observation, 1, True, info)
+        else:
+            info['success'] = True
+            return (self.observation, 0, False, info)
+
+
     def get_ns_limits(self):
         self.ns_lim = [[],[],[]]
         for i, agent in enumerate(self.ns_states):
             self.ns_lim[i] = [[agent[0]-self.perim, agent[1]],
-                              [agent[0]+self.perim, agent[1]], 
-                              [agent[0], agent[1]-self.perim], 
+                              [agent[0]+self.perim, agent[1]],
+                              [agent[0], agent[1]-self.perim],
                               [agent[0], agent[1]+self.perim]
                              ]
 
-    def reset(self):   
+    def reset(self):
         if self.verbose:
-            print('reset environment')   
+            print('reset environment')
         ''' save data '''
         if self.level_counter > 0:
             self.data['game_type'].append(self.game_type)
@@ -308,11 +440,11 @@ class GridworldEnv(gym.Env):
             self.data['map'].append(self.start_grid_map.tolist())
             self.data['level'].append(self.level_counter)
             self.data['self_start_loc'].append(np.transpose(self.self_start_state).tolist())  #
-            self.data['ns_start_locs'].append(self.ns_start_states) 
+            self.data['ns_start_locs'].append(self.ns_start_states)
             self.data['reward_loc'].append(np.transpose(self.agent_target_state).tolist())
             self.data['self_actions'].append(self.level_self_actions)
             self.data['self_locs'].append(np.transpose(self.level_s_locs).tolist())
-            self.data['ns_locs'].append(self.level_ns_locs) 
+            self.data['ns_locs'].append(self.level_ns_locs)
             self.data['wall_interactions'].append(self.wall_interactions)
             self.data['ns_interactions'].append(self.ns_interactions)
             self.data['steps'].append(self.step_counter)
@@ -333,13 +465,13 @@ class GridworldEnv(gym.Env):
         print('level: ', self.level_counter)
         print('steps array: ', self.data['steps'])
         print('total steps: ', self.total_steps_counter)
-        
+
         ''' save data when all levels are completed '''
         if  self.level_counter == self.n_levels + 1:
             final_data = {}
             final_data['data'] = self.data
             final_data['metadata'] = self.metadata
-            
+
             #with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
             #    pickle.dump(self.steps[2:], f)
             with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed) + ".json", 'w')  as fp:
@@ -358,12 +490,12 @@ class GridworldEnv(gym.Env):
                 self.level_ns_locs = []
                 self.steps = []
                 #sys.exit(0)
-        
+
         ''' get new self location '''
         if self.game_type == 'logic':
-            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')    
-        elif self.game_type == 'contingency':
-            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')  
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')
+        elif self.game_type == 'contingency' or self.game_type == 'change_agent':
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
 
@@ -379,7 +511,7 @@ class GridworldEnv(gym.Env):
             self.start_grid_map[self.agent_start_locs[0]] = 4
         else:
             self.start_grid_map[new_s_loc[0], new_s_loc[1]] = 4
-        
+
         ''' update states '''
         self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
         self.s_state = copy.deepcopy(self.self_start_state)
@@ -387,7 +519,7 @@ class GridworldEnv(gym.Env):
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
-        if self.game_type == 'contingency':
+        if self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.get_ns_limits() #get new oscillation limits for non-self agents
 
         self.current_grid_map
@@ -424,8 +556,8 @@ class GridworldEnv(gym.Env):
         target_state = list(map(
             lambda x:x[0] if len(x) > 0 else None,
             np.where(start_grid_map == 3)
-        ))    
-        
+        ))
+
         self.agent_states = np.transpose(np.nonzero((start_grid_map == 8) | (start_grid_map == 4)))
         self.ns_states = np.transpose(np.nonzero((start_grid_map == 8))).tolist()
         self.available_states = np.transpose(np.nonzero(start_grid_map == 0))
@@ -444,8 +576,9 @@ class GridworldEnv(gym.Env):
             for k in range(grid_map.shape[1]):
                 observation[i*gs0:(i+1)*gs0, k*gs1:(k+1)*gs1] = np.array(COLORS[grid_map[i,k]])
         return observation
-  
+
     def _render(self, mode='human', close=False):
+        print(self.ns_states)
         if self.verbose != 1:
             return
         img = self.observation
@@ -454,8 +587,8 @@ class GridworldEnv(gym.Env):
         plt.imshow(img)
         fig.canvas.draw()
         plt.pause(0.00001)
-        return 
- 
+        return
+
     def change_start_state(self, sp):
         ''' change agent start state '''
         ''' Input: sp: new start state '''
@@ -475,7 +608,7 @@ class GridworldEnv(gym.Env):
             self.reset()
             self._render()
         return True
-        
+
     def change_target_state(self, tg):
         if self.agent_target_state[0] == tg[0] and self.agent_target_state[1] == tg[1]:
             _ = self.reset()
@@ -497,7 +630,7 @@ class GridworldEnv(gym.Env):
     def get_grid_state(self):
         ''' get current grid state '''
         return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.ns_states, self.s_state
-    
+
     def get_agent_state(self):
         ''' get current agent state '''
         return self.s_state
@@ -529,7 +662,7 @@ class GridworldEnv(gym.Env):
                 self.s_state = [to_state[0], to_state[1]]
                 self._render()
                 return (self.observation, 0, False, info)
-            if self.current_grid_map[self.s_state[0], self.s_state[1]] == 7:  
+            if self.current_grid_map[self.s_state[0], self.s_state[1]] == 7:
                 self.current_grid_map[self.s_state[0], self.s_state[1]] = 3
                 self.current_grid_map[to_state[0], to_state[1]] = 4
                 self.observation = self._gridmap_to_observation(self.current_grid_map)
@@ -558,7 +691,7 @@ class GridworldEnv(gym.Env):
     def _close_env(self):
         plt.close(1)
         return
-    
+
     def jump_to_state(self, to_state):
         a, b, c, d = self._jump_to_state(to_state)
-        return (a, b, c, d) 
+        return (a, b, c, d)
