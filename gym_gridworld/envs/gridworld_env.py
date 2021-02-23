@@ -198,7 +198,7 @@ class GridworldEnv(gym.Env):
         self.level_self_actions.append(action)
 
         ''' append level-specific data '''
-        self.level_self_actions.append(action)
+        #self.level_self_actions.append(action) <-
         self.level_s_locs.append(self.s_state)
         self.level_ns_locs.append(self.ns_states)
 
@@ -292,21 +292,22 @@ class GridworldEnv(gym.Env):
             info['success'] = True
             return (self.observation, 0, False, info)
 
-    ''' change the self to another possible self every 5 steps '''
+    ''' change the self to another possible self every 7 steps '''
     def change_agent(self):
         if self.step_counter % 7 != 0:
             return
-        rand_num = random.randint(0,2)
+        rand_num = random.randint(0, 2)
         temp = self.s_state
         self.current_grid_map[temp[0], temp[1]] = 0
         self.s_state = list(self.ns_states[rand_num])
         print("AGENT CHANGED. Current agent: ", self.s_state)
         self.current_grid_map[self.s_state[0], self.s_state[1]] = 4
 
-        self.ns_states[rand_num] = list(temp)
+        self.ns_states[rand_num] = [int(temp[0]), int(temp[1])]
 
     def step_change_agent(self, action):
-        self.change_agent()
+        if self.step_counter != 0:
+            self.change_agent()
         self.total_steps_counter += 1
         self.step_counter += 1
         info = {}
@@ -318,7 +319,6 @@ class GridworldEnv(gym.Env):
         self.level_self_actions.append(action)
 
         ''' append level-specific data '''
-        self.level_self_actions.append(action)
         self.level_s_locs.append(self.s_state)
         self.level_ns_locs.append(self.ns_states)
 
@@ -586,8 +586,17 @@ class GridworldEnv(gym.Env):
             return
         img = self.observation
         fig = plt.figure(self.this_fig_num, figsize=(3,4)) #figsize=(3,4)
+        actionDict = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
+
         plt.clf()
+
         plt.imshow(img)
+        if self.step_counter != 0:
+            plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
+
+        if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
+            plt.suptitle("CHANGE")
+
         fig.canvas.draw()
         plt.pause(0.00001)
         return
