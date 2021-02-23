@@ -1,5 +1,7 @@
+import itertools
+import math
+import random
 from pdb import set_trace
-import numpy as np
 from utils.keys import *
 import copy
 
@@ -11,6 +13,7 @@ class Self_class():
         self.action_ref = [[-1,0], [1,0], [0,-1], [0,1]]
         self.prev_move_dirs = [[],[],[],[]]
         self.prev_actions = []
+        self.agent_locs = []
         self.last_grid = []
         self.prev_action = None
         self.candidates = []
@@ -53,6 +56,7 @@ class Self_class():
             return (key_converter(2))
 
     def predict(self, env):
+        action = None
         if env.game_type == 'logic':
             action = self.predict_logic(env)
         if env.game_type == 'contingency':
@@ -60,6 +64,8 @@ class Self_class():
                 action = self.predict_contingency(env)
             else:
                 action = self.predict_shuffled(env)
+        if env.game_type == 'change_agent':
+            action = self.predict_change_agent(env)
         return action
 
     def predict_logic(self, env):
@@ -171,6 +177,174 @@ class Self_class():
                          self.prev_action = self.navigate(target, SELF)
                          self.mode = 'navigation'
                          return self.prev_action
+
+
+    # Go back to self discovery if the agent has changed (moves into unexpected position)
+    def check_if_agent_is_correct(self, action):
+        self.prev_candidates = []
+
+        new_loc = [self.agent_locs[self.action_counter - 2][0] + action[0],
+                                   self.agent_locs[self.action_counter - 2][1] + action[1]]
+
+
+        print("guessed self: ", new_loc)
+        print("self: ", list(self.agent_locs[self.action_counter - 1]))
+        print("action: ", action)
+
+
+        if list(self.agent_locs[self.action_counter - 1]) != new_loc:
+            print("Unexpected position: going back to self discovery")
+            self.mode = "self_discovery"
+
+
+    # Get which direction to move based on agents' locations.
+    # e.g if > 2 of them are above and at the leftside the goal, then the proper move is to move down or right
+    def get_direction(self):
+        boundary = [10, 10]
+        counts = [0] * 4  # U D L R
+        actions = []
+
+        for agent in self.agent_locs:
+            if agent[0] > 10:
+                counts[2] = counts[2] + 1  # increment left
+            elif agent[0] < 10:
+                counts[3] = counts[3] + 1  # increment right
+
+            if agent[0] > 10:
+                counts[0] = counts[0] + 1  # increment up
+            elif agent[0] < 10:
+                counts[1] = counts[1] + 1  # increment down
+
+        if counts[0] > counts[1]:
+            actions.append(0) # UP
+        elif counts[1] > counts[0]:
+            actions.append(1) # DOWN
+        else:
+            actions.append(random.randint(0, 1))
+
+        if counts[2] > counts[3]:
+            actions.append(2) # LEFT
+        elif counts[3] > counts[2]:
+            actions.append(3) # RIGHT
+        else:
+            actions.append(random.randint(2, 3))
+
+        return actions[random.randint(0, len(actions) - 1)]
+
+
+    def predict_change_agent(self, env):
+        print("*-*-*-*---- PREDICTING ----*-*-*-*")
+        self.action_counter += 1
+
+        # Get env state
+        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+        self.agent_locs.append(SELF)
+
+        # Whenever environment resets, we start in self discovery mode
+        if len(self.last_grid) == 0:
+            self.mode = 'self_discovery'
+            self.prev_action = None
+            self.prev_candidates = []
+
+        self.last_grid = copy.deepcopy(grid)
+
+        # Get current sorted agents
+        cur_agents = []
+        cur_agents.extend(non_self)
+        cur_agents.append(SELF)
+        self.movements = []
+        self.candidates = []
+
+        print("SELF: ", SELF)
+
+        if self.mode == 'navigation':
+            print("*** Navigating ***")
+            self.check_if_agent_is_correct(self.action_ref[self.prev_action])
+            action = self.navigate(target, SELF)
+            return action
+
+        # (1) First action..
+        elif self.prev_action == None:
+            print('*** Taking first action ***')
+            self.prev_agents = copy.deepcopy(cur_agents)
+            self.prev_action = key_converter(random.randint(0, 3))
+            return self.prev_action
+
+        # (2) Not the first action
+        elif (self.prev_action != None):
+            print('*** Getting self candidates ***')
+            self.get_candidates(cur_agents)
+
+            # (3) If only one agent moved in direction of keypress, navigate it to the reward
+            if (len(self.candidates) == 1):
+                if self.candidates[0] == 3:
+                    print('*** Found myself! Navigating to the reward ***')
+                    self.mode = 'navigation'
+                    self.prev_action = self.navigate(target, SELF)
+                    self.prev_candidates = copy.deepcopy(self.candidates)
+                    self.candidates = []
+                    return self.prev_action
+                else:
+                    print("Eliminated candidate is not self.")
+                    self.prev_candidates = []
+                    self.prev_agents = copy.deepcopy(cur_agents)
+                    self.prev_action = key_converter(self.get_direction())
+                    return self.prev_action
+
+            elif len(self.candidates) > 1:
+                # (4) If > 1 agent moved in directon of keypress, take action in a different dimension
+                if len(self.prev_candidates) == 0:
+                    print('*** Found > 1 self candidate. Taking another action ***')
+                    self.prev_candidates = copy.deepcopy(self.candidates)
+                    self.candidates = []
+                    self.prev_agents = copy.deepcopy(cur_agents)
+                    self.prev_action = key_converter(self.get_direction())
+                    return self.prev_action
+
+                #  More than one candidates: Eliminate
+                elif len(self.prev_candidates) > 0:
+                    print('*** Eliminating candidates. ***')
+
+                    self.get_candidates(cur_agents)
+
+                    candidate = set(self.candidates).intersection(self.prev_candidates)
+
+                    print("Eliminated candidates: ", candidate)
+
+                    if len(candidate) == 0:
+                        print("No matching candidates")
+                        self.prev_agents = copy.deepcopy(cur_agents)
+                        self.prev_action = key_converter(self.get_direction())
+                        return self.prev_action
+                    elif len(candidate) > 1:
+                        print('*** Found > 1 self candidate. Taking another action ***')
+                        self.prev_candidates = copy.deepcopy(self.candidates)
+                        self.candidates = []
+                        self.prev_agents = copy.deepcopy(cur_agents)
+                        self.prev_action = key_converter(self.get_direction())
+                        return self.prev_action
+
+                    # If one candidate:
+                    final_candidate = candidate.pop()
+                    if final_candidate == 3:
+                        print("Found self, going into navigation.")
+                        self.prev_candidates = []
+                        self.prev_action = self.navigate(target, SELF)
+                        self.mode = 'navigation'
+                        return self.prev_action
+                    else:
+                        print("Eliminated candidate is not self.")
+                        self.prev_candidates = []
+                        self.prev_agents = copy.deepcopy(cur_agents)
+                        self.prev_action = key_converter(self.get_direction())
+                        return self.prev_action
+
+            else:  # No candidates.
+                print("No candidates. Keep moving")
+                self.prev_agents = copy.deepcopy(cur_agents)
+                self.prev_action = key_converter(self.get_direction())
+                return self.prev_action
+
 
     def predict_shuffled(self, env):
         self.action_counter += 1
