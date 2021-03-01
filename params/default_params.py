@@ -32,7 +32,7 @@ default_params = {
           # env params
           'env_id': 'gridworld-v0',
           'singleAgent': False,
-          'game_type': 'logic', #logic or contingency
+          'game_type': 'logic', #logic or contingency or change_agent
           'player': 'random', #random, human, dqn_training, self_class
           'exp_name': 'test', 
           'verbose': False,
