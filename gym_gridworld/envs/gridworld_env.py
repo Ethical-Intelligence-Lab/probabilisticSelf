@@ -165,7 +165,6 @@ class GridworldEnv(gym.Env):
             elif new_s_color == 8:
                 self.ns_interactions += 1
             info['success'] = False
-            return (self.observation, 0, False, info)
         elif new_s_color == 2 or new_s_color == 3:
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
             self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color+4
@@ -271,7 +270,6 @@ class GridworldEnv(gym.Env):
             elif new_s_color == 8:
                 self.ns_interactions += 1
             info['success'] = False
-            return (self.observation, 0, False, info)
         elif new_s_color == 2 or new_s_color == 3:
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
             self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color+4
@@ -402,7 +400,6 @@ class GridworldEnv(gym.Env):
             elif new_s_color == 8:
                 self.ns_interactions += 1
             info['success'] = False
-            return (self.observation, 0, False, info)
         elif new_s_color == 2 or new_s_color == 3:
             self.current_grid_map[self.s_state[0], self.s_state[1]] = 0
             self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] = new_s_color + 4
