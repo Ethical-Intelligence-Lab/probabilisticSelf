@@ -4,7 +4,7 @@ import argparse
 #defaults are in comments
 default_params = { 
           # mod params
-          'gamma': 0.999, #0.99
+          'gamma': 0.9, #0.99
           'learning_rate': 0.00025, #0.0005
           'buffer_size': 50000, #50000
           'exploration_fraction': 0.1, #0.1
@@ -27,13 +27,13 @@ default_params = {
           '_init_setup_model': True, #True
           'policy_kwargs': None, #None
           'full_tensorboard_log': False, #False
-          'seed': 0, #None
+          'seed': 0,
           
           # env params
           'env_id': 'gridworld-v0',
           'singleAgent': False,
           'game_type': 'logic', #logic or contingency or change_agent
-          'player': 'random', #random, human, dqn_training, self_class
+          'player': 'random', #random, human, dqn_training, self_class, ppo2_training
           'exp_name': 'test', 
           'verbose': False,
           'single_loc': False,
@@ -52,7 +52,11 @@ def update_params(params, arguments):
       if arguments[arg] != None:
         params[arg] = arguments[arg]
 
-    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
+    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' +\
+                              "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) +\
+                              "_ef" + str(params['exploration_fraction']) +\
+                              "_efeps" + str(params['exploration_initial_eps']) + \
+                              "_ls" + str(params['learning_starts']) + "_seed" + str(params['seed']) + "/"
 
     return params
 

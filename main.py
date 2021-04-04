@@ -1,3 +1,4 @@
+import os
 from pdb import set_trace
 import sys
 import argparse
@@ -10,7 +11,7 @@ from utils.keys import key_converter
 
 from baselines_l.stable_baselines.common.vec_env import DummyVecEnv
 from baselines_l.stable_baselines.deepq.policies import MlpPolicy
-from baselines_l.stable_baselines import DQN
+from baselines_l.stable_baselines import DQN, PPO2, TRPO, GAIL, HER, SAC, TD3, ACKTR, A2C
 from baselines_l.stable_baselines.common.callbacks import BaseCallback
 
 from utils.neptune_creds import *
@@ -44,18 +45,110 @@ if __name__ == '__main__':
     # Main loop
     obs = env.reset()
     steps = []
+    loaded = False
     step_counter = 0
     n_timesteps = 1000000 #25000
     for i in range(n_timesteps): 
         if P['player'] == 'dqn_training':
-            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], target_network_update_freq = P['target_network_update_freq'])
+            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'],
+                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed, prioritized_replay_eps=P['epsilon'])
+
+            path = "saved_models" + P['data_save_dir'].split("dqn_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
             model.learn(total_timesteps=n_timesteps)
-            model.save("models/deepq_gridworld")
+            model.save(path)
+        elif P['player'] == 'ppo2_training':
+
+            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("ppo2_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+
+        elif P['player'] == 'trpo_training':
+
+            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("trpo_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'gail_training':
+
+            model = GAIL("MlpPolicy", env)
+            path = "saved_models" + P['data_save_dir'].split("gail_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'her_training':
+
+            model = HER("MlpPolicy", env, DQN)
+            path = "saved_models" + P['data_save_dir'].split("her_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'sac_training':
+
+            model = SAC("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("sac_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'td3_training':
+
+            model = TD3("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("td3_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'acktr_training':
+
+            model = ACKTR("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("acktr_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
+        elif P['player'] == 'a2c_training':
+
+            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            path = "saved_models" + P['data_save_dir'].split("a2c_training", 1)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
         elif P['player'] == 'dqn_trained':
-            model = DQN.load("models/deepq_gridworld", env, verbose=P['verbose'])
-            action, _states = model.predict(obs)
-            obs, reward, done, info = env.step(action)
-            env._render()
+            path = "saved_models" + P['data_save_dir'].split("dqn_trained", 1)[1] + ".zip"
+            if not loaded:
+                model = DQN.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            model.save(path)
         elif P['player'] == 'random':
             obs, reward, done, info = env.step(env.action_space.sample()) 
             env._render()
