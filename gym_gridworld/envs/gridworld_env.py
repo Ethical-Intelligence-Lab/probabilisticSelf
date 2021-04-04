@@ -30,6 +30,7 @@ class GridworldEnv(gym.Env):
     def __init__(self):
         print('initializing environment')
         self._seed = 0
+        self.levels_count = 0  # count of each 100 levels
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
         self.action_pos_dict = [[-1,0], [1,0], [0,-1], [0,1]]
@@ -52,9 +53,9 @@ class GridworldEnv(gym.Env):
         '''
 
         self.metadata = P
-        self._seed = int(P['seed'])
+        self._seed = P['seed']
 
-        self.metadata['env_seed'] = P['seed']
+        #self.metadata['env_seed'] = self._seed
         self.game_type = P['game_type']
         self.player = P['player']
         self.exp_name = P['exp_name']
@@ -81,6 +82,43 @@ class GridworldEnv(gym.Env):
             self.oscil_dirs = [random.randint(0,1), random.randint(0,1), random.randint(0,1)] #whether to oscil ud (0) or lr (1)
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
+        elif self.game_type[0:4] == 'test':
+
+            if self.game_type == 'test1' or self.game_type == 'test3':
+                self.agent_start_locs = [[1, 1]]
+            elif self.game_type == 'test2' or self.game_type == 'test4' or self.game_type == 'test5' or self.game_type == 'test6':
+                self.agent_start_locs = [[1, 1], [1, 7], [7, 1], [7, 7]]
+
+            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
+
+            ''' initialize system state '''
+            self.start_grid_map = self._read_grid_map(self.grid_map_path)  # initial grid map
+
+            ''' reset agent location '''
+            new_s_loc = [1, 1]
+            self.start_grid_map[new_s_loc[0], new_s_loc[1]] = 4
+
+            self.current_grid_map = copy.deepcopy(self.start_grid_map)  # current grid map
+            self.observation = self._gridmap_to_observation(self.start_grid_map)
+            self.grid_map_shape = self.start_grid_map.shape
+
+            ''' agent state: start, target, current state '''
+            self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(
+                self.start_grid_map)
+            self.s_state = copy.deepcopy(self.self_start_state)
+
+            ''' set other parameters '''
+            self.restart_once_done = False  # restart or not once done
+
+            GridworldEnv.num_env += 1
+            self.this_fig_num = GridworldEnv.num_env
+            if self.verbose == 1:
+                self.fig = plt.figure(self.this_fig_num)
+                plt.show(block=False)
+                plt.axis('off')
+                self._render()
+
+            return
 
         ''' initialize system state '''
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
@@ -117,6 +155,12 @@ class GridworldEnv(gym.Env):
             new_obs, rew, done, info = self.step_contingency(action)
         elif self.game_type == 'change_agent':
             new_obs, rew, done, info = self.step_change_agent(action)
+
+        # Tests:
+
+        elif self.game_type[0:4] == 'test':
+            new_obs, rew, done, info = self.step_logic(action)
+
         return new_obs, rew, done, info
 
     def step_logic(self, action):
@@ -434,6 +478,10 @@ class GridworldEnv(gym.Env):
         if self.verbose:
             print('reset environment')
         ''' save data '''
+        if self.step_counter > 10000:
+            print('step count too high. terminating...')
+            sys.exit()
+
         if self.level_counter > 0:
             self.data['game_type'].append(self.game_type)
             self.data['player'].append(self.player)
@@ -474,11 +522,15 @@ class GridworldEnv(gym.Env):
 
             #with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
             #    pickle.dump(self.steps[2:], f)
-            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_seed' + str(self._seed) + ".json", 'w')  as fp:
+
+            if not os.path.exists(self.metadata['data_save_dir']):
+                os.makedirs(self.metadata['data_save_dir'])
+
+            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_100levels_' + str(self.levels_count) + ".json", 'w')  as fp:
                 json.dump(final_data, fp)
-                print('*******CONGRATS, YOU FINISHED ' + str(self._seed) + '!************')
-                self._seed += 1
-                if self._seed == 10:
+                print('*******CONGRATS, YOU FINISHED ' + str(self.levels_count) + '!************')
+                self.levels_count += 1
+                if self.levels_count == 20:
                     sys.exit()
                 #reset variables
                 self.data = {'game_type': [], 'player': [], 'map': [], 'level': [], 'self_start_loc': [], 'ns_start_locs': [],
@@ -498,6 +550,68 @@ class GridworldEnv(gym.Env):
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
+
+
+        # For testing ----
+        elif self.game_type == 'test1' or self.game_type == 'test3':
+            start_loc = [1, 1]
+
+            ''' reset grid state and agent location '''
+            self.start_grid_map = self._read_grid_map(self.grid_map_path)  # initial grid map
+            new_s_loc = start_loc
+
+            self.start_grid_map[1, 1] = 4
+
+            ''' update states '''
+            self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(
+                self.start_grid_map)
+            self.s_state = copy.deepcopy(self.self_start_state)
+            self.ns_states = np.transpose(np.nonzero((self.start_grid_map == 8))).tolist()
+
+            self.current_grid_map = copy.deepcopy(self.start_grid_map)
+            self.observation = self._gridmap_to_observation(self.start_grid_map)
+            if self.game_type == 'contingency' or self.game_type == 'change_agent':
+                self.get_ns_limits()  # get new oscillation limits for non-self agents
+
+            self._render()
+
+            return self.observation
+
+            # For testing ----
+        elif self.game_type == 'test2' or self.game_type == 'test4' or self.game_type == 'test5' or self.game_type == 'test6':
+
+            rand = random.randint(0, 3)
+
+            self.grid_map_path = os.path.join(self.this_file_path,
+                                              self.game_type + '/plan' + str(rand) + '.txt')
+            ''' reset grid state and agent location '''
+            self.start_grid_map = self._read_grid_map(self.grid_map_path)  # initial grid map
+
+            if rand == 0:
+                self.start_grid_map[1, 1] = 4
+            elif rand == 1:
+                self.start_grid_map[1, 7] = 4
+            elif rand == 2:
+                self.start_grid_map[7, 1] = 4
+            elif rand == 3:
+                self.start_grid_map[7, 7] = 4
+
+            ''' update states '''
+            self.self_start_state, self.ns_start_states, self.agent_target_state = self._get_agent_start_target_state(
+                self.start_grid_map)
+            self.s_state = copy.deepcopy(self.self_start_state)
+            self.ns_states = np.transpose(np.nonzero((self.start_grid_map == 8))).tolist()
+
+            self.current_grid_map = copy.deepcopy(self.start_grid_map)
+            self.observation = self._gridmap_to_observation(self.start_grid_map)
+            if self.game_type == 'contingency' or self.game_type == 'change_agent':
+                self.get_ns_limits()  # get new oscillation limits for non-self agents
+
+            self._render()
+
+            return self.observation
+        # End of testing ----
+
 
         ''' if singleAgent is true, blank out all non-self agents '''
         if self.singleAgent == True:
@@ -704,3 +818,54 @@ class GridworldEnv(gym.Env):
     def jump_to_state(self, to_state):
         a, b, c, d = self._jump_to_state(to_state)
         return (a, b, c, d)
+
+    # For experiments:
+    def step_test1(self, action):
+        ''' return next observation, reward, finished, success '''
+        action = int(action)
+        info = {}
+        info['success'] = False
+        nxt_agent_state = (self.agent_state[0] + self.action_pos_dict[action][0],
+                           self.agent_state[1] + self.action_pos_dict[action][1])
+        if action == 0:  # stay in place
+            info['success'] = True
+            return (self.observation, 0, False, info)
+        if nxt_agent_state[0] < 0 or nxt_agent_state[0] >= self.grid_map_shape[0]:
+            info['success'] = False
+            return (self.observation, 0, False, info)
+        if nxt_agent_state[1] < 0 or nxt_agent_state[1] >= self.grid_map_shape[1]:
+            info['success'] = False
+            return (self.observation, 0, False, info)
+
+        # successful behavior
+        org_color = self.current_grid_map[self.agent_state[0], self.agent_state[1]]
+        new_color = self.current_grid_map[nxt_agent_state[0], nxt_agent_state[1]]
+        if new_color == 0:
+            if org_color == 4:
+                self.current_grid_map[self.agent_state[0], self.agent_state[1]] = 0
+                self.current_grid_map[nxt_agent_state[0], nxt_agent_state[1]] = 4
+            elif org_color == 6 or org_color == 7:
+                self.current_grid_map[self.agent_state[0], self.agent_state[1]] = org_color - 4
+                self.current_grid_map[nxt_agent_state[0], nxt_agent_state[1]] = 4
+            self.agent_state = copy.deepcopy(nxt_agent_state)
+        elif new_color == 1:  # gray
+            info['success'] = False
+            return (self.observation, 0, False, info)
+        elif new_color == 2 or new_color == 3:
+            self.current_grid_map[self.agent_state[0], self.agent_state[1]] = 0
+            self.current_grid_map[nxt_agent_state[0], nxt_agent_state[1]] = new_color + 4
+            self.agent_state = copy.deepcopy(nxt_agent_state)
+        self.observation = self._gridmap_to_observation(self.current_grid_map)
+        self._render()
+        if nxt_agent_state[0] == self.agent_target_state[0] and nxt_agent_state[1] == self.agent_target_state[1]:
+            target_observation = copy.deepcopy(self.observation)
+            if self.restart_once_done:
+                self.observation = self.reset()
+                info['success'] = True
+                return (self.observation, 1, True, info)
+            else:
+                info['success'] = True
+                return (target_observation, 1, True, info)
+        else:
+            info['success'] = True
+            return (self.observation, 0, False, info)
