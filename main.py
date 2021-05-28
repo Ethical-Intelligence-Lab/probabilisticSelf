@@ -51,7 +51,7 @@ if __name__ == '__main__':
     for i in range(n_timesteps): 
         if P['player'] == 'dqn_training':
             model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'],
-                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed, prioritized_replay_eps=P['epsilon'])
+                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed )
 
             path = "saved_models" + P['data_save_dir'].split("dqn_training", 1)[1]
 
