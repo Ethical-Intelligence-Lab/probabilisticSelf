@@ -46,17 +46,19 @@ default_params = {
         }      
 
 def update_params(params, arguments):
-    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
-
     for arg in arguments.keys():
       if arguments[arg] != None:
         params[arg] = arguments[arg]
 
     params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' +\
-                              "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) +\
+                              "lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) +\
                               "_ef" + str(params['exploration_fraction']) +\
                               "_efeps" + str(params['exploration_initial_eps']) + \
-                              "_ls" + str(params['learning_starts']) + "_seed" + str(params['seed']) + "/"
+                              "_ls" + str(params['learning_starts']) + "_seed" + str(params['seed']) + '_s' + \
+                              str(params['shuffle_keys']) + "/"
+
+    if params['player'] == 'self_class' or params['player'] == 'human':
+        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
 
     return params
 
