@@ -1,3 +1,5 @@
+import random
+import string
 from pdb import set_trace
 import argparse
 
@@ -15,7 +17,7 @@ default_params = {
           'double_q': True, #True
           'learning_starts': 1000, #1000
           'target_network_update_freq': 500, #500
-          'prioritized_replay': False, #False
+          'prioritized_replay': True, #False
           'prioritized_replay_alpha': 0.6, #0.6
           'prioritized_replay_beta0': 0.4, #0.4
           'prioritized_replay_beta_iters': None, #None
@@ -34,7 +36,7 @@ default_params = {
           'singleAgent': False,
           'game_type': 'logic', #logic or contingency or change_agent
           'player': 'random', #random, human, dqn_training, self_class, ppo2_training
-          'exp_name': 'test', 
+          'exp_name': 'train_',
           'verbose': False,
           'single_loc': False,
           'n_levels': 100,
@@ -42,7 +44,8 @@ default_params = {
 
           # data params !add 'data_save_dir'
           'log_neptune': False,
-          'data_save_dir': None
+          'data_save_dir': None,
+          'load': False # Load pretrained agent
         }      
 
 def update_params(params, arguments):
@@ -50,15 +53,28 @@ def update_params(params, arguments):
       if arguments[arg] != None:
         params[arg] = arguments[arg]
 
-    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' +\
-                              "lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) +\
-                              "_ef" + str(params['exploration_fraction']) +\
-                              "_efeps" + str(params['exploration_initial_eps']) + \
-                              "_ls" + str(params['learning_starts']) + "_seed" + str(params['seed']) + '_s' + \
-                              str(params['shuffle_keys']) + "/"
+    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + \
+                              "seed" + str(params['seed']) + "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) + \
+                              "_ls" + str(params['learning_starts']) + '_s' + \
+                              str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + "/"
 
-    if params['player'] == 'self_class' or params['player'] == 'human':
-        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/'
+    if params['player'] == 'random' or params['player'] == 'self_class':
+        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "iter" + str(params['seed']) + '/'
+
+    if params['player'] == 'human':
+        letters = string.digits
+        rand_id = ''.join(random.choice(letters) for i in range(10))
+        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "player" + str(rand_id) + '/'
+
+    if params['shuffle_keys']:
+        if params['player'] == 'random' or params['player'] == 'self_class':
+            params['data_save_dir'] = 'data/' + params['game_type'] + '_game_shuffled/' + params['player'] + '/' + "iter" + str(
+                params['seed']) + '/'
+        else:
+            params['data_save_dir'] = 'data/' + params['game_type'] + '_game_shuffled/' + params['player'] + '/' + \
+                                  "seed" + str(params['seed']) + "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) + \
+                                  "_ls" + str(params['learning_starts']) + '_s' + \
+                                  str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + "/"
 
     return params
 
