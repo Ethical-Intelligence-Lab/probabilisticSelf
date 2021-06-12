@@ -47,108 +47,67 @@ if __name__ == '__main__':
     steps = []
     loaded = False
     step_counter = 0
-    n_timesteps = 1000000 #25000
-    for i in range(n_timesteps): 
-        if P['player'] == 'dqn_training':
-            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'],
-                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed )
+    n_timesteps = 10000000000000000 #25000
 
-            path = "saved_models" + P['data_save_dir'].split("dqn_training", 1)[1]
+    game_name_pf = "_game_shuffled/" if P['shuffle_keys'] else "_game/"
+    path = 'saved_models/' + P['game_type'] + game_name_pf + P['player'] + '/' + \
+           "seed" + str(P['seed']) + "_lr" + str(P['learning_rate']) + "_gamma" + str(P['gamma']) + \
+           "_ls" + str(P['learning_starts']) + '_s' + \
+           str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "/"
 
-            if not os.path.exists(path):
-                os.makedirs(path)
+    if P['player'] != 'random' and P['player'] != 'human' and P['player'] != 'self_class':
+        if not os.path.exists(path):
+            os.makedirs(path)
 
+    while True:
+        if P['player'] == 'dqn_training' and not P['load']:
+            print("Seed: ", env._seed)
+            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], prioritized_replay=P['prioritized_replay'],
+                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed, ) # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'ppo2_training':
-
-            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("ppo2_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
+            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=env._seed, ) #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
-
         elif P['player'] == 'trpo_training':
-
-            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("trpo_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
+            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=env._seed, ) #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'gail_training':
-
             model = GAIL("MlpPolicy", env)
-            path = "saved_models" + P['data_save_dir'].split("gail_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'her_training':
-
             model = HER("MlpPolicy", env, DQN)
-            path = "saved_models" + P['data_save_dir'].split("her_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'sac_training':
-
             model = SAC("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("sac_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'td3_training':
-
             model = TD3("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("td3_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'acktr_training':
-
             model = ACKTR("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("acktr_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
         elif P['player'] == 'a2c_training':
-
-            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
-            path = "saved_models" + P['data_save_dir'].split("a2c_training", 1)[1]
-
-            if not os.path.exists(path):
-                os.makedirs(path)
-
+            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed) #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
-        elif P['player'] == 'dqn_trained':
-            path = "saved_models" + P['data_save_dir'].split("dqn_trained", 1)[1] + ".zip"
+        elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
+            path = path + ".zip"
+
             if not loaded:
                 model = DQN.load(path, env, verbose=P['verbose'])
                 loaded = True
 
             model.learn(total_timesteps=n_timesteps)
             model.save(path)
+        # TODO: Add loading for other agents
         elif P['player'] == 'random':
             obs, reward, done, info = env.step(env.action_space.sample()) 
             env._render()

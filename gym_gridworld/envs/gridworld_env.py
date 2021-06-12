@@ -354,6 +354,7 @@ class GridworldEnv(gym.Env):
         self.step_counter += 1
         info = {}
         info['success'] = False
+        osc_directions = [-1, 1]
         new_ns_colors = [0, 0, 0]
 
         ''' next self position and colors '''
@@ -367,7 +368,10 @@ class GridworldEnv(gym.Env):
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
 
+        nxt_ns_actions = [random.sample(osc_directions, 1)[0], random.sample(osc_directions, 1)[0],
+                          random.sample(osc_directions, 1)[0]]
         nxt_ns_states = copy.deepcopy(self.ns_states)
+
         for i, agent in enumerate(self.ns_states):
 
             action = random.randint(0, 3)
@@ -478,9 +482,9 @@ class GridworldEnv(gym.Env):
         if self.verbose:
             print('reset environment')
         ''' save data '''
-        if self.step_counter > 10000:
-            print('step count too high. terminating...')
-            sys.exit()
+        #if self.step_counter > 50000000:
+        #    print('step count too high. terminating...')
+        #    sys.exit()
 
         if self.level_counter > 0:
             self.data['game_type'].append(self.game_type)
@@ -526,7 +530,7 @@ class GridworldEnv(gym.Env):
             if not os.path.exists(self.metadata['data_save_dir']):
                 os.makedirs(self.metadata['data_save_dir'])
 
-            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + '_100levels_' + str(self.levels_count) + ".json", 'w')  as fp:
+            with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json", 'w')  as fp:
                 json.dump(final_data, fp)
                 print('*******CONGRATS, YOU FINISHED ' + str(self.levels_count) + '!************')
                 self.levels_count += 1
@@ -692,7 +696,6 @@ class GridworldEnv(gym.Env):
         return observation
 
     def _render(self, mode='human', close=False):
-        print(self.ns_states)
         if self.verbose != 1:
             return
         img = self.observation
