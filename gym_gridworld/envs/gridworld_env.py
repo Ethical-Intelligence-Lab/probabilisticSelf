@@ -368,13 +368,11 @@ class GridworldEnv(gym.Env):
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
 
-        nxt_ns_actions = [random.sample(osc_directions, 1)[0], random.sample(osc_directions, 1)[0],
-                          random.sample(osc_directions, 1)[0]]
         nxt_ns_states = copy.deepcopy(self.ns_states)
 
         for i, agent in enumerate(self.ns_states):
-
-            action = random.randint(0, 3)
+            oscil_dir = self.oscil_dirs[i]
+            action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
             next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
@@ -382,7 +380,7 @@ class GridworldEnv(gym.Env):
             cc = [0] * 4
             stay = False
             while next_color == 1 or next_color == 3 or next_color == 8:
-                action = random.randint(0, 3)
+                action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
 
                 if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
                     nxt_ns_states[i] = self.ns_states[i]
@@ -506,7 +504,7 @@ class GridworldEnv(gym.Env):
             self.exp_neptune.log_text(self.data)
 
         ''' print some metrics '''
-        self.level_self_actions = [] #clear actions for this level
+        self.level_self_actions = []  #clear actions for this level
         self.level_s_locs = []
         self.level_ns_locs = []
         self.wall_interactions = 0
@@ -534,8 +532,9 @@ class GridworldEnv(gym.Env):
                 json.dump(final_data, fp)
                 print('*******CONGRATS, YOU FINISHED ' + str(self.levels_count) + '!************')
                 self.levels_count += 1
-                if self.levels_count == 20:
-                    sys.exit()
+                if self.levels_count == 1:
+                    sys.exit(0)
+
                 #reset variables
                 self.data = {'game_type': [], 'player': [], 'map': [], 'level': [], 'self_start_loc': [], 'ns_start_locs': [],
                 'reward_loc': [], 'self_actions': [], 'self_locs': [], 'ns_locs': [], 'wall_interactions': [],
