@@ -56,7 +56,8 @@ def update_params(params, arguments):
     params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + \
                               "seed" + str(params['seed']) + "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) + \
                               "_ls" + str(params['learning_starts']) + '_s' + \
-                              str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + "/"
+                              str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) +\
+                              "load" + str(int(params['load'])) + "/"
 
     if params['player'] == 'random' or params['player'] == 'self_class':
         params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "iter" + str(params['seed']) + '/'
@@ -74,7 +75,8 @@ def update_params(params, arguments):
             params['data_save_dir'] = 'data/' + params['game_type'] + '_game_shuffled/' + params['player'] + '/' + \
                                   "seed" + str(params['seed']) + "_lr" + str(params['learning_rate']) + "_gamma" + str(params['gamma']) + \
                                   "_ls" + str(params['learning_starts']) + '_s' + \
-                                  str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + "/"
+                                  str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + \
+                                    "load" + str(int(params['load'])) + "/"
 
     return params
 
