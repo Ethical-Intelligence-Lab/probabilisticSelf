@@ -11,8 +11,9 @@ from utils.keys import key_converter
 
 from baselines_l.stable_baselines.common.vec_env import DummyVecEnv
 from baselines_l.stable_baselines.deepq.policies import MlpPolicy
-from baselines_l.stable_baselines import DQN, PPO2, TRPO, GAIL, HER, SAC, TD3, ACKTR, A2C
+from baselines_l.stable_baselines import DQN, PPO2, TRPO, GAIL, HER, SAC, TD3, ACKTR, A2C, ACER
 from baselines_l.stable_baselines.common.callbacks import BaseCallback
+from stable_baselines.common.cmd_util import make_vec_env
 
 from utils.neptune_creds import *
 from params.default_params import default_params, update_params, get_cmd_line_args
@@ -47,78 +48,179 @@ if __name__ == '__main__':
     steps = []
     loaded = False
     step_counter = 0
-    n_timesteps = 10000000000000000 #25000
+
+    if P['player'] != 'human' and P['player'] != 'self_class':
+        env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
+
 
     game_name_pf = "_game_shuffled/" if P['shuffle_keys'] else "_game/"
-    path = 'saved_models/' + P['game_type'] + game_name_pf + P['player'] + '/' + \
+    orig_path = 'saved_models/' + P['game_type'] + game_name_pf + P['player'] + '/' + \
            "seed" + str(P['seed']) + "_lr" + str(P['learning_rate']) + "_gamma" + str(P['gamma']) + \
            "_ls" + str(P['learning_starts']) + '_s' + \
-           str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "/"
+           str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "_"
 
-    if P['player'] != 'random' and P['player'] != 'human' and P['player'] != 'self_class':
-        if not os.path.exists(path):
-            os.makedirs(path)
-
+    n_timesteps = 50000  # Save every 50k steps
+    iteration_count = 1
     while True:
+        path = orig_path + str(int((n_timesteps/1000) * iteration_count)) + "k/weights"
+
+        if P['player'] != 'random' and P['player'] != 'human' and P['player'] != 'self_class':
+            if not os.path.exists(path):
+                os.makedirs(path)
+
         if P['player'] == 'dqn_training' and not P['load']:
-            print("Seed: ", env._seed)
+            print("Seed: ", P['seed'])
             model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], prioritized_replay=P['prioritized_replay'],
-                        target_network_update_freq = P['target_network_update_freq'], seed=env._seed, ) # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
+                        target_network_update_freq = P['target_network_update_freq'], seed=P['seed'], ) # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'ppo2_training' and not P['load']:
-            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=env._seed, ) #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
+            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=P['seed'], ) #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'trpo_training' and not P['load']:
-            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=env._seed, ) #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
+            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'], ) #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'gail_training' and not P['load']:
             model = GAIL("MlpPolicy", env)
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'her_training' and not P['load']:
-            model = HER("MlpPolicy", env, DQN)
+            model = HER("MlpPolicy", env, model_class=DQN)
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'sac_training' and not P['load']:
-            model = SAC("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            model = SAC("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'td3_training' and not P['load']:
-            model = TD3("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            model = TD3("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'acktr_training' and not P['load']:
-            model = ACKTR("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed)
+            model = ACKTR("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'a2c_training' and not P['load']:
-            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=env._seed) #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
+            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed']) #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
-        elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
-            path = path + ".zip"
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'acer_training' and not P['load']:
+            model = ACER("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
 
+        # LOAD
+        elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
             if not loaded:
                 model = DQN.load(path, env, verbose=P['verbose'])
                 loaded = True
 
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'a2c_training' and P['load']:  # Play with loaded DQN agent
-            #path = path + ".zip"
-
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
             if not loaded:
                 print("LOADING ", path)
-                model = DQN.load(path, env, verbose=P['verbose'])
+                model = A2C.load(path, env, verbose=P['verbose'])
                 loaded = True
 
-            print("SAVING")
             model.learn(total_timesteps=n_timesteps)
-            model.save(path)
-        # TODO: Add loading for other agents
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'trpo_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = TRPO.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'ppo2_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = PPO2.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'acktr_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = ACKTR.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'acer_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = ACER.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'sac_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = SAC.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'her_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = HER.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'gail_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = GAIL.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
+        elif P['player'] == 'td3_training' and P['load']:  # Play with loaded DQN agent
+            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            if not loaded:
+                print("LOADING ", path)
+                model = TD3.load(path, env, verbose=P['verbose'])
+                loaded = True
+
+            model.learn(total_timesteps=n_timesteps)
+            if P['save']:
+                model.save(path)
         elif P['player'] == 'random':
             obs, reward, done, info = env.step(env.action_space.sample()) 
             env._render()
@@ -142,5 +244,8 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(action) 
             if done:
                 env.reset()
+
         step_counter += 1
+        iteration_count += 1
+        path = orig_path
 

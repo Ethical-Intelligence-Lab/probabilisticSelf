@@ -532,7 +532,7 @@ class GridworldEnv(gym.Env):
                 json.dump(final_data, fp)
                 print('*******CONGRATS, YOU FINISHED ' + str(self.levels_count) + '!************')
                 self.levels_count += 1
-                if self.levels_count == 1:
+                if self.levels_count == 20:
                     sys.exit(0)
 
                 #reset variables
@@ -702,13 +702,18 @@ class GridworldEnv(gym.Env):
         actionDict = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
         plt.clf()
-
         plt.imshow(img)
+
+        """
+        
         if self.step_counter != 0:
             plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
 
         if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
             plt.suptitle("CHANGE")
+        
+        """
+
 
         fig.canvas.draw()
         plt.pause(0.00001)

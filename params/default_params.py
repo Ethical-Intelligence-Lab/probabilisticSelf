@@ -45,7 +45,9 @@ default_params = {
           # data params !add 'data_save_dir'
           'log_neptune': False,
           'data_save_dir': None,
-          'load': False # Load pretrained agent
+          'load': False,  # Load pretrained agent
+          'timestamp': 100,
+          'save': True,
         }      
 
 def update_params(params, arguments):
