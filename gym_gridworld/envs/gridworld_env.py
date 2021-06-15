@@ -484,9 +484,12 @@ class GridworldEnv(gym.Env):
         #    print('step count too high. terminating...')
         #    sys.exit()
 
-        if self.level_counter > 0:
-            self.data['game_type'].append(self.game_type)
-            self.data['player'].append(self.player)
+        if self.level_counter >= 0 and self.step_counter != 0:
+
+            if self.level_counter == 0:
+                self.data['game_type'].append(self.game_type)
+                self.data['player'].append(self.player)
+
             self.data['map'].append(self.start_grid_map.tolist())
             self.data['level'].append(self.level_counter)
             self.data['self_start_loc'].append(np.transpose(self.self_start_state).tolist())  #
@@ -499,6 +502,12 @@ class GridworldEnv(gym.Env):
             self.data['ns_interactions'].append(self.ns_interactions)
             self.data['steps'].append(self.step_counter)
 
+            print('level: ', self.level_counter)
+            print('steps array: ', self.data['steps'])
+            print('total steps: ', self.total_steps_counter)
+
+            self.level_counter += 1
+
         if self.log_neptune:
             #self.exp_neptune.log_metric('steps', self.step_counter)
             self.exp_neptune.log_text(self.data)
@@ -510,14 +519,10 @@ class GridworldEnv(gym.Env):
         self.wall_interactions = 0
         self.ns_interactions = 0
 
-        self.level_counter += 1
         self.step_counter = 0
-        print('level: ', self.level_counter)
-        print('steps array: ', self.data['steps'])
-        print('total steps: ', self.total_steps_counter)
 
         ''' save data when all levels are completed '''
-        if  self.level_counter == self.n_levels + 1:
+        if self.level_counter == self.n_levels:
             final_data = {}
             final_data['data'] = self.data
             final_data['metadata'] = self.metadata
