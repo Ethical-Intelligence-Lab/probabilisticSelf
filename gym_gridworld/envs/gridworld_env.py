@@ -535,9 +535,9 @@ class GridworldEnv(gym.Env):
 
             with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json", 'w')  as fp:
                 json.dump(final_data, fp)
-                print('*******CONGRATS, YOU FINISHED ' + str(self.levels_count) + '!************')
+                print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' !************')
                 self.levels_count += 1
-                if self.levels_count == 20:
+                if self.levels_count == self.metadata['levels_count']:
                     sys.exit(0)
 
                 #reset variables

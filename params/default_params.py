@@ -48,6 +48,7 @@ default_params = {
           'load': False,  # Load pretrained agent
           'timestamp': 100,
           'save': True,
+          'levels_count': 20,
         }      
 
 def update_params(params, arguments):
