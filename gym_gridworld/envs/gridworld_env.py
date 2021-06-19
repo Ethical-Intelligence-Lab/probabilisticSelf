@@ -30,6 +30,7 @@ class GridworldEnv(gym.Env):
     def __init__(self):
         print('initializing environment')
         self._seed = 0
+        self.model = None
         self.levels_count = 0  # count of each 100 levels
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
@@ -538,6 +539,22 @@ class GridworldEnv(gym.Env):
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' !************')
                 self.levels_count += 1
                 if self.levels_count == self.metadata['levels_count']:
+
+                    game_name_pf = "_game_shuffled/" if self.metadata['shuffle_keys'] else "_game/"
+                    path = 'saved_models/' + self.metadata['game_type'] + game_name_pf + self.metadata['player'] + '/' + \
+                           "seed" + str(self.metadata['seed']) + "/lr" + str(
+                        self.metadata['learning_rate']) + "_gamma" + str(
+                        self.metadata['gamma']) + \
+                           "_ls" + str(self.metadata['learning_starts']) + '_s' + \
+                           str(int(self.metadata['shuffle_keys'])) + "_prio" + str(
+                        int(self.metadata['prioritized_replay'])) + "_lastSave/weights"
+
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+
+                    self.model.save(path)
+
+
                     sys.exit(0)
 
                 #reset variables
@@ -881,3 +898,6 @@ class GridworldEnv(gym.Env):
         else:
             info['success'] = True
             return (self.observation, 0, False, info)
+
+    def set_model(self, model):
+        self.model = model
