@@ -11,7 +11,7 @@ class CustomCallback(BaseCallback):
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
 
-    def __init__(self, params, verbose=0, n=10000):
+    def __init__(self, params, verbose=0, n=50000):
         super(CustomCallback, self).__init__(verbose)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
