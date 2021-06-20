@@ -1,11 +1,13 @@
 from self_model import Self_class
 import gym_l.gym as gym
+import gym_gridworld
 from utils.keys import key_converter
 from baselines_l.stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
 from stable_baselines.common.cmd_util import make_vec_env
 from utils.neptune_creds import *
 from params.default_params import default_params, update_params, get_cmd_line_args
 import neptune
+
 import custom_callback
 
 if __name__ == '__main__':
