@@ -1,27 +1,11 @@
-import os
-from pdb import set_trace
-import sys
-import argparse
-
-import numpy as np
-
 from self_model import Self_class
-
 import gym_l.gym as gym
-import gym_gridworld
-import pickle
 from utils.keys import key_converter
-
-from baselines_l.stable_baselines.common.vec_env import DummyVecEnv
-from baselines_l.stable_baselines.deepq.policies import MlpPolicy
 from baselines_l.stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from baselines_l.stable_baselines.common.callbacks import BaseCallback
 from stable_baselines.common.cmd_util import make_vec_env
-
 from utils.neptune_creds import *
 from params.default_params import default_params, update_params, get_cmd_line_args
 import neptune
-
 import custom_callback
 
 if __name__ == '__main__':
@@ -54,10 +38,6 @@ if __name__ == '__main__':
     loaded = False
     step_counter = 0
 
-    #if P['player'] != 'human' and P['player'] != 'self_class' and P['player'] != 'random':
-    #    env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-
-
     game_name_pf = "_game_shuffled/" if P['shuffle_keys'] else "_game/"
     orig_path = 'saved_models/' + P['game_type'] + game_name_pf + P['player'] + '/' + \
            "seed" + str(P['seed']) + "/lr" + str(P['learning_rate']) + "_gamma" + str(P['gamma']) + \
@@ -65,14 +45,12 @@ if __name__ == '__main__':
            str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "_"
 
     n_timesteps = 100000000000000000000000000000000
-    iteration_count = 1
-    while True:
-        path = orig_path + str(int((50000/1000) * iteration_count)) + "k/weights"
 
+    while True:
         if P['player'] == 'dqn_training' and not P['load']:
             print("Seed: ", P['seed'])
             model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], prioritized_replay=P['prioritized_replay'],
-                        target_network_update_freq = P['target_network_update_freq'], seed=P['seed'], ) # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
+                        target_network_update_freq=P['target_network_update_freq'], seed=P['seed'])  # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -80,7 +58,7 @@ if __name__ == '__main__':
                 model.learn(total_timesteps=n_timesteps)
 
         elif P['player'] == 'ppo2_training' and not P['load']:
-            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=P['seed'], ) #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
+            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=P['seed'], )  #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -88,7 +66,7 @@ if __name__ == '__main__':
                 model.learn(total_timesteps=n_timesteps)
 
         elif P['player'] == 'trpo_training' and not P['load']:
-            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'], ) #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
+            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'], )  #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -120,9 +98,7 @@ if __name__ == '__main__':
                 model.learn(total_timesteps=n_timesteps)
 
         elif P['player'] == 'a2c_training' and not P['load']:
-
-            #env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed']) #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
+            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])  #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -262,6 +238,4 @@ if __name__ == '__main__':
                 env.reset()
 
         step_counter += 1
-        iteration_count += 1
-        path = orig_path
 
