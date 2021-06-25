@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from self_model import Self_class
 import gym_l.gym as gym
 import gym_gridworld
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     step_counter = 0
 
     game_name_pf = "_game_shuffled/" if P['shuffle_keys'] else "_game/"
-    orig_path = 'saved_models/' + P['game_type'] + game_name_pf + P['player'] + '/' + \
+    load_path = 'saved_models/' + P['load_game'] + game_name_pf + P['player'] + '/' + \
            "seed" + str(P['seed']) + "/lr" + str(P['learning_rate']) + "_gamma" + str(P['gamma']) + \
            "_ls" + str(P['learning_starts']) + '_s' + \
            str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "_"
@@ -49,10 +51,11 @@ if __name__ == '__main__':
     n_timesteps = 100000000000000000000000000000000
 
     while True:
+        pprint(P)
         if P['player'] == 'dqn_training' and not P['load']:
             print("Seed: ", P['seed'])
             model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], prioritized_replay=P['prioritized_replay'],
-                        target_network_update_freq=P['target_network_update_freq'], seed=P['seed'])  # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
+                        target_network_update_freq=P['target_network_update_freq'], seed=env._seed, batch_size=P['batch_size'])  # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -83,7 +86,7 @@ if __name__ == '__main__':
             else:
                 model.learn(total_timesteps=n_timesteps)
 
-        elif P['player'] == 'her_training' and not P['load']:
+        elif P['player'] == 'her_training' and not P['load']:  #  TODO: How to convert our environment to goal environment? (AttributeError: 'Box' object has no attribute 'spaces')
             model = HER("MlpPolicy", env, model_class=DQN)
             env.set_model(model)
             if P['save']:
@@ -117,9 +120,9 @@ if __name__ == '__main__':
 
         # LOAD
         elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 model = DQN.load(path, env, verbose=P['verbose'])
                 loaded = True
@@ -129,9 +132,9 @@ if __name__ == '__main__':
                 model.save(path)
         elif P['player'] == 'a2c_training' and P['load']:  # Play with loaded DQN agent
             env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
 
             if not loaded:
                 model = A2C.load(path, env, verbose=P['verbose'])
@@ -141,9 +144,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'trpo_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = TRPO.load(path, env, verbose=P['verbose'])
@@ -153,9 +156,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'ppo2_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = PPO2.load(path, env, verbose=P['verbose'])
@@ -165,9 +168,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'acktr_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = ACKTR.load(path, env, verbose=P['verbose'])
@@ -177,9 +180,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'acer_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = ACER.load(path, env, verbose=P['verbose'])
@@ -189,9 +192,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'her_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = HER.load(path, env, verbose=P['verbose'])
@@ -201,9 +204,9 @@ if __name__ == '__main__':
             if P['save']:
                 model.save(path)
         elif P['player'] == 'gail_training' and P['load']:  # Play with loaded DQN agent
-            path = orig_path + str(P['timestamp']) + "k/weights.zip"
+            path = load_path + str(P['timestamp']) + "k/weights.zip"
             if P['timestamp'] == -1:
-                path = orig_path + "lastSave/weights.zip"
+                path = load_path + "lastSave/weights.zip"
             if not loaded:
                 print("LOADING ", path)
                 model = GAIL.load(path, env, verbose=P['verbose'])
