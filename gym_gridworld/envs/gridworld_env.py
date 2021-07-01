@@ -50,7 +50,7 @@ class GridworldEnv(gym.Env):
     def make_game(self, P):
         '''
         Initialize env properties, given game type, player, and no. agents
-        Normally the contents of this function would be in init, but we can't add arguments to openai's init method. 
+        Normally the contents of this function would be in init, but we can't add arguments to openai's init method.
         '''
 
         self.metadata = P
@@ -72,7 +72,7 @@ class GridworldEnv(gym.Env):
             print('making environment')
 
         ''' set game_type-specific env config '''
-        if self.game_type == 'logic':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended':
             self.agent_start_locs = [[1,1], [1,7], [7,1], [7,7]]
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')
         elif self.game_type == 'contingency' or self.game_type == 'change_agent':
@@ -150,7 +150,7 @@ class GridworldEnv(gym.Env):
     def step(self, action):
         if self.verbose:
             print('taking a step')
-        if self.game_type == 'logic':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended':
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type == 'contingency':
             new_obs, rew, done, info = self.step_contingency(action)
@@ -185,7 +185,7 @@ class GridworldEnv(gym.Env):
         # Get next observation, reward, win state, and info
         # if action == 0: # stay in place
         #     info['success'] = True
-        #     return (self.observation, 0, False, info) 
+        #     return (self.observation, 0, False, info)
         if nxt_s_state[0] < 0 or nxt_s_state[0] >= self.grid_map_shape[0]:
             info['success'] = False
             return (self.observation, 0, False, info)
@@ -287,7 +287,7 @@ class GridworldEnv(gym.Env):
         #     self.observation = self._gridmap_to_observation(self.current_grid_map)
         #     self._render()
         #     info['success'] = True
-        #     return (self.observation, 0, False, info) 
+        #     return (self.observation, 0, False, info)
         if nxt_s_state[0] < 0 or nxt_s_state[0] >= self.grid_map_shape[0]: #stay in place
             info['success'] = False
             return (self.observation, 0, False, info)
@@ -536,7 +536,8 @@ class GridworldEnv(gym.Env):
 
             with open(self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json", 'w')  as fp:
                 json.dump(final_data, fp)
-                print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' !************')
+                print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(self.total_steps_counter) + ' STEPS !************')
+
                 self.levels_count += 1
                 if self.levels_count == self.metadata['levels_count']:
 
@@ -569,7 +570,7 @@ class GridworldEnv(gym.Env):
                 #sys.exit(0)
 
         ''' get new self location '''
-        if self.game_type == 'logic':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended':
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')
         elif self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
@@ -682,7 +683,7 @@ class GridworldEnv(gym.Env):
 
     def _get_agent_start_target_state(self, start_grid_map):
         '''
-        Return agent (=4) starting location and current goal (=3) location. If 4 and 3 dont' exist, throw error. 
+        Return agent (=4) starting location and current goal (=3) location. If 4 and 3 dont' exist, throw error.
         '''
 
         start_state = None
@@ -716,7 +717,7 @@ class GridworldEnv(gym.Env):
                 observation[i*gs0:(i+1)*gs0, k*gs1:(k+1)*gs1] = np.array(COLORS[grid_map[i,k]])
         return observation
 
-    def _render(self, mode='human', close=False):
+    def _render(self):
         if self.verbose != 1:
             return
         img = self.observation
@@ -726,16 +727,11 @@ class GridworldEnv(gym.Env):
         plt.clf()
         plt.imshow(img)
 
-        """
-        
-        if self.step_counter != 0:
-            plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
+        #if self.step_counter != 0:
+        #    plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
 
-        if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
-            plt.suptitle("CHANGE")
-        
-        """
-
+        #if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
+        #    plt.suptitle("CHANGE")
 
         fig.canvas.draw()
         plt.pause(0.00001)
