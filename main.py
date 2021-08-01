@@ -100,7 +100,8 @@ if __name__ == '__main__':
                 model.learn(total_timesteps=n_timesteps)
 
         elif P['player'] == 'a2c_training' and not P['load']:
-            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])  #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
+            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'],
+                        seed=P['seed'], n_steps=P['n_steps'])  #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
@@ -108,7 +109,8 @@ if __name__ == '__main__':
                 model.learn(total_timesteps=n_timesteps)
 
         elif P['player'] == 'acer_training' and not P['load']:
-            model = ACER("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
+            model = ACER("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'],
+                         seed=P['seed'], n_steps=P['n_steps'])
             env.set_model(model)
             if P['save']:
                 model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
