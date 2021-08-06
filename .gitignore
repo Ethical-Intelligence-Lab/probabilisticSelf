@@ -2,6 +2,7 @@
 env/
 models/
 data/
+saved_models/
 
 #file extentions
 .zip
@@ -9,6 +10,7 @@ data/
 .jpg
 .svg
 .idea
+.zip
 
 #repos
 baselines_l
