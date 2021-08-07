@@ -47,6 +47,7 @@ if __name__ == '__main__':
            str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "_"
 
     n_timesteps = 50000 if P['player'] in ["dqn_training", "acer_training"] else 1000000000
+    n_timesteps = 10000 if P['player'] in ["dqn_training", "acer_training"] and P['game_type'] == 'logic' else n_timesteps
     while True:
         print("... STARTING ITERATION ...")
         if P['player'] == 'dqn_training' and not P['load']:
