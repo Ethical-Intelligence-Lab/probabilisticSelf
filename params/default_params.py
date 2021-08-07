@@ -67,7 +67,8 @@ def update_params(params, arguments):
         params['gamma']) + \
                               "_ls" + str(params['learning_starts']) + '_s' + \
                               str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + \
-                              "load" + str(int(params['load'])) + "_" + "n_steps" + str(params['n_steps']) + "/"
+                              "load" + str(int(params['load'])) + "_" + "n_steps" + str(params['n_steps']) +\
+                              "r_{}".format(str(params['agent_location_random'])) + "/"
 
     if params['player'] == 'random' or params['player'] == 'self_class':
         params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "iter" + str(
