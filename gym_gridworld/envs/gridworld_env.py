@@ -507,9 +507,9 @@ class GridworldEnv(gym.Env):
             self.data['ns_interactions'].append(self.ns_interactions)
             self.data['steps'].append(self.step_counter)
 
-            print('level: ', self.level_counter)
-            print('steps array: ', self.data['steps'])
-            print('total steps: ', self.total_steps_counter)
+            #print('level: ', self.level_counter)
+            #print('steps array: ', self.data['steps'])
+            #print('total steps: ', self.total_steps_counter)
 
             self.level_counter += 1
 
