@@ -66,6 +66,7 @@ class GridworldEnv(gym.Env):
         self.single_loc = P['single_loc']
         self.n_levels = P['n_levels']
         self.shuffle_keys = P['shuffle_keys']
+        self.agent_location_random = P['agent_location_random']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
 
         if self.verbose:
@@ -125,7 +126,10 @@ class GridworldEnv(gym.Env):
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
 
         ''' reset agent location '''
-        new_s_loc = self.agent_start_locs[random.randint(0,3)]
+        if self.agent_location_random:
+            new_s_loc = self.agent_start_locs[random.randint(0,3)]
+        else:
+            new_s_loc = self.agent_start_locs[0]
         self.start_grid_map[new_s_loc[0], new_s_loc[1]] = 4
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)  # current grid map
@@ -646,7 +650,11 @@ class GridworldEnv(gym.Env):
 
         ''' reset grid state and agent location '''
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
-        new_s_loc = self.agent_start_locs[random.randint(0,3)]
+        if self.agent_location_random:
+            new_s_loc = self.agent_start_locs[random.randint(0,3)]
+        else:
+            new_s_loc = self.agent_start_locs[0]
+
         if self.single_loc == True:
             self.start_grid_map[self.agent_start_locs[0]] = 4
         else:

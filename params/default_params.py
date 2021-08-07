@@ -50,6 +50,7 @@ default_params = {
     'levels_count': 20,  # Stop until 100 * 'levels_count' levels
     'load_game': None,  # Which weights to load
     'n_steps': 10,
+    'agent_location_random': True,  # Is agent location random or not
 }
 
 
