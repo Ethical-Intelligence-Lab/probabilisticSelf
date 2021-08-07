@@ -574,7 +574,7 @@ class GridworldEnv(gym.Env):
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan' + str(random.randint(0,9)) + '.txt')
         elif self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
-            if self.shuffle_keys:
+            if self.shuffle_keys and self.level_counter % 50 == 0:
                 random.shuffle(self.action_pos_dict) #distort key mappings for self sprite
 
 
@@ -727,14 +727,14 @@ class GridworldEnv(gym.Env):
         plt.clf()
         plt.imshow(img)
 
-        #if self.step_counter != 0:
-        #    plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
+        if self.step_counter != 0:
+            plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
 
-        #if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
-        #    plt.suptitle("CHANGE")
+        if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
+            plt.suptitle("CHANGE")
 
         fig.canvas.draw()
-        plt.pause(0.00001)
+        plt.pause(0.000001)
         return
 
     def change_start_state(self, sp):
