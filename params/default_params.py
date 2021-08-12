@@ -49,7 +49,8 @@ class DefaultParams:
         if self.params['load_game'] is None:
             self.params['load_game'] = self.params['game_type']
 
-        game_str = "_game_shuffled/" if self.params['shuffle_keys'] else "_game/"
+        game_str = "_game_shuffled" if self.params['shuffle_keys'] else "_game"
+        game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"
         if self.params['player'] not in ['human', 'random', 'self_class']:
             algo_params_str = ""
             for key, val in self.algo_only.items():
@@ -57,18 +58,16 @@ class DefaultParams:
                     val = 1 if val else 0
 
                 if self.param_abbreviations[key] != '':
-                    algo_params_str += self.param_abbreviations[key] + "=" + str(val) + "_"
+                    algo_params_str += self.param_abbreviations[key] + "=" + str(val) + "-"
 
             load_str = "1" if self.params['load'] else "0"
-            agent_rand = "1" if self.params['agent_location_random'] else "0"
             self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
-                                           "seed" + str(self.params['seed']) + "_" + algo_params_str + \
-                                           "load=" + load_str + "_" + "n_ts=" + str(self.params['n_timesteps']) + \
-                                           "_r=" + agent_rand + "/"
+                                           "seed" + str(self.params['seed']) + "-" + algo_params_str + \
+                                           "load=" + load_str + "-" + "n_ts=" + str(self.params['n_timesteps']) + "/"
 
             # Set save path
             self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
-                   "seed" + str(self.params['seed']) + "_" + algo_params_str
+                   "seed" + str(self.params['seed']) + "-" + algo_params_str
 
 
         elif self.params['player'] != 'human':  # Random or self class
