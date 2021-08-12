@@ -93,7 +93,11 @@ class GridworldEnv(gym.Env):
         self.start_grid_map = self._read_grid_map(self.grid_map_path)  # initial grid map
 
         ''' reset agent location '''
-        new_s_loc = self.agent_start_locs[random.randint(0, 3)]
+
+        if not self.agent_location_random:
+            new_s_loc = self.agent_start_locs[0]
+        else:
+            new_s_loc = self.agent_start_locs[random.randint(0, 3)]
         self.start_grid_map[new_s_loc[0], new_s_loc[1]] = 4
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)  # current grid map
@@ -549,7 +553,12 @@ class GridworldEnv(gym.Env):
 
         ''' reset grid state and agent location '''
         self.start_grid_map = self._read_grid_map(self.grid_map_path)  # initial grid map
-        new_s_loc = self.agent_start_locs[random.randint(0, 3)]
+        if not self.agent_location_random:
+            new_s_loc = self.agent_start_locs[0]
+        else:
+            new_s_loc = self.agent_start_locs[random.randint(0, 3)]
+
+
         if self.single_loc == True:
             self.start_grid_map[self.agent_start_locs[0]] = 4
         else:
