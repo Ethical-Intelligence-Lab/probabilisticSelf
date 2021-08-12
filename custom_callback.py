@@ -57,13 +57,7 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
 
-        game_name_pf = "_game_shuffled/" if self.params['shuffle_keys'] else "_game/"
-
-        path = 'saved_models/' + self.params['game_type'] + game_name_pf + self.params['player'] + '/' + \
-                    "seed" + str(self.params['seed']) + "/lr" + str(self.params['learning_rate']) + "_gamma" + str(self.params['gamma']) + \
-                    "_ls" + str(self.params['learning_starts']) + '_s' + \
-                    str(int(self.params['shuffle_keys'])) + "_prio" + str(int(self.params['prioritized_replay'])) + "_" +\
-                    str(int((self.num_timesteps/1000))) + "k/weights"
+        path = self.params['save_path'] + str(int((self.num_timesteps/1000))) + "k/weights"
 
         if self.num_timesteps % self.n == 0:
             if not os.path.exists(path):

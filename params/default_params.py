@@ -1,100 +1,88 @@
 import random
 import string
-from pdb import set_trace
 import argparse
-
-# defaults are in comments
-default_params = {
-    # mod params
-    'gamma': 0.9,  # 0.99
-    'learning_rate': 0.00025,  # 0.0005
-    'buffer_size': 50000,  # 50000
-    'exploration_fraction': 0.1,  # 0.1
-    'exploration_final_eps': 0.02,  # 0.02
-    'exploration_initial_eps': 1.0,  # 1.0
-    'train_freq': 1,  # 1
-    'batch_size': 32,  # 32
-    'double_q': True,  # True
-    'learning_starts': 1000,  # 1000
-    'target_network_update_freq': 500,  # 500
-    'prioritized_replay': True,  # False
-    'prioritized_replay_alpha': 0.6,  # 0.6
-    'prioritized_replay_beta0': 0.4,  # 0.4
-    'prioritized_replay_beta_iters': None,  # None
-    'prioritized_replay_eps': 1e-06,  # 1e-06
-    'param_noise': False,  # False
-    'n_cpu_tf_sess': None,  # None
-    'tensorboard_log': None,  # None
-    '_init_setup_model': True,  # True
-    'policy_kwargs': None,  # None
-    'full_tensorboard_log': False,  # False
-    'seed': 0,
-
-    # env params
-    'env_id': 'gridworld-v0',
-    'singleAgent': False,
-    'game_type': 'logic',  # logic or contingency or change_agent
-    'player': 'random',  # random, human, dqn_training, self_class, ppo2_training
-    'exp_name': 'train_',
-    'verbose': False,
-    'single_loc': False,
-    'n_levels': 100,
-    'shuffle_keys': False,
-
-    # data params !add 'data_save_dir'
-    'log_neptune': False,
-    'data_save_dir': None,
-    'load': False,  # Load pretrained agent
-    'timestamp': 100,  # Select which weight to run. Enter -1 for the latest.
-    'save': True,  # Save the weights
-    'levels_count': 20,  # Stop until 100 * 'levels_count' levels
-    'load_game': None,  # Which weights to load
-    'n_steps': 10,
-    'agent_location_random': True,  # Is agent location random or not
-}
+import inspect
+from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
+from params.param_dicts import param_abbreviations, params
 
 
-def update_params(params, arguments):
-    for arg in arguments.keys():
-        if arguments[arg] is not None:
-            params[arg] = arguments[arg]
+class DefaultParams:
+    def __init__(self, player):
+        self.player = player
+        self.param_abbreviations = param_abbreviations
+        self.params = params
+        self.params['player'] = player
+        self.params['save_path'] = ''
 
-    if params['load_game'] is None:
-        params['load_game'] = params['game_type']
-
-    params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + \
-                              "seed" + str(params['seed']) + "_lr" + str(params['learning_rate']) + "_gamma" + str(
-        params['gamma']) + \
-                              "_ls" + str(params['learning_starts']) + '_s' + \
-                              str(int(params['shuffle_keys'])) + "_prio" + str(int(params['prioritized_replay'])) + \
-                              "load" + str(int(params['load'])) + "_" + "n_steps" + str(params['n_steps']) +\
-                              "r_{}".format(str(params['agent_location_random'])) + "/"
-
-    if params['player'] == 'random' or params['player'] == 'self_class':
-        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "iter" + str(
-            params['seed']) + '/'
-
-    if params['player'] == 'human':
-        letters = string.digits
-        rand_id = ''.join(random.choice(letters) for i in range(10))
-        params['data_save_dir'] = 'data/' + params['game_type'] + '_game/' + params['player'] + '/' + "player" + str(
-            rand_id) + '/'
-
-    if params['shuffle_keys']:
-        if params['player'] == 'random' or params['player'] == 'self_class':
-            params['data_save_dir'] = 'data/' + params['game_type'] + '_game_shuffled/' + params[
-                'player'] + '/' + "iter" + str(
-                params['seed']) + '/'
+        if player not in ['human', 'self_class', 'random']:
+            # Get arguments of particular algorithm
+            param_names = inspect.getfullargspec(globals()[player])[0][1:]
+            param_defaults = inspect.getfullargspec(globals()[player])[3]
+            param_names = [name for name in param_names if name not in ['env', 'model_class', 'policy']]
         else:
-            params['data_save_dir'] = 'data/' + params['game_type'] + '_game_shuffled/' + params['player'] + '/' + \
-                                      "seed" + str(params['seed']) + "_lr" + str(
-                params['learning_rate']) + "_gamma" + str(params['gamma']) + \
-                                      "_ls" + str(params['learning_starts']) + '_s' + \
-                                      str(int(params['shuffle_keys'])) + "_prio" + str(
-                int(params['prioritized_replay'])) + \
-                                      "load" + str(int(params['load'])) + "/"
+            param_names = []
+            param_defaults = []
 
-    return params
+        self.algo_only = {}
+
+        for i, name in enumerate(param_names):
+            self.params[name] = param_defaults[i]
+            self.algo_only[name] = param_defaults[i]
+
+    def get_algorithm_params(self):
+        return self.algo_only
+
+    def get_policy(self):
+        return self.params['policy']
+
+    def update_params(self, arguments):
+        for arg in arguments.keys():
+            if arguments[arg] is not None and arg in params:
+                self.params[arg] = arguments[arg]
+
+            if arguments[arg] is not None and arg in self.algo_only:
+                self.algo_only[arg] = arguments[arg]
+
+        #self.algo_only['policy'] = arguments['policy'] if arguments['policy'] is not None else self.params['policy']
+        self.algo_only['seed'] = arguments['seed'] if arguments['seed'] is not None else self.params['seed']
+
+        if self.params['load_game'] is None:
+            self.params['load_game'] = self.params['game_type']
+
+        game_str = "_game_shuffled/" if self.params['shuffle_keys'] else "_game/"
+        if self.params['player'] not in ['human', 'random', 'self_class']:
+            algo_params_str = ""
+            for key, val in self.algo_only.items():
+                if isinstance(val, bool):
+                    val = 1 if val else 0
+
+                if self.param_abbreviations[key] != '':
+                    algo_params_str += self.param_abbreviations[key] + "=" + str(val) + "_"
+
+            load_str = "1" if self.params['load'] else "0"
+            agent_rand = "1" if self.params['agent_location_random'] else "0"
+            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
+                                           "seed" + str(self.params['seed']) + "_" + algo_params_str + \
+                                           "load=" + load_str + "_" + "n_ts=" + str(self.params['n_timesteps']) + \
+                                           "_r=" + agent_rand + "/"
+
+            # Set save path
+            self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
+                   "seed" + str(self.params['seed']) + "_" + algo_params_str
+
+
+        elif self.params['player'] != 'human':  # Random or self class
+            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + \
+                                           self.params['player'] + '/' + "iter" + str(self.params['seed']) + '/'
+        else:  # Human
+            letters = string.digits
+            rand_id = ''.join(random.choice(letters) for i in range(10))
+            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params[
+                'player'] + '/' + "player" + str(
+                rand_id) + '/'
+
+        return self.params
+
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -107,16 +95,38 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def get_cmd_line_args(params):
+def get_cmd_line_args():
     parser = argparse.ArgumentParser()
-    for param_name in params.keys():
-        if params[param_name] == None:
+
+    all_possible_params = {"seed": 0,
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['DQN'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['DQN'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['PPO2'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['PPO2'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['TRPO'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['GAIL'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['GAIL'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['HER'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['HER'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['ACKTR'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['A2C'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['A2C'])[3]))),
+                          **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if v not in ['env', 'policy']],
+                                   inspect.getfullargspec(globals()['ACER'])[3]))),
+                           **params}
+
+    all_possible_params['seed'] = 0
+
+    for param_name in all_possible_params:
+        if all_possible_params[param_name] == None:
             input_type = str
         else:
-            if type(params[param_name]) == bool:
+            if type(all_possible_params[param_name]) == bool:
                 input_type = str2bool
             else:
-                input_type = type(params[param_name])
+                input_type = type(all_possible_params[param_name])
         parser.add_argument("-" + param_name, "--" + param_name, type=input_type, required=False)
 
     cmd_line_params = vars(parser.parse_args())
