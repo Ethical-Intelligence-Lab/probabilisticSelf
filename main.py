@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from self_model import Self_class
 import gym_l.gym as gym
 import gym_gridworld
@@ -7,217 +5,188 @@ from utils.keys import key_converter
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
 from stable_baselines.common.cmd_util import make_vec_env
 from utils.neptune_creds import *
-from params.default_params import default_params, update_params, get_cmd_line_args
+from params.default_params import DefaultParams, get_cmd_line_args
 import neptune
 
 import custom_callback
 
 if __name__ == '__main__':
 
-    # Get cmd line arguments, and integrate with default paramss
-    cmd_line_args = get_cmd_line_args(default_params) #process any inputted arguments
-    P = update_params(default_params, cmd_line_args) #update default params with (optional) input arguments
+    # Get cmd line arguments, and integrate with default params
+    args = get_cmd_line_args()
+    player = args['player'].split('_')[0].upper() if args['player'] not in ['human', 'self_class', 'random'] else args['player']
+    def_params = DefaultParams(player)
+    def_params.update_params(args)
+    P = def_params.params
 
     # Initilize env and Self Class
+    if P['agent_location_random'] is False and P['game_type'] != "contingency":
+        print("Not implemented yet")
+        exit(0)
     env_id = P['env_id']
-    env = gym.make(P['env_id']) #'CartPole-v1' #'FetchSlide-v1'
+    env = gym.make(P['env_id'])
     env.make_game(P)
 
-    self_class = Self_class() #adapt to take different games as inputs
+    self_class = Self_class()
 
     # Data logging to neptune AI
-    if P['log_neptune']:
-        neptune.init(project_qualified_name='juliandefreitas/proba-self123',
-                    api_token=NEPTUNE_API_TOKEN,
-                    )
-        exp_neptune = neptune.create_experiment(name=args.experiment,
-                                                upload_source_files=['main.py','gridworld_env.py','default_params.py'],
-                                                params=P)
-        env.log_neptune = True
-        env.exp_neptune = exp_neptune
+    #if P['log_neptune']:
+    #    neptune.init(project_qualified_name='juliandefreitas/proba-self123',
+    #                 api_token=NEPTUNE_API_TOKEN,
+    #                 )
+    #    exp_neptune = neptune.create_experiment(name=args.experiment,
+    #                                            upload_source_files=['main.py', 'gridworld_env.py',
+    #                                                                 'default_params.py'],
+    #                                            params=P)
+    #    env.log_neptune = True
+    #    env.exp_neptune = exp_neptune
 
     # Main loop
     obs = env.reset()
     steps = []
 
-    game_name_pf = "_game_shuffled/" if P['shuffle_keys'] else "_game/"
-    load_path = 'saved_models/' + P['load_game'] + game_name_pf + P['player'] + '/' + \
-           "seed" + str(P['seed']) + "/lr" + str(P['learning_rate']) + "_gamma" + str(P['gamma']) + \
-           "_ls" + str(P['learning_starts']) + '_s' + \
-           str(int(P['shuffle_keys'])) + "_prio" + str(int(P['prioritized_replay'])) + "_"
 
-    n_timesteps = 50000 if P['player'] in ["dqn_training", "acer_training"] else 1000000000
-    n_timesteps = 10000 if P['player'] in ["dqn_training", "acer_training"] and P['game_type'] == 'logic' else n_timesteps
+    if P['timestamp'] == -1:
+        load_path = P['save_path'] + "lastSave/weights.zip"
+    else:
+        load_path = P['save_path'] + str(P['timestamp']) + "k/weights.zip"
+
+    algo_params = def_params.get_algorithm_params()
     while True:
-        print("... STARTING ITERATION ...")
+        #print("... STARTING ITERATION ...")
         if P['player'] == 'dqn_training' and not P['load']:
-            print("Seed: ", P['seed'])
-            model = DQN("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], prioritized_replay=P['prioritized_replay'],
-                        target_network_update_freq=P['target_network_update_freq'], seed=P['seed'], batch_size=P['batch_size'])  # tensorboard_log="./tensorboard_results/dqn_tensorboard/")  # tensorboard_log="./tensorboard_results/dqn_tensorboard/"
+            model = DQN(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'ppo2_training' and not P['load']:
-            model = PPO2("MlpPolicy", env, verbose=P['verbose'], learning_rate=P['learning_rate'], gamma=P['gamma'], seed=P['seed'])  #tensorboard_log="./tensorboard_results/ppo2_tensorboard/"
+            model = PPO2(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'trpo_training' and not P['load']:
-            model = TRPO("MlpPolicy", env, verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'], )  #tensorboard_log="./tensorboard_results/trpo_tensorboard/"
+            model = TRPO(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'gail_training' and not P['load']:
-            model = GAIL("MlpPolicy", env)
+            model = GAIL(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
-        elif P['player'] == 'her_training' and not P['load']:  #  TODO: How to convert our environment to goal environment? (AttributeError: 'Box' object has no attribute 'spaces')
-            model = HER("MlpPolicy", env, model_class=DQN)
+        elif P['player'] == 'her_training' and not P[
+            'load']:  # TODO: How to convert our environment to goal environment? (AttributeError: 'Box' object has no attribute 'spaces')
+            model = HER(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'acktr_training' and not P['load']:
-            model = ACKTR("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'], seed=P['seed'])
+            model = ACKTR(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'a2c_training' and not P['load']:
-            model = A2C("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'],
-                        seed=P['seed'], n_steps=P['n_steps'])  #tensorboard_log="./tensorboard_results/a2c_tensorboard/"
+            model = A2C(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'acer_training' and not P['load']:
-            model = ACER("MlpPolicy", env, learning_rate=P['learning_rate'], verbose=P['verbose'], gamma=P['gamma'],
-                         seed=P['seed'], n_steps=P['n_steps'])
+            model = ACER(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         # LOAD
         elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = DQN.load(path, env, verbose=P['verbose'])
+            model = DQN.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'a2c_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
             env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            model = A2C.load(path, env, verbose=P['verbose'])
+            model = A2C.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
 
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'trpo_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = TRPO.load(path, env, verbose=P['verbose'])
+            model = TRPO.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'ppo2_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = PPO2.load(path, env, verbose=P['verbose'])
+            model = PPO2.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'acktr_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = ACKTR.load(path, env, verbose=P['verbose'])
+            model = ACKTR.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'acer_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
             env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            model = ACER.load(path, env, verbose=P['verbose'])
+            model = ACER.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
 
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'her_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = HER.load(path, env, verbose=P['verbose'])
+            model = HER.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'gail_training' and P['load']:  # Play with loaded DQN agent
-            path = load_path + str(P['timestamp']) + "k/weights.zip"
-            if P['timestamp'] == -1:
-                path = load_path + "lastSave/weights.zip"
-
-            model = GAIL.load(path, env, verbose=P['verbose'])
+            model = GAIL.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=n_timesteps, callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
             else:
-                model.learn(total_timesteps=n_timesteps)
+                model.learn(total_timesteps=P['n_timesteps'])
 
         elif P['player'] == 'random':
             obs, reward, done, info = env.step(env.action_space.sample())
@@ -242,5 +211,3 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(action)
             if done:
                 env.reset()
-
-
