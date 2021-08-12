@@ -516,7 +516,8 @@ class GridworldEnv(gym.Env):
                     if not os.path.exists(path):
                         os.makedirs(path)
 
-                    self.model.save(path)
+                    if self.model is not None:
+                        self.model.save(path)
                     sys.exit(0)
 
                 # reset variables
