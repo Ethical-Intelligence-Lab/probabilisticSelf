@@ -10,7 +10,7 @@ param_abbreviations = {
     'param_noise': 'prn', 'policy': 'plc', 'tensorboard_log': '', '_init_setup_model': '', 'policy_kwargs': '',
     'full_tensorboard_log': '', 'n_cpu_tf_sess': '', 'kwargs': '', 'target_network_update_freq': 'netuf',
     # PPO2
-    'n_steps': 'n_steps', 'ent_coef': 'ent', 'vf_coef': 'vf', 'max_grad_norm': 'maxgn',
+    'n_steps': 'n_s', 'ent_coef': 'ent', 'vf_coef': 'vf', 'max_grad_norm': 'mxgn',
     'lam': 'lam', 'nminibatches': 'nmb', 'noptepochs': 'nepoc', 'cliprange': 'cr', 'cliprange_vf': 'cr_vf',
     # TRPO
     'timesteps_per_batch': 'tspb', 'max_kl': 'maxkl', 'cg_iters': 'cgite',
@@ -22,10 +22,10 @@ param_abbreviations = {
     'model_class': 'model_class', 'n_sampled_goal': 'nsg',
     'goal_selection_strategy': 'gss', 'args': '',
     # ACKTR
-    'nprocs': 'nprocs', 'vf_fisher_coef': 'vffc', 'kfac_clip': 'kfacc', 'lr_schedule': 'lr_sched',
+    'nprocs': 'nprocs', 'vf_fisher_coef': 'vffc', 'kfac_clip': 'kfacc', 'lr_schedule': 'lrsc',
     'async_eigen_decomp': 'eigen_dec', 'kfac_update': 'kfac_upd', 'gae_lambda': 'gae_lmd',
     # A2C
-    'alpha': 'alpha', 'momentum': 'momentum', 'epsilon': 'epsilon',
+    'alpha': 'alpha', 'momentum': 'mmt', 'epsilon': 'epsilon',
     # ACER
     'q_coef': 'q', 'rprop_alpha': 'rprop_a', 'rprop_epsilon': 'rprop_e', 'replay_ratio': 'rep_ratio',
     'replay_start': 'rep_start', 'correction_term': 'corr_term', 'trust_region': 'treg',
@@ -54,6 +54,6 @@ params = {
     'levels_count': 20,  # Stop until 100 * 'levels_count' levels
     'load_game': None,  # Which weights to load
     'agent_location_random': True,  # Is agent location random or not
-    'n_timesteps': 10000,
+    'n_timesteps': 1000000000,
     'single_loc': False,
 }

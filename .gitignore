@@ -3,6 +3,7 @@ env/
 models/
 data/
 saved_models/
+.neptune
 
 #file extentions
 .zip
@@ -16,3 +17,4 @@ saved_models/
 baselines_l
 gym_l
 __pycache__
+
