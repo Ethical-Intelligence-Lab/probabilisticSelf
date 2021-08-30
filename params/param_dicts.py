@@ -1,14 +1,14 @@
 param_abbreviations = {
     'seed': '', 'verbose': '',
     # DQN
-    'gamma': 'g', 'learning_rate': 'lr', 'buffer_size': 's_buf', 'learning_starts': 'lr_strt',
-    'exploration_fraction': 'exp_fr', 'exploration_final_eps': 'exp_f_eps',
-    'exploration_initial_eps': 'ieps', 'train_freq': 'trfrq', 'batch_size': 'batch_size',
+    'gamma': 'g', 'learning_rate': 'lr', 'buffer_size': 's_buf', 'learning_starts': 'lrst',
+    'exploration_fraction': 'exf', 'exploration_final_eps': 'exp_f_eps',
+    'exploration_initial_eps': 'ieps', 'train_freq': 'trfrq', 'batch_size': 'b_s',
     'double_q': 'dq', 'prioritized_replay_alpha': 'pra', 'prioritized_replay_beta0': 'prb',
     'n_timesteps': 'n_ts', 'prioritized_replay_beta_iters': 'prbi',
     'prioritized_replay_eps': 'preps', 'prioritized_replay': 'pr',
-    'param_noise': 'prn', 'policy': 'plcy', 'tensorboard_log': '', '_init_setup_model': '', 'policy_kwargs': '',
-    'full_tensorboard_log': '', 'n_cpu_tf_sess': '', 'kwargs': '', 'target_network_update_freq': 'tnet_uf',
+    'param_noise': 'prn', 'policy': 'plc', 'tensorboard_log': '', '_init_setup_model': '', 'policy_kwargs': '',
+    'full_tensorboard_log': '', 'n_cpu_tf_sess': '', 'kwargs': '', 'target_network_update_freq': 'netuf',
     # PPO2
     'n_steps': 'n_steps', 'ent_coef': 'ent', 'vf_coef': 'vf', 'max_grad_norm': 'maxgn',
     'lam': 'lam', 'nminibatches': 'nmb', 'noptepochs': 'nepoc', 'cliprange': 'cr', 'cliprange_vf': 'cr_vf',
