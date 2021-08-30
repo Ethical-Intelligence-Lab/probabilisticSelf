@@ -63,7 +63,7 @@ class DefaultParams:
             load_str = "1" if self.params['load'] else "0"
             self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
                                            "seed" + str(self.params['seed']) + "-" + algo_params_str + \
-                                           "load=" + load_str + "-" + "n_ts=" + str(self.params['n_timesteps']) + "/"
+                                           "load=" + load_str + "-" + "n_ts=" + str("{:.2e}".format(self.params['n_timesteps'])) + "/"
 
             # Set save path
             self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
