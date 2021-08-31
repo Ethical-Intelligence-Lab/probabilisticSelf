@@ -135,9 +135,11 @@ if __name__ == '__main__':
             model = ACER(def_params.get_policy(), env, **algo_params)
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -146,9 +148,10 @@ if __name__ == '__main__':
             model = DQN.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -158,9 +161,10 @@ if __name__ == '__main__':
             env.set_model(model)
 
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -168,9 +172,10 @@ if __name__ == '__main__':
             model = TRPO.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -178,9 +183,10 @@ if __name__ == '__main__':
             model = PPO2.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -188,9 +194,10 @@ if __name__ == '__main__':
             model = ACKTR.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -200,9 +207,10 @@ if __name__ == '__main__':
             env.set_model(model)
 
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -210,9 +218,10 @@ if __name__ == '__main__':
             model = HER.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
 
@@ -220,9 +229,10 @@ if __name__ == '__main__':
             model = GAIL.load(load_path, env, verbose=P['verbose'])
             env.set_model(model)
             if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'])
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            run.stop()
             print("Training Finished. Exiting...")
             sys.exit()
         elif P['player'] == 'random':

@@ -547,7 +547,7 @@ class ACER(ActorCriticRLModel):
 
         return self.names_ops, step_return[1:]  # strip off _train
 
-    def learn(self, total_timesteps, callback=None, log_interval=100, tb_log_name="ACER",
+    def learn(self, total_timesteps, run, callback=None, log_interval=100, tb_log_name="ACER",
               reset_num_timesteps=True):
 
         new_tb_log = self._init_num_timesteps(reset_num_timesteps)
@@ -604,6 +604,13 @@ class ACER(ActorCriticRLModel):
 
                 names_ops, values_ops = self._train_step(obs, actions, rewards, dones, mus, self.initial_state, masks,
                                                          self.num_timesteps, writer)
+
+                if run and (int(steps / self.n_batch) % log_interval == 0):
+                    run["train/total_timesteps"].log(self.num_timesteps)
+                    run["train/mean_episode_length"].log(episode_stats.mean_length())
+                    run["train/mean_episode_reward"].log(episode_stats.mean_reward())
+                    for name, val in zip(names_ops, values_ops):
+                        run["train/{}".format(name)].log(float(val))
 
                 if self.verbose >= 1 and (int(steps / self.n_batch) % log_interval == 0):
                     logger.record_tabular("total_timesteps", self.num_timesteps)
