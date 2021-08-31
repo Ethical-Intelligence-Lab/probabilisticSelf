@@ -245,7 +245,7 @@ class A2C(ActorCriticRLModel):
         super().set_env(env)
         self.n_batch = self.n_envs * self.n_steps
 
-    def learn(self, total_timesteps, callback=None, log_interval=100, tb_log_name="A2C",
+    def learn(self, total_timesteps, run, callback=None, log_interval=100, tb_log_name="A2C",
               reset_num_timesteps=True):
 
         new_tb_log = self._init_num_timesteps(reset_num_timesteps)
@@ -285,6 +285,17 @@ class A2C(ActorCriticRLModel):
                                                 true_reward.reshape((self.n_envs, self.n_steps)),
                                                 masks.reshape((self.n_envs, self.n_steps)),
                                                 writer, self.num_timesteps)
+
+                if run and (update % log_interval == 0 or update == 1):
+                    explained_var = explained_variance(values, rewards)
+                    run["train/nupdates"].log(update)
+                    run["train/total_timesteps"].log(self.num_timesteps)
+                    run["train/policy_entropy"].log(float(policy_entropy))
+                    run["train/value_loss"].log(float(value_loss))
+                    run["train/explained_variance"].log(float(explained_var))
+                    if len(self.ep_info_buf) > 0 and len(self.ep_info_buf[0]) > 0:
+                        run["train/ep_reward_mean"].log(safe_mean([ep_info['r'] for ep_info in self.ep_info_buf]))
+                        run["train/ep_len_mean"].log(safe_mean([ep_info['l'] for ep_info in self.ep_info_buf]))
 
                 if self.verbose >= 1 and (update % log_interval == 0 or update == 1):
                     explained_var = explained_variance(values, rewards)

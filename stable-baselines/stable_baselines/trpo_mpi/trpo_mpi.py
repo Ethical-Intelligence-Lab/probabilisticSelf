@@ -352,6 +352,10 @@ class TRPO(ActorCriticRLModel):
                                                         seg["dones"].reshape((self.n_envs, -1)),
                                                         writer, self.num_timesteps)
 
+                        if run:
+                            run["train/num_timesteps"].log(self.num_timesteps)
+                            run["train/episode_reward"].log(self.episode_reward)
+
                         args = seg["observations"], seg["observations"], seg["actions"], atarg
                         # Subsampling: see p40-42 of John Schulman thesis
                         # http://joschu.net/docs/thesis.pdf
@@ -485,8 +489,13 @@ class TRPO(ActorCriticRLModel):
                     if len(len_buffer) > 0:
                         logger.record_tabular("EpLenMean", np.mean(len_buffer))
                         logger.record_tabular("EpRewMean", np.mean(reward_buffer))
+                        if run:
+                            run["train/episode_len_mean"].log(np.mean(len_buffer))
+                            run["train/episode_rew_mean"].log(np.mean(reward_buffer))
                     if self.using_gail:
                         logger.record_tabular("EpTrueRewMean", np.mean(true_reward_buffer))
+                        if run:
+                            run["train/episode_true_rew_mean"].log(np.mean(true_reward_buffer))
                     logger.record_tabular("EpThisIter", len(lens))
                     episodes_so_far += len(lens)
                     current_it_timesteps = MPI.COMM_WORLD.allreduce(seg["total_timestep"])
@@ -497,6 +506,11 @@ class TRPO(ActorCriticRLModel):
                     logger.record_tabular("EpisodesSoFar", episodes_so_far)
                     logger.record_tabular("TimestepsSoFar", self.num_timesteps)
                     logger.record_tabular("TimeElapsed", time.time() - t_start)
+
+                    if run:
+                        run["train/EpisodesSoFar"].log(episodes_so_far)
+                        run["train/TimestepsSoFar"].log(self.num_timesteps)
+                        run["train/TimeElapsed"].log(time.time() - t_start)
 
                     if self.verbose >= 1 and self.rank == 0:
                         logger.dump_tabular()
