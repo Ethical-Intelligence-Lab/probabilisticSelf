@@ -25,6 +25,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         python -m venv env [make sure this is created using python 3.6]
         source env/bin/activate
         pip install -r requirements.txt
+        pip install -e ./stable-baselines
         ```
 
 (3) Clone other relevant repos and rename them to avoid conflicts with official packages
