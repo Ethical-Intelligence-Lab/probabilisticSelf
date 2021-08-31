@@ -481,10 +481,6 @@ class GridworldEnv(gym.Env):
 
             self.level_counter += 1
 
-        if self.log_neptune:
-            # self.exp_neptune.log_metric('steps', self.step_counter)
-            self.exp_neptune.log_text(self.data)
-
         ''' print some metrics '''
         self.level_self_actions = []  # clear actions for this level
         self.level_s_locs = []
