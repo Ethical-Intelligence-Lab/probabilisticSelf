@@ -43,7 +43,7 @@ class DefaultParams:
             if arguments[arg] is not None and arg in self.algo_only:
                 self.algo_only[arg] = arguments[arg]
 
-        #self.algo_only['policy'] = arguments['policy'] if arguments['policy'] is not None else self.params['policy']
+        # self.algo_only['policy'] = arguments['policy'] if arguments['policy'] is not None else self.params['policy']
         self.algo_only['seed'] = arguments['seed'] if arguments['seed'] is not None else self.params['seed']
 
         if self.params['load_game'] is None:
@@ -57,17 +57,19 @@ class DefaultParams:
                 if isinstance(val, bool):
                     val = 1 if val else 0
 
-                if self.param_abbreviations[key] != '':
+                if key in self.param_abbreviations.keys() and self.param_abbreviations[key] != '':
                     algo_params_str += self.param_abbreviations[key] + "=" + str(val) + "-"
 
             load_str = "1" if self.params['load'] else "0"
             self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
                                            "seed" + str(self.params['seed']) + "-" + algo_params_str + \
-                                           "load=" + load_str + "-" + "n_ts=" + str("{:.2e}".format(self.params['n_timesteps'])) + "/"
+                                           "load=" + load_str + "-" + "n_ts=" + str(
+                "{:.2e}".format(self.params['n_timesteps'])) + "/"
 
             # Set save path
-            self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
-                   "seed" + str(self.params['seed']) + "-" + algo_params_str
+            self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params[
+                'player'] + '/' + \
+                                       "seed" + str(self.params['seed']) + "-" + algo_params_str
 
 
         elif self.params['player'] != 'human':  # Random or self class
@@ -98,22 +100,30 @@ def get_cmd_line_args():
     parser = argparse.ArgumentParser()
 
     all_possible_params = {"seed": 0,
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['DQN'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['DQN'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['PPO2'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['PPO2'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['TRPO'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['GAIL'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['GAIL'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['HER'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['HER'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['ACKTR'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['A2C'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['A2C'])[3]))),
-                          **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if v not in ['env', 'policy']],
-                                   inspect.getfullargspec(globals()['ACER'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['DQN'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['DQN'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['PPO2'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['PPO2'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['TRPO'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['GAIL'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['GAIL'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['HER'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['HER'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['ACKTR'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['A2C'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['A2C'])[3]))),
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if
+                                        v not in ['env', 'policy']],
+                                       inspect.getfullargspec(globals()['ACER'])[3]))),
                            **params}
 
     all_possible_params['seed'] = 0
