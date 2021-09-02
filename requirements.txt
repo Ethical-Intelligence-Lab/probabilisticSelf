@@ -32,13 +32,11 @@ matplotlib~=3.3.4
 monotonic==1.5
 mpi4py==3.0.3
 msgpack==1.0.2
-neptune-client==0.4.129
-NEURON==7.6
+neptune-client==0.10.7
 numpy~=1.19.5
 numpy-indexed==0.3.5
 oauthlib==3.1.0
 olefile==0.46
-opencv-python~=4.0.0.21
 opt-einsum==3.3.0
 packaging==20.8
 pandas~=1.1.5
@@ -82,3 +80,4 @@ scikit-learn==0.24.0
 setuptools~=52.0.0
 pygame~=2.0.1
 imageio~=2.9.0
+python-dotenv~=0.19.0
