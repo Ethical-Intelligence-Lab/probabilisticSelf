@@ -354,7 +354,6 @@ class TRPO(ActorCriticRLModel):
 
                         if run:
                             run["train/num_timesteps"].log(self.num_timesteps)
-                            run["train/episode_reward"].log(self.episode_reward)
 
                         args = seg["observations"], seg["observations"], seg["actions"], atarg
                         # Subsampling: see p40-42 of John Schulman thesis

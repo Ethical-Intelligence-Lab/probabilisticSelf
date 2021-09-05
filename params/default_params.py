@@ -4,6 +4,7 @@ import argparse
 import inspect
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
 from params.param_dicts import param_abbreviations, params
+import os
 
 
 class DefaultParams:
@@ -60,16 +61,23 @@ class DefaultParams:
                 if key in self.param_abbreviations.keys() and self.param_abbreviations[key] != '':
                     algo_params_str += self.param_abbreviations[key] + "=" + str(val) + "-"
 
+            path_len = len(os.path.abspath(os.getcwd()))
+            if (len(algo_params_str) + path_len) > 150:
+                suitable_len = 170 - path_len
+                algo_params_str = algo_params_str[:suitable_len]
+
+            letters = string.ascii_uppercase
+            r_str = ''.join(random.choice(letters) for i in range(10))
             load_str = "1" if self.params['load'] else "0"
             self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
-                                           "seed" + str(self.params['seed']) + "-" + algo_params_str + \
+                                           "seed" + str(self.params['seed']) + "-" + r_str + '-' \
                                            "load=" + load_str + "-" + "n_ts=" + str(
                 "{:.2e}".format(self.params['n_timesteps'])) + "/"
 
             # Set save path
             self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params[
                 'player'] + '/' + \
-                                       "seed" + str(self.params['seed']) + "-" + algo_params_str
+                                       "seed" + str(self.params['seed']) + "-" + r_str
 
 
         elif self.params['player'] != 'human':  # Random or self class

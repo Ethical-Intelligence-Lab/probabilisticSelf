@@ -1,6 +1,6 @@
 import os
 import sys
-
+import importlib
 from self_model import Self_class
 import gym_l.gym as gym
 import gym_gridworld
@@ -11,15 +11,22 @@ from params.default_params import DefaultParams, get_cmd_line_args
 import neptune.new as neptune
 from dotenv import load_dotenv
 
-
 import custom_callback
 
 if __name__ == '__main__':
     load_dotenv()  # take environment variables from .env.
 
+    arg_string = "python main.py"
+    for i, arg in enumerate(sys.argv):
+        if i != 0:
+            arg_string = arg_string + " " + arg
+
+    print(arg_string)
+
     # Get cmd line arguments, and integrate with default params
     args = get_cmd_line_args()
-    player = args['player'].split('_')[0].upper() if args['player'] not in ['human', 'self_class', 'random'] else args['player']
+    player = args['player'].split('_')[0].upper() if args['player'] not in ['human', 'self_class', 'random'] else args[
+        'player']
     def_params = DefaultParams(player)
     def_params.update_params(args)
     P = def_params.params
@@ -41,11 +48,11 @@ if __name__ == '__main__':
         run = neptune.init(project='akaanug/Probabilistic-Self',
                            api_token=os.environ['NEPTUNE_API_TOKEN'])  # your credentials
         run["model/parameters"] = P
+        run["model/param_string"] = arg_string
 
     # Main loop
     obs = env.reset()
     steps = []
-
 
     if P['timestamp'] == -1:
         load_path = P['save_path'] + "lastSave/weights.zip"
@@ -54,207 +61,69 @@ if __name__ == '__main__':
 
     algo_params = def_params.get_algorithm_params()
     while True:
-        print("... STARTING ITERATION ...")
-        if P['player'] == 'dqn_training' and not P['load']:
-            model = DQN(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit(0)
+        if P['player'] in ['human', 'self_class', 'random']:
+            if P['player'] == 'random':
+                while True:
+                    obs, reward, done, info = env.step(env.action_space.sample())
+                    env._render()
+                    if done:
+                        print('done')
+                        env.reset()
+            elif P['player'] == 'human':
+                while True:
+                    while True:
+                        prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
+                        if prelim_action in ['w', 'a', 's', 'd']:
+                            action = key_converter(prelim_action)
+                            break
+                        else:
+                            print("Please enter a valid key (w, a, s, or d).")
+                            continue
+                    obs, reward, done, info = env.step(action)
+                    if done:
+                        env.reset()
+            elif P['player'] == 'self_class':
+                while True:
+                    action = self_class.predict(env)
+                    obs, reward, done, info = env.step(action)
+                    if done:
+                        env.reset()
+            exit(0)
 
-        elif P['player'] == 'ppo2_training' and not P['load']:
-            model = PPO2(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
 
-        elif P['player'] == 'trpo_training' and not P['load']:
-            model = TRPO(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
+        def class_for_name(module_name, class_name):
+            # load the module, will raise ImportError if module cannot be loaded
+            m = importlib.import_module(module_name)
+            # get the class, will raise AttributeError if class cannot be found
+            c = getattr(m, class_name)
+            return c
 
-        elif P['player'] == 'gail_training' and not P['load']:
-            model = GAIL(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
-            else:
-                model.learn(total_timesteps=P['n_timesteps'])
-            print("Training Finished. Exiting...")
-            sys.exit()
 
-        elif P['player'] == 'her_training' and not P[
-            'load']:  # TODO: How to convert our environment to goal environment? (AttributeError: 'Box' object has no attribute 'spaces')
-            model = HER(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
-            else:
-                model.learn(total_timesteps=P['n_timesteps'])
-            print("Training Finished. Exiting...")
-            sys.exit()
+        # Run RL algorithms with either SB2 or SB3
+        if P['baselines_version'] == 2:  # Stable Baselines 2
+            ALGO = class_for_name('stable_baselines', player)
+        elif P['baselines_version'] == 3:  # Stable Baselines 3
+            print("Not supported yet.")
+            exit(1)
+            ALGO = class_for_name('stable_baselines3', player)
+        else:
+            ALGO = None
+            print("Incorrect \"baselines_version\" parameter: Should be either 2 or 3.")
+            exit(1)
 
-        elif P['player'] == 'acktr_training' and not P['load']:
-            model = ACKTR(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
-            else:
-                model.learn(total_timesteps=P['n_timesteps'])
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'a2c_training' and not P['load']:
-            model = A2C(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'acer_training' and not P['load']:
-            model = ACER(def_params.get_policy(), env, **algo_params)
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        # LOAD
-        elif P['player'] == 'dqn_training' and P['load']:  # Play with loaded DQN agent
-            model = DQN.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'a2c_training' and P['load']:  # Play with loaded DQN agent
+        if player == 'A2C':
             env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            model = A2C.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
 
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
+        if not P['load']:  # Train From Zero
+            model = ALGO(def_params.get_policy(), env, **algo_params)
+        else:  # Continue Training on Saved Model
+            model = ALGO.load(load_path, env, verbose=P['verbose'])
 
-        elif P['player'] == 'trpo_training' and P['load']:  # Play with loaded DQN agent
-            model = TRPO.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'ppo2_training' and P['load']:  # Play with loaded DQN agent
-            model = PPO2.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'acktr_training' and P['load']:  # Play with loaded DQN agent
-            model = ACKTR.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'acer_training' and P['load']:  # Play with loaded DQN agent
-            env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
-            model = ACER.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'her_training' and P['load']:  # Play with loaded DQN agent
-            model = HER.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-
-        elif P['player'] == 'gail_training' and P['load']:  # Play with loaded DQN agent
-            model = GAIL.load(load_path, env, verbose=P['verbose'])
-            env.set_model(model)
-            if P['save']:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
-            else:
-                model.learn(total_timesteps=P['n_timesteps'], run=run)
-            run.stop()
-            print("Training Finished. Exiting...")
-            sys.exit()
-        elif P['player'] == 'random':
-            obs, reward, done, info = env.step(env.action_space.sample())
-            env._render()
-            if done:
-                print('done')
-                env.reset()
-        elif P['player'] == 'human':
-            while True:
-                prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
-                if prelim_action in ['w', 'a', 's', 'd']:
-                    action = key_converter(prelim_action)
-                    break
-                else:
-                    print("Please enter a valid key (w, a, s, or d).")
-                    continue
-            obs, reward, done, info = env.step(action)
-            if done:
-                env.reset()
-        elif P['player'] == 'self_class':
-            action = self_class.predict(env)
-            obs, reward, done, info = env.step(action)
-            if done:
-                env.reset()
+        env.set_model(model)
+        if P['save']:
+            model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
+        else:
+            model.learn(total_timesteps=P['n_timesteps'], run=run)
+        run.stop()
+        print("Training Finished. Exiting...")
+        sys.exit(0)
