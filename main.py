@@ -124,6 +124,7 @@ if __name__ == '__main__':
             model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
         else:
             model.learn(total_timesteps=P['n_timesteps'], run=run)
-        run.stop()
         print("Training Finished. Exiting...")
+        if run:
+            run.stop()
         sys.exit(0)

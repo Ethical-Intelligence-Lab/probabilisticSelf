@@ -77,7 +77,7 @@ class DefaultParams:
             # Set save path
             self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params[
                 'player'] + '/' + \
-                                       "seed" + str(self.params['seed']) + "-" + r_str
+                                       "seed" + str(self.params['seed']) + "-" + r_str + "-"
 
 
         elif self.params['player'] != 'human':  # Random or self class
