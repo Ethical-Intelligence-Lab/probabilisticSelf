@@ -316,12 +316,13 @@ class GridworldEnv(gym.Env):
         temp = self.s_state
         self.current_grid_map[temp[0], temp[1]] = 0
         self.s_state = list(self.ns_states[rand_num])
-        print("AGENT CHANGED. Current agent: ", self.s_state)
+        #print("AGENT CHANGED. Current agent: ", self.s_state)
         self.current_grid_map[self.s_state[0], self.s_state[1]] = 4
 
         self.ns_states[rand_num] = [int(temp[0]), int(temp[1])]
 
     def step_change_agent(self, action):
+        #print('moving', action)
         if self.step_counter != 0:
             self.change_agent()
         self.total_steps_counter += 1
@@ -344,7 +345,9 @@ class GridworldEnv(gym.Env):
 
         nxt_ns_states = copy.deepcopy(self.ns_states)
 
+        #print(self.ns_states)
         for i, agent in enumerate(self.ns_states):
+            #print("agent: ", agent, i)
             oscil_dir = self.oscil_dirs[i]
             action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
             next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
@@ -354,9 +357,17 @@ class GridworldEnv(gym.Env):
             cc = [0] * 4
             stay = False
             while next_color == 1 or next_color == 3 or next_color == 8:
+                #print("next_color: ", next_color)
+                #print(cc)
                 action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
 
-                if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
+                if oscil_dir and cc[0] != 0 and cc[1] != 0:  # Cannot move, stay
+                    #print("STAYING")
+                    nxt_ns_states[i] = self.ns_states[i]
+                    stay = True
+                    break
+                elif not oscil_dir and cc[2] != 0 and cc[3] != 0:
+                    #print("STAYING")
                     nxt_ns_states[i] = self.ns_states[i]
                     stay = True
                     break
@@ -475,9 +486,9 @@ class GridworldEnv(gym.Env):
             self.data['ns_interactions'].append(self.ns_interactions)
             self.data['steps'].append(self.step_counter)
 
-            print('level: ', self.level_counter)
-            print('steps array: ', self.data['steps'])
-            print('total steps: ', self.total_steps_counter)
+            #print('level: ', self.level_counter)
+            #print('steps array: ', self.data['steps'])
+            #print('total steps: ', self.total_steps_counter)
 
             self.level_counter += 1
 
