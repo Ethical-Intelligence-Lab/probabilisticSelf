@@ -1,19 +1,11 @@
 import gym_l.gym as gym
-import sys
 import os
-import time
 import copy
-from gym_l.gym import error, spaces, utils
-from gym_l.gym.utils import seeding
+from gym_l.gym import spaces
 import numpy as np
-from PIL import Image as Image
 import matplotlib.pyplot as plt
 import random
-from pdb import set_trace
-import pickle
-import itertools
 import sys
-import collections
 import json
 
 # define colors
@@ -57,8 +49,7 @@ class GridworldEnv(gym.Env):
 
         self.metadata = P
         self._seed = P['seed']
-
-        # self.metadata['env_seed'] = self._seed
+        random.seed(self._seed)
         self.game_type = P['game_type']
         self.player = P['player']
         self.exp_name = P['exp_name']
