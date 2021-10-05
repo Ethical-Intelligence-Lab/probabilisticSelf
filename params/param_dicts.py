@@ -56,6 +56,8 @@ params = {
     'agent_location_random': True,  # Is agent location random or not
     'n_timesteps': 1000000000,
     'single_loc': False,
+    'shuffle_keys_freq': False,
+    'different_self_color': False,
 
     'baselines_version': 2
 }
