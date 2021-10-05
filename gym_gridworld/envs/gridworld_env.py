@@ -11,7 +11,7 @@ import json
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
 COLORS = {0: [0.0, 0.0, 0.0], 1: [0.5, 0.5, 0.5], \
-          2: [1.0, 0.0, 0.0], 3: [0.0, 1.0, 0.0], \
+          2: [0.0, 0.0, 1.0], 3: [0.0, 1.0, 0.0], \
           4: [1.0, 0.0, 0.0], 6: [1.0, 0.0, 1.0], \
           7: [1.0, 1.0, 0.0], 8: [1.0, 0.0, 0.0],
           9: [1.0, 0.0, 0.0], 10: [1.0, 0.0, 0.0]}
@@ -59,11 +59,16 @@ class GridworldEnv(gym.Env):
         self.n_levels = P['n_levels']
         self.single_loc = P['single_loc']
         self.shuffle_keys = P['shuffle_keys']
+        self.shuffle_keys_freq = P['shuffle_keys_freq']
         self.agent_location_random = P['agent_location_random']
+        self.different_self_color = P['different_self_color']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
 
         if self.verbose:
             print('making environment')
+
+        if self.different_self_color:
+            COLORS[4] = [0.0, 0.0, 1.0]
 
         ''' set game_type-specific env config '''
         if self.game_type == 'logic' or self.game_type == 'logic_extended':
@@ -77,7 +82,7 @@ class GridworldEnv(gym.Env):
             # self.oscil_dirs = [1,0,0]
             self.oscil_dirs = [random.randint(0, 1), random.randint(0, 1),
                                random.randint(0, 1)]  # whether to oscil ud (0) or lr (1)
-            if self.shuffle_keys:
+            if self.shuffle_keys or self.shuffle_keys_freq:
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
 
         ''' initialize system state '''
@@ -542,6 +547,9 @@ class GridworldEnv(gym.Env):
         elif self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             if self.shuffle_keys and self.levels_count % 2 == 0: # Shuffle each 200 levels
+                random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
+
+            if self.shuffle_keys_freq:
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
 
         ''' if singleAgent is true, blank out all non-self agents '''
