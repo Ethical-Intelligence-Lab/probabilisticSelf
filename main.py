@@ -37,9 +37,10 @@ if __name__ == '__main__':
         exit(0)
     env_id = P['env_id']
     env = gym.make(P['env_id'])
+    env.seed(P['seed'])
     env.make_game(P)
 
-    self_class = Self_class()
+    self_class = Self_class(P['seed'])
 
     run = None
 

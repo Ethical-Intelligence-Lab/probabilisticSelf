@@ -59,7 +59,7 @@ class GridworldEnv(gym.Env):
         self.n_levels = P['n_levels']
         self.single_loc = P['single_loc']
         self.shuffle_keys = P['shuffle_keys']
-        self.shuffle_keys_freq = P['shuffle_keys_freq']
+        self.shuffle_each = P['shuffle_each']
         self.agent_location_random = P['agent_location_random']
         self.different_self_color = P['different_self_color']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -82,7 +82,7 @@ class GridworldEnv(gym.Env):
             # self.oscil_dirs = [1,0,0]
             self.oscil_dirs = [random.randint(0, 1), random.randint(0, 1),
                                random.randint(0, 1)]  # whether to oscil ud (0) or lr (1)
-            if self.shuffle_keys or self.shuffle_keys_freq:
+            if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
 
         ''' initialize system state '''
@@ -302,6 +302,7 @@ class GridworldEnv(gym.Env):
         else:
             info['success'] = True
             return (self.observation, 0, False, info)
+        print("CONTINGENCY FAIL")
 
     ''' change the self to another possible self every 7 steps '''
 
@@ -312,13 +313,13 @@ class GridworldEnv(gym.Env):
         temp = self.s_state
         self.current_grid_map[temp[0], temp[1]] = 0
         self.s_state = list(self.ns_states[rand_num])
-        #print("AGENT CHANGED. Current agent: ", self.s_state)
+        # print("AGENT CHANGED. Current agent: ", self.s_state)
         self.current_grid_map[self.s_state[0], self.s_state[1]] = 4
 
         self.ns_states[rand_num] = [int(temp[0]), int(temp[1])]
 
     def step_change_agent(self, action):
-        #print('moving', action)
+        # print('moving', action)
         if self.step_counter != 0:
             self.change_agent()
         self.total_steps_counter += 1
@@ -341,9 +342,9 @@ class GridworldEnv(gym.Env):
 
         nxt_ns_states = copy.deepcopy(self.ns_states)
 
-        #print(self.ns_states)
+        # print(self.ns_states)
         for i, agent in enumerate(self.ns_states):
-            #print("agent: ", agent, i)
+            # print("agent: ", agent, i)
             oscil_dir = self.oscil_dirs[i]
             action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
             next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
@@ -353,17 +354,17 @@ class GridworldEnv(gym.Env):
             cc = [0] * 4
             stay = False
             while next_color == 1 or next_color == 3 or next_color == 8:
-                #print("next_color: ", next_color)
-                #print(cc)
+                # print("next_color: ", next_color)
+                # print(cc)
                 action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
 
                 if oscil_dir and cc[0] != 0 and cc[1] != 0:  # Cannot move, stay
-                    #print("STAYING")
+                    # print("STAYING")
                     nxt_ns_states[i] = self.ns_states[i]
                     stay = True
                     break
                 elif not oscil_dir and cc[2] != 0 and cc[3] != 0:
-                    #print("STAYING")
+                    # print("STAYING")
                     nxt_ns_states[i] = self.ns_states[i]
                     stay = True
                     break
@@ -482,9 +483,9 @@ class GridworldEnv(gym.Env):
             self.data['ns_interactions'].append(self.ns_interactions)
             self.data['steps'].append(self.step_counter)
 
-            #print('level: ', self.level_counter)
-            #print('steps array: ', self.data['steps'])
-            #print('total steps: ', self.total_steps_counter)
+            # print('level: ', self.level_counter)
+            # print('steps array: ', self.data['steps'])
+            # print('total steps: ', self.total_steps_counter)
 
             self.level_counter += 1
 
@@ -546,12 +547,18 @@ class GridworldEnv(gym.Env):
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
         elif self.game_type == 'contingency' or self.game_type == 'change_agent':
             self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
-            if self.shuffle_keys and self.levels_count % 2 == 0: # Shuffle each 200 levels
+            if self.shuffle_keys and (self.shuffle_each <= 100) and (
+                    (self.level_counter % self.shuffle_each) == 0):  # Shuffle each n levels
+                #print(self.level_counter, self.levels_count)
+                #print("SHUFFLE =)(=)(=)(=)(=)(=)(=)(=)()=(=)(")
+                if self.verbose:
+                    print("Shuffling")
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
-
-            if self.shuffle_keys_freq:
+            elif self.shuffle_keys and (self.shuffle_each > 100) and (
+                    ((self.levels_count * self.n_levels + self.level_counter) % self.shuffle_each) == 0):
+                if self.verbose:
+                    print("Shuffling")
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
-
         ''' if singleAgent is true, blank out all non-self agents '''
         if self.singleAgent == True:
             for loc in self.agent_start_locs:
@@ -563,7 +570,6 @@ class GridworldEnv(gym.Env):
             new_s_loc = self.agent_start_locs[0]
         else:
             new_s_loc = self.agent_start_locs[random.randint(0, 3)]
-
 
         if self.single_loc == True:
             self.start_grid_map[self.agent_start_locs[0]] = 4
