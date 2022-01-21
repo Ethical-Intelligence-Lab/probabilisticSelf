@@ -58,6 +58,7 @@ params = {
     'single_loc': False,
     'shuffle_each': 1,  # Shuffle each n levels
     'different_self_color': False,
+    'load_str': '',
 
     'baselines_version': 2
 }

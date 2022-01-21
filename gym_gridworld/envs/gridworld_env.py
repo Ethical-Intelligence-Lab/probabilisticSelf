@@ -23,6 +23,7 @@ class GridworldEnv(gym.Env):
 
     def __init__(self):
         print('initializing environment')
+        self.num_envs = 1
         self._seed = 0
         self.model = None
         self.levels_count = 0  # count of each 100 levels

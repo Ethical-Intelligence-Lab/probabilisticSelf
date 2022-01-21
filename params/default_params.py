@@ -50,7 +50,9 @@ class DefaultParams:
         if self.params['load_game'] is None:
             self.params['load_game'] = self.params['game_type']
 
-        game_str = "_game_shuffled" if self.params['shuffle_keys'] else "_game"
+        game_str = "_game_shuffled_{}".format(self.params['shuffle_each']) if self.params['shuffle_keys'] else "_game_0"
+        if self.params['different_self_color']:
+            game_str = game_str + "_diff_color"
         game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"
         if self.params['player'] not in ['human', 'random', 'self_class']:
             algo_params_str = ""
@@ -75,9 +77,15 @@ class DefaultParams:
                 "{:.2e}".format(self.params['n_timesteps'])) + "/"
 
             # Set save path
+
             self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params[
                 'player'] + '/' + \
                                        "seed" + str(self.params['seed']) + "-" + r_str + "-"
+
+            if self.params['load_str'] != '' and self.params['load']:
+                self.params['save_path'] = 'saved_models/' + self.params['load_game'] + game_str + self.params[
+                    'player'] + '/' + \
+                                           "seed" + str(self.params['seed']) + "-" + self.params['load_str'] + "-"
 
 
         elif self.params['player'] != 'human':  # Random or self class
