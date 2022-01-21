@@ -57,7 +57,7 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
 
-        path = self.params['save_path'] + str(int((self.num_timesteps/1000))) + "k/weights"
+        path = self.params['save_path'] + str(int((self.num_timesteps / 1000))) + "k/weights"
 
         if self.num_timesteps % self.n == 0:
             if not os.path.exists(path):
@@ -66,15 +66,21 @@ class CustomCallback(BaseCallback):
 
         return True
 
-    def _on_rollout_end(self) -> None:
-        """
-        This event is triggered before updating the policy.
-        """
-        pass
+def _on_rollout_end(self) -> None:
+    """
+    This event is triggered before updating the policy.
+    """
+    pass
 
-    def _on_training_end(self) -> None:
-        """
-        This event is triggered before exiting the `learn()` method.
-        """
-        # Save for the last time before exiting
-        pass
+
+def _on_training_end(self) -> None:
+    """
+    This event is triggered before exiting the `learn()` method.
+    """
+    # Save for the last time before exiting
+    path = self.params['save_path'] + "lastSave/weights"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    self.model.save(path)

@@ -478,20 +478,32 @@ class Self_class():
         dist_vertical = target[0] - SELF[0]
         dist_horiz = target[1] - SELF[1]
 
-        if dist_vertical > 0:
-            key = 1  # down
-        elif dist_vertical < 0:
-            key = 0  # up
-        elif dist_horiz > 0:
-            key = 3  # right
-            if dist_horiz == 1:
-                self.last_grid = []
-        elif dist_horiz < 0:
-            key = 2  # left
-            if dist_horiz == -1:
-                self.last_grid = []
+        if self.prefer_vertical:
+            if dist_vertical > 0:
+                key = 1
+            elif dist_vertical < 0:
+                key = 0
+            elif dist_horiz > 0:
+                key = 3
+                if dist_horiz == 1:
+                    self.last_grid = []
+            elif dist_horiz < 0:
+                key = 2
+                if dist_horiz == -1:
+                    self.last_grid = []
         else:
-            print('something went wrong')
+            if dist_horiz > 0:
+                key = 3
+            elif dist_horiz < 0:
+                key = 2
+            elif dist_vertical > 0:
+                key = 1
+                if dist_vertical == 1:
+                    self.last_grid = []
+            elif dist_vertical < 0:
+                key = 0
+                if dist_vertical == -1:
+                    self.last_grid = []
 
         print('dist vertical: ', dist_vertical)
         print('dist horizontal: ', dist_horiz)

@@ -112,7 +112,9 @@ if __name__ == '__main__':
             print("Incorrect \"baselines_version\" parameter: Should be either 2 or 3.")
             exit(1)
 
-        if player == 'A2C':
+        original_env = None
+        if player in ['A2C', 'ACER', 'PPO2']:
+            original_env = env
             env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
 
         if not P['load']:  # Train From Zero
@@ -120,6 +122,8 @@ if __name__ == '__main__':
         else:  # Continue Training on Saved Model
             model = ALGO.load(load_path, env, verbose=P['verbose'])
 
+        if original_env:
+            original_env.set_model(model)
         env.set_model(model)
         if P['save']:
             model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
