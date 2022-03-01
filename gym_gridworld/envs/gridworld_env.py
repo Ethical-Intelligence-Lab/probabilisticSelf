@@ -346,8 +346,7 @@ class GridworldEnv(gym.Env):
         # print(self.ns_states)
         for i, agent in enumerate(self.ns_states):
             # print("agent: ", agent, i)
-            oscil_dir = self.oscil_dirs[i]
-            action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
+            action = random.randint(0, 3)
             next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
@@ -357,14 +356,9 @@ class GridworldEnv(gym.Env):
             while next_color == 1 or next_color == 3 or next_color == 8:
                 # print("next_color: ", next_color)
                 # print(cc)
-                action = random.randint(0, 1) if oscil_dir else random.randint(2, 3)
+                action = random.randint(0, 3)
 
-                if oscil_dir and cc[0] != 0 and cc[1] != 0:  # Cannot move, stay
-                    # print("STAYING")
-                    nxt_ns_states[i] = self.ns_states[i]
-                    stay = True
-                    break
-                elif not oscil_dir and cc[2] != 0 and cc[3] != 0:
+                if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
                     # print("STAYING")
                     nxt_ns_states[i] = self.ns_states[i]
                     stay = True
