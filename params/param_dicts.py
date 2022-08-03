@@ -49,7 +49,7 @@ params = {
     'log_neptune': False,
     'data_save_dir': None,
     'load': False,  # Load pretrained agent
-    'timestamp': 100,  # Select which weight to run. Enter -1 for the latest.
+    'timestamp': -1,  # Select which weight to run. Enter -1 to save only the last one.
     'save': True,  # Save the weights
     'levels_count': 20,  # Stop until 100 * 'levels_count' levels
     'load_game': None,  # Which weights to load
