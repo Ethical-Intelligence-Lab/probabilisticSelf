@@ -26,6 +26,7 @@ class GridworldEnv(gym.Env):
         self.num_envs = 1
         self._seed = 0
         self.model = None
+        self.mock_s = None  # Mock Self
         self.levels_count = 0  # count of each 100 levels
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
@@ -76,13 +77,22 @@ class GridworldEnv(gym.Env):
             self.agent_start_locs = [[1, 1], [1, 7], [7, 1], [7, 7]]
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type == 'contingency' or self.game_type == 'change_agent':
+        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
             self.agent_start_locs = [[6, 6], [6, 14], [14, 6], [14, 14]]
-            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
+
+            if 'extended' in self.game_type:
+                self.grid_map_path = os.path.join(self.this_file_path,
+                                                  self.game_type + '/plan{}.txt'.format(random.randint(0, 3)))
+            else:
+                self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             self.perim = 3
             # self.oscil_dirs = [1,0,0]
             self.oscil_dirs = [random.randint(0, 1), random.randint(0, 1),
-                               random.randint(0, 1)]  # whether to oscil ud (0) or lr (1)
+                               random.randint(0, 1)] # whether to oscil ud (0) or lr (1)
+
+            if 'extended' in self.game_type:
+                self.oscil_dirs.append(random.randint(0, 1))
+
             if self.shuffle_keys:
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
 
@@ -122,9 +132,9 @@ class GridworldEnv(gym.Env):
             print('taking a step')
         if self.game_type == 'logic' or self.game_type == 'logic_extended':
             new_obs, rew, done, info = self.step_logic(action)
-        elif self.game_type == 'contingency':
+        elif self.game_type in ['contingency', 'contingency_extended']:
             new_obs, rew, done, info = self.step_contingency(action)
-        elif self.game_type == 'change_agent':
+        elif self.game_type in ['change_agent', 'change_agent_extended']:
             new_obs, rew, done, info = self.step_change_agent(action)
 
         return new_obs, rew, done, info
@@ -202,6 +212,9 @@ class GridworldEnv(gym.Env):
         osc_directions = [-1, 1]
         new_ns_colors = [0, 0, 0]
 
+        if 'extended' in self.game_type:
+            new_ns_colors.append(0)
+
         ''' next self position and colors '''
         action = int(action)
         self.level_self_actions.append(action)
@@ -217,15 +230,25 @@ class GridworldEnv(gym.Env):
         ''' next non-self positions and colors '''
         nxt_ns_actions = [random.sample(osc_directions, 1)[0], random.sample(osc_directions, 1)[0],
                           random.sample(osc_directions, 1)[0]]
+
+        if 'extended' in self.game_type:
+            nxt_ns_actions.append(random.sample(osc_directions, 1)[0])
+
         nxt_ns_states = copy.deepcopy(self.ns_states)
         for i, agent in enumerate(self.ns_states):
 
+            ''' non-selves should not collide with each other '''
+
             if self.oscil_dirs[i] == 0:  # if agent oscillates up-down
                 nxt_ns_states[i][0] = self.ns_states[i][0] + nxt_ns_actions[i]
+
+                # if self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][
+                #    1]] == 8:  # If collides with another non-selve, move another way
+
                 if nxt_ns_states[i] == [self.ns_lim[i][0][0] - 1, self.ns_lim[i][0][1]]:  # if equal to upper limit
-                    nxt_ns_states[i][0] = nxt_ns_states[i][0] + 2
+                    nxt_ns_states[i][0] = nxt_ns_states[i][0] + 2  # Move down
                 if nxt_ns_states[i] == [self.ns_lim[i][1][0] + 1, self.ns_lim[i][1][1]]:  # if equal to lower limit
-                    nxt_ns_states[i][0] = nxt_ns_states[i][0] - 2
+                    nxt_ns_states[i][0] = nxt_ns_states[i][0] - 2  # Move up
                 new_ns_colors[i] = self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]]
 
             elif self.oscil_dirs[i] == 1:  # ditto, if agent oscillates left-right
@@ -239,8 +262,7 @@ class GridworldEnv(gym.Env):
             ''' update grid locations of non-self agents '''
             # since we determine next position for ns first, we need to also check if self is planning to enter a common square
             # also need to check that we're not entering the self's current state, in case the self decides not to move
-            num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
-            if (new_ns_colors[i] != 4) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
+            if (new_ns_colors[i] != 4) & (new_ns_colors[i] != 8) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
                 self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0
                 self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8
                 self.ns_states[i] = copy.deepcopy(
@@ -336,6 +358,7 @@ class GridworldEnv(gym.Env):
 
         ''' append level-specific data '''
         self.level_s_locs.append(self.s_state)
+        print(self.level_s_locs)
         self.level_ns_locs.append(self.ns_states)
 
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
@@ -444,7 +467,9 @@ class GridworldEnv(gym.Env):
             return (self.observation, 0, False, info)
 
     def get_ns_limits(self):
-        self.ns_lim = [[], [], []]
+        # Mock self has the same perimeter as other selves
+        self.ns_lim = [[], [], []] if self.mock_s is None else [[], [], [], []]
+
         for i, agent in enumerate(self.ns_states):
             self.ns_lim[i] = [[agent[0] - self.perim, agent[1]],
                               [agent[0] + self.perim, agent[1]],
@@ -540,12 +565,16 @@ class GridworldEnv(gym.Env):
         if self.game_type == 'logic' or self.game_type == 'logic_extended':
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type == 'contingency' or self.game_type == 'change_agent':
-            self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
+        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
+            if 'extended' in self.game_type:
+                self.grid_map_path = os.path.join(self.this_file_path,
+                                                  self.game_type + '/plan{}.txt'.format(random.randint(0, 3)))
+            else:
+                self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
             if self.shuffle_keys and (self.shuffle_each <= 100) and (
                     (self.level_counter % self.shuffle_each) == 0):  # Shuffle each n levels
-                #print(self.level_counter, self.levels_count)
-                #print("SHUFFLE =)(=)(=)(=)(=)(=)(=)(=)()=(=)(")
+                # print(self.level_counter, self.levels_count)
+                # print("SHUFFLE =)(=)(=)(=)(=)(=)(=)(=)()=(=)(")
                 if self.verbose:
                     print("Shuffling")
                 random.shuffle(self.action_pos_dict)  # distort key mappings for self sprite
@@ -577,12 +606,17 @@ class GridworldEnv(gym.Env):
         self.s_state = copy.deepcopy(self.self_start_state)
         self.ns_states = np.transpose(np.nonzero((self.start_grid_map == 8))).tolist()
 
+        self.mock_s = [x for x in self.ns_states if x[0] == 10 or x[1] == 10]
+        self.mock_s = None if len(self.mock_s) == 0 else self.mock_s
+
+        # Mock self stays as a possible self
+        # self.ns_states = np.asarray([x for x in self.ns_states if x[0] != 10 and x[1] != 10])  # Remove mock self
+
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
-        if self.game_type == 'contingency' or self.game_type == 'change_agent':
+        if self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
             self.get_ns_limits()  # get new oscillation limits for non-self agents
 
-        self.current_grid_map
         self._render()
 
         return self.observation
@@ -619,7 +653,9 @@ class GridworldEnv(gym.Env):
         ))
 
         self.agent_states = np.transpose(np.nonzero((start_grid_map == 8) | (start_grid_map == 4)))
+        self.agent_states = np.asarray([x for x in self.agent_states if x[0] != 10 and x[1] != 10])  # Remove mock self
         self.ns_states = np.transpose(np.nonzero((start_grid_map == 8))).tolist()
+        self.ns_states = np.asarray([x for x in self.ns_states if x[0] != 10 and x[1] != 10])  # Remove mock self
         self.available_states = np.transpose(np.nonzero(start_grid_map == 0))
 
         if start_state == [None, None] or target_state == [None, None]:
