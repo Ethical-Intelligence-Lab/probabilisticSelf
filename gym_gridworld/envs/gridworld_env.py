@@ -17,6 +17,24 @@ COLORS = {0: [0.0, 0.0, 0.0], 1: [0.5, 0.5, 0.5], \
           9: [1.0, 0.0, 0.0], 10: [1.0, 0.0, 0.0]}
 
 
+class MockSelf:
+    def __init__(self):
+        self.rushing_to_goal = True
+        self.location = []
+
+    def set_location(self, loc):
+        self.location = loc
+
+    def toggle_rush(self):
+        self.rushing_to_goal = not self.rushing_to_goal
+
+    def get_location(self):
+        return self.location
+
+    def is_rushing(self):
+        return self.rushing_to_goal
+
+
 class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0
@@ -26,7 +44,7 @@ class GridworldEnv(gym.Env):
         self.num_envs = 1
         self._seed = 0
         self.model = None
-        self.mock_s = None  # Mock Self
+        self.mock_s = MockSelf()  # Mock Self
         self.levels_count = 0  # count of each 100 levels
         self.actions = [0, 1, 2, 3]
         self.action_space = spaces.Discrete(4)
@@ -77,10 +95,26 @@ class GridworldEnv(gym.Env):
             self.agent_start_locs = [[1, 1], [1, 7], [7, 1], [7, 7]]
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
+        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
+                                'change_agent_extended_1', 'change_agent_extended_2']:
             self.agent_start_locs = [[6, 6], [6, 14], [14, 6], [14, 14]]
 
-            if 'extended' in self.game_type:
+            if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
+                rn = random.randint(0, 3)
+                self.grid_map_path = os.path.join(self.this_file_path,
+                                                  self.game_type + '/plan{}.txt'.format(rn))
+
+                # Set the location of the mock self, to keep track of it
+                if rn == 0:
+                    self.mock_s.set_location([10, 6])
+                elif rn == 1:
+                    self.mock_s.set_location([6, 10])
+                elif rn == 2:
+                    self.mock_s.set_location([10, 14])
+                elif rn == 3:
+                    self.mock_s.set_location([14, 10])
+
+            elif 'extended' in self.game_type:
                 self.grid_map_path = os.path.join(self.this_file_path,
                                                   self.game_type + '/plan{}.txt'.format(random.randint(0, 3)))
             else:
@@ -88,7 +122,7 @@ class GridworldEnv(gym.Env):
             self.perim = 3
             # self.oscil_dirs = [1,0,0]
             self.oscil_dirs = [random.randint(0, 1), random.randint(0, 1),
-                               random.randint(0, 1)] # whether to oscil ud (0) or lr (1)
+                               random.randint(0, 1)]  # whether to oscil ud (0) or lr (1)
 
             if 'extended' in self.game_type:
                 self.oscil_dirs.append(random.randint(0, 1))
@@ -134,7 +168,8 @@ class GridworldEnv(gym.Env):
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type in ['contingency', 'contingency_extended']:
             new_obs, rew, done, info = self.step_contingency(action)
-        elif self.game_type in ['change_agent', 'change_agent_extended']:
+        elif self.game_type in ['change_agent', 'change_agent_extended', 'change_agent_extended_2',
+                                'change_agent_extended_1']:
             new_obs, rew, done, info = self.step_change_agent(action)
 
         return new_obs, rew, done, info
@@ -262,7 +297,8 @@ class GridworldEnv(gym.Env):
             ''' update grid locations of non-self agents '''
             # since we determine next position for ns first, we need to also check if self is planning to enter a common square
             # also need to check that we're not entering the self's current state, in case the self decides not to move
-            if (new_ns_colors[i] != 4) & (new_ns_colors[i] != 8) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
+            if (new_ns_colors[i] != 4) & (new_ns_colors[i] != 8) & (nxt_ns_states[i] != nxt_s_state) & (
+                    nxt_ns_states[i] != self.s_state):
                 self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0
                 self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8
                 self.ns_states[i] = copy.deepcopy(
@@ -332,11 +368,22 @@ class GridworldEnv(gym.Env):
     def change_agent(self):
         if self.step_counter % 7 != 0:
             return
-        rand_num = random.randint(0, 2)
+
+        print("Switching embodiment!")
+
+        # Rush to goal after embodiment changes
+        self.mock_s.toggle_rush()
+
         temp = self.s_state
         self.current_grid_map[temp[0], temp[1]] = 0
+        rand_num = random.randint(0, 2)
+
+        # Mock self cannot be the self
+        if "extended_1" in self.game_type or "extended_2" in self.game_type:
+            while (self.ns_states[rand_num] == self.mock_s.get_location()):
+                rand_num = random.randint(0, 2)
+
         self.s_state = list(self.ns_states[rand_num])
-        # print("AGENT CHANGED. Current agent: ", self.s_state)
         self.current_grid_map[self.s_state[0], self.s_state[1]] = 4
 
         self.ns_states[rand_num] = [int(temp[0]), int(temp[1])]
@@ -349,8 +396,10 @@ class GridworldEnv(gym.Env):
         self.step_counter += 1
         info = {}
         info['success'] = False
-        osc_directions = [-1, 1]
         new_ns_colors = [0, 0, 0]
+
+        if 'extended' in self.game_type:
+            new_ns_colors.append(0)
 
         ''' next self position and colors '''
         action = int(action)
@@ -358,39 +407,88 @@ class GridworldEnv(gym.Env):
 
         ''' append level-specific data '''
         self.level_s_locs.append(self.s_state)
-        print(self.level_s_locs)
         self.level_ns_locs.append(self.ns_states)
 
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
 
         nxt_ns_states = copy.deepcopy(self.ns_states)
-
-        # print(self.ns_states)
         for i, agent in enumerate(self.ns_states):
-            # print("agent: ", agent, i)
-            action = random.randint(0, 3)
-            next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                               nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
-
-            # move non selves without colliding to anything
-            cc = [0] * 4
             stay = False
-            while next_color == 1 or next_color == 3 or next_color == 8:
-                # print("next_color: ", next_color)
-                # print(cc)
+            if nxt_ns_states[
+                i] != self.mock_s.get_location():  # Move towards the goal, if not already there and then move away
                 action = random.randint(0, 3)
+                next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                   nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
-                if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
-                    # print("STAYING")
-                    nxt_ns_states[i] = self.ns_states[i]
-                    stay = True
-                    break
+                # move non selves without colliding to anything
+                cc = [0] * 4
 
-                if cc[action] == 0:  # if current action is not tried before
-                    cc[action] = cc[action] + 1
+                while next_color == 1 or next_color == 3 or next_color == 8:
+                    action = random.randint(0, 3)
+
+                    if cc[0] != 0 and cc[1] != 0 and cc[2] != 0 and cc[3] != 0:  # Cannot move, stay
+                        nxt_ns_states[i] = self.ns_states[i]
+                        stay = True
+                        break
+
+                    if cc[action] == 0:  # if current action is not tried before
+                        cc[action] = cc[action] + 1
+                        next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                           nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+            else:
+                if not self.mock_s.is_rushing():
+                    action = random.randint(0, 1) if self.mock_s.get_location()[1] == 10 else random.randint(2, 3)
+
                     next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                        nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+                    if next_color != 0:  # Not possible to move, so stay
+                        stay = True
+
+                    if not stay:
+                        self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                  nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
+                else:  # Rush to the goal
+                    if self.mock_s.get_location()[0] == 10:
+                        if self.mock_s.get_location()[1] > 10:
+                            action = 2
+                        else:
+                            action = 3
+
+                    if self.mock_s.get_location()[1] == 10:
+                        if self.mock_s.get_location()[0] > 10:
+                            action = 0
+                        else:
+                            action = 1
+
+                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+                    if next_color == 3:  # Got to the goal, so make another self, the "mock self", i.e., moves towards the reward
+                        self.mock_s.toggle_rush()
+
+                        if self.mock_s.get_location()[0] == 10:
+                            if action == 2:
+                                action = 3
+                            else:
+                                action = 2
+
+                        if self.mock_s.get_location()[1] == 10:
+                            if action == 0:
+                                action = 1
+                            else:
+                                action = 0
+
+                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+                    if next_color != 0:  # Not possible to move, so stay
+                        stay = True
+
+                    if not stay:
+                        self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                  nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
 
             # Update ns positions
             if stay is False:
@@ -401,7 +499,6 @@ class GridworldEnv(gym.Env):
             ''' update grid locations of non-self agents '''
             # since we determine next position for ns first, we need to also check if self is planning to enter a common square
             # also need to check that we're not entering the self's current state, in case the self decides not to move
-            num_prev_agents = len(np.transpose(np.nonzero((self.current_grid_map == 8) | (self.current_grid_map == 4))))
             if (new_ns_colors[i] != 4) & (nxt_ns_states[i] != nxt_s_state) & (nxt_ns_states[i] != self.s_state):
                 self.current_grid_map[self.ns_states[i][0], self.ns_states[i][1]] = 0
                 self.current_grid_map[nxt_ns_states[i][0], nxt_ns_states[i][1]] = 8
@@ -565,12 +662,32 @@ class GridworldEnv(gym.Env):
         if self.game_type == 'logic' or self.game_type == 'logic_extended':
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
-            if 'extended' in self.game_type:
+        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
+                                'change_agent_extended_2', 'change_agent_extended_1']:
+
+            if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
+                rn = random.randint(0, 3)
+                self.grid_map_path = os.path.join(self.this_file_path,
+                                                  self.game_type + '/plan{}.txt'.format(rn))
+
+                # Set the location of the mock self, to keep track of it
+                if rn == 0:
+                    self.mock_s.set_location([10, 6])
+                elif rn == 1:
+                    self.mock_s.set_location([6, 10])
+                elif rn == 2:
+                    self.mock_s.set_location([10, 14])
+                elif rn == 3:
+                    self.mock_s.set_location([14, 10])
+
+                if not self.mock_s.is_rushing():
+                    self.mock_s.toggle_rush()
+            elif 'extended' in self.game_type:
                 self.grid_map_path = os.path.join(self.this_file_path,
                                                   self.game_type + '/plan{}.txt'.format(random.randint(0, 3)))
             else:
                 self.grid_map_path = os.path.join(self.this_file_path, self.game_type + '/plan0.txt')
+
             if self.shuffle_keys and (self.shuffle_each <= 100) and (
                     (self.level_counter % self.shuffle_each) == 0):  # Shuffle each n levels
                 # print(self.level_counter, self.levels_count)
@@ -606,15 +723,16 @@ class GridworldEnv(gym.Env):
         self.s_state = copy.deepcopy(self.self_start_state)
         self.ns_states = np.transpose(np.nonzero((self.start_grid_map == 8))).tolist()
 
-        self.mock_s = [x for x in self.ns_states if x[0] == 10 or x[1] == 10]
-        self.mock_s = None if len(self.mock_s) == 0 else self.mock_s
+        # self.mock_s = [x for x in self.ns_states if x[0] == 10 or x[1] == 10]
+        # self.mock_s = None if len(self.mock_s) == 0 else self.mock_s
 
         # Mock self stays as a possible self
         # self.ns_states = np.asarray([x for x in self.ns_states if x[0] != 10 and x[1] != 10])  # Remove mock self
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
-        if self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended']:
+        if self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
+                              'change_agent_extended_2', 'change_agent_extended_1']:
             self.get_ns_limits()  # get new oscillation limits for non-self agents
 
         self._render()
@@ -653,9 +771,9 @@ class GridworldEnv(gym.Env):
         ))
 
         self.agent_states = np.transpose(np.nonzero((start_grid_map == 8) | (start_grid_map == 4)))
-        self.agent_states = np.asarray([x for x in self.agent_states if x[0] != 10 and x[1] != 10])  # Remove mock self
+        self.agent_states = [x for x in self.agent_states if x[0] != 10 and x[1] != 10]  # Remove mock self
         self.ns_states = np.transpose(np.nonzero((start_grid_map == 8))).tolist()
-        self.ns_states = np.asarray([x for x in self.ns_states if x[0] != 10 and x[1] != 10])  # Remove mock self
+        self.ns_states = [x for x in self.ns_states if x[0] != 10 and x[1] != 10]  # Remove mock self
         self.available_states = np.transpose(np.nonzero(start_grid_map == 0))
 
         if start_state == [None, None] or target_state == [None, None]:
