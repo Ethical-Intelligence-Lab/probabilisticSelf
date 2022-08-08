@@ -57,12 +57,12 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
 
-        path = self.params['save_path'] + str(int((self.num_timesteps / 1000))) + "k/weights"
+        #path = self.params['save_path'] + str(int((self.num_timesteps / 1000))) + "k/weights"
 
-        if self.num_timesteps % self.n == 0:
-            if not os.path.exists(path):
-                os.makedirs(path)
-            self.model.save(path)
+        #if self.num_timesteps % self.n == 0:
+        #    if not os.path.exists(path):
+        #        os.makedirs(path)
+        #    self.model.save(path)
 
         return True
 

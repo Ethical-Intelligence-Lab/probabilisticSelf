@@ -1,20 +1,23 @@
 # Created by: kaan
 # Created on: 5.03.2022
 
-# Against denominator:
-#   Null, mu1-mu2 = 0
-# Independent samples t-test
+if (!require(pacman)) { install.packages(pacman) }
 library(BayesFactor)
 library(Dict)
 
+pacman::p_load('rjson')
 
-library("rjson")
+# Manually enter directory path if you are not using Rstudio
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 games = c('logic_game') #, 'change_agent_game', 'contingency_game', 'contingency_game_shuffled_1'
 agents = c('self_class')
 game_datas <- c()
 all_stats <- c()
+
+## BAYESIAN ANALYSIS
 for (game in games) {
-  filename <- paste("/Users/kaan/Documents/GitHub/probabilisticSelf2/stats/data_", game, ".json", sep = "", collapse = NULL)
+  filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
   game_data <- fromJSON(file = filename)
   game_datas[[game]] <- game_data
 
@@ -26,14 +29,20 @@ for (game in games) {
     levels <- 1:100
     print(paste("--------- FIRST 100: Human vs. ", agent, " ---------"))
     for (level in levels) {
-      result <- 1 / ttestBF(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]])  # Favors Alternative Hypothesis (mu =/= 0)
-      result_welsh <- t.test(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]], var.equal = FALSE)
+      # Favors Alternative Hypothesis (mu =/= 0)
+      result <- 1 / ttestBF(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]])
+
+      var_result <- var.test(game_datas[[game]]$human[[level]], game_datas[[game]]$self_class_first_100[[level]])
+      print(var_result)
+
+      #
+      result_ttest <- t.test(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]], var.equal = var_result$p.value > 0.05)
 
 
       result_bf <- exp(result@bayesFactor$bf)
 
       bf_corr <- append(bf_corr, result_bf)
-      ts <- append(ts, 1/result_welsh$statistic)
+      ts <- append(ts, 1 / result_ttest$statistic)
 
       if (result_bf < 1.0) { # Bayes factor below 1.0 means: They are different
         result_bf <- 0
@@ -43,14 +52,14 @@ for (game in games) {
       bfs <- append(bfs, result_bf)
 
 
-      #t.test(game_datas[[game]]$human[[i]] ~ game_datas[[game]]$self_class_first_100[[i]], paired=FALSE, var.equal=FALSE)
+      #t.test(game_datas[[game]]$human[[level]] ~ game_datas[[game]]$self_class_first_100[[level]], paired=FALSE, var.equal=FALSE)
     }
-    all_stats[[game]] <- c('Bayes Factors'=bf_corr, 't-values'=ts)
+    all_stats[[game]] <- c('Bayes Factors' = bf_corr, 't-values' = ts)
   }
-  plot(ts)
+
 }
 
-if (FALSE) {
+if (TRUE) {
   # LOGIC GAME
   print("**** 0 ****")
   # Level 0 (x=Humans, y=Self Class):
@@ -103,127 +112,211 @@ if (FALSE) {
           y = c(8, 7, 7, 7, 6, 8, 8, 7, 6, 8))
 
 
+  # ********** LOGIC GAME **********
   # Compare human (Level 100) to each baseline (Level 2000).
-  print("Compare human (Level 100) to each baseline (Level 2000)")
+  print("LOGIC ---- Compare human (Level 100) to each baseline (Level 2000)")
   print("**** Human vs. Self Class ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6)))
+  print("**** Human vs. Self Class (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6), var.equal = FALSE))
 
   print("**** Human vs. Random ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82)))
+  print("**** Human vs. Random (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82), var.equal = FALSE))
 
   print("**** Human vs. DQN ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32)))
+  print("**** Human vs. DQN (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32), var.equal = FALSE))
 
   print("**** Human vs. ACER ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6)))
+  print("**** Human vs. ACER (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6), var.equal = FALSE))
 
   print("**** Human vs. TRPO ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12)))
+  print("**** Human vs. TRPO (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12), var.equal = FALSE))
 
   print("**** Human vs. A2C ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20)))
+  print("**** Human vs. A2C (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20), var.equal = FALSE))
 
   print("**** Human vs. PPO2 ****")
-  ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
-          y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6))
+  print(1 / ttestBF(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+                    y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6)))
+  print("**** Human vs. PPO2 (ttest) ****")
+  print(t.test(x = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5),
+               y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6), var.equal = FALSE))
 
 
   print("Compare self-class to each baseline (Level 2000)")
   print("**** Self vs DQN ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32)))
+  print("**** Self vs DQN (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(50, 17, 6, 6, 46, 36, 11, 10, 6, 32), var.equal = FALSE))
 
   print("**** Self vs ACER ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6)))
+  print("**** Self vs ACER (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(7, 14, 14, 8, 18, 44, 10, 8, 6, 6), var.equal = FALSE))
 
   print("**** Self vs TRPO ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12)))
+  print("**** Self vs TRPO (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(8, 11, 11, 8, 12, 18, 23, 12, 7, 12), var.equal = FALSE))
 
   print("**** Self vs A2C ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20)))
+  print("**** Self vs A2C (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(9, 50, 8, 35, 37, 17, 11, 15, 6, 20), var.equal = FALSE))
 
   print("**** Self vs PPO2 ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6)))
+  print("**** Self vs PPO2 (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(8, 8, 21, 9, 18, 7, 7, 11, 6, 6), var.equal = FALSE))
 
   print("**** Self vs Human ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5)))
+  print("**** Self vs Human (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(6, 5, 7, 5, 5, 6, 10, 6, 7, 5, 7, 7, 6, 5, 7, 7, 5, 5), var.equal = FALSE))
 
   print("**** Self vs Random ****")
-  ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
-          y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82))
+  print(1 / ttestBF(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+                    y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82)))
+  print("**** Self vs Random (ttest) ****")
+  print(t.test(x = c(7, 7, 6, 6, 6, 6, 6, 6, 6, 6),
+               y = c(38, 62, 240, 20, 83, 28, 39, 26, 58, 82), var.equal = FALSE))
 
 
   # CONTINGENCY GAME
   # Compare human (Level 100) to each baseline (Level 2000).
   print("CONTINGENCY - Compare human (Level 100) to each baseline (Level 2000)")
   print("*** CONTINGENCY * Human vs. Self Class ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. Random ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. DQN ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. ACER ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. TRPO ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. A2C ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10)))
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Human vs. PPO2 ****")
-  ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
-          y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10))
+  print(1 / ttestBF(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+                    y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(7, 7, 11, 7, 7, 7, 9, 7, 9, 15, 13, 13, 9, 15, 20, 11, 17, 7, 13, 13),
+               y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10), var.equal = FALSE))
 
 
   print("CONTINGENCY - Compare self-class to each baseline (Level 2000)")
   print("*** CONTINGENCY * Self vs. Self Class ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. Random ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(915, 726, 764, 1055, 2011, 78, 1355, 2543, 2543, 2543), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. DQN ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(10, 8, 8, 8, 8, 12, 8, 10, 8, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. ACER ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(14, 14, 12, 16, 22, 14, 14, 10, 39, 70), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. TRPO ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(24, 46, 28, 10, 16, 10, 8, 22, 14, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. A2C ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(8, 10, 8, 10, 10, 8, 8, 8, 12, 10), var.equal = FALSE))
 
   print("*** CONTINGENCY * Self vs. PPO2 ****")
-  ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
-          y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10))
+  print(1 / ttestBF(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+                    y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10)))
+  print("*** ttest ****")
+  print(t.test(x = c(10, 10, 10, 10, 10, 10, 10, 10, 8, 8),
+               y = c(8, 8, 10, 12, 10, 10, 30, 10, 74, 10), var.equal = FALSE))
 
 
   print("*** CONT * 0 ****")
@@ -276,59 +369,95 @@ if (FALSE) {
   ttestBF(x = c(11, 7, 9, 18, 17, 7, 7, 20, 7, 19, 7, 7, 7, 11, 22, 24, 7, 17, 18, 7),
           y = c(8, 12, 8, 8, 10, 10, 8, 8, 10, 10))
 
-  # CONTINGENCY GAME
+  # SWITCHING EMBODIMENTS GAME
   # Compare human (Level 100) to each baseline (Level 2000).
   print("SWITCHING EMBODIMENTS - Compare human (Level 100) to each baseline (Level 2000)")
   print("*** SE * Human vs. Self Class ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41), var.equal = FALSE))
 
   print("*** SE * Human vs. Random ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(126, 120, 44, 329, 264, 778, 32, 1253, 42, 267))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(126, 120, 44, 329, 264, 778, 32, 1253, 42, 267)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(126, 120, 44, 329, 264, 778, 32, 1253, 42, 267), var.equal = FALSE))
 
   print("*** SE * Human vs. DQN ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14), var.equal = FALSE))
 
   print("*** SE * Human vs. ACER ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73)), var.equal = FALSE)
 
   print("*** SE * Human vs. TRPO ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272), var.equal = FALSE))
 
   print("*** SE * Human vs. A2C ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14), var.equal = FALSE))
 
   print("*** SE * Human vs. PPO2 ****")
-  ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
-          y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26))
+  print(1 / ttestBF(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+                    y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26)))
+  print("--ttest--")
+  print(t.test(x = c(37, 15, 33, 23, 79, 62, 61, 79, 61, 11, 39, 17, 17, 81, 31, 39, 12, 33),
+               y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26), var.equal = FALSE))
 
 
   print("SWITCHING EMBODIMENTS - Compare self-class to each baseline (Level 2000)")
 
   print("*** SE * Self vs. DQN ****")
-  ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
-          y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14))
+  print(1 / ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+                    y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14)))
+  print("--ttest--")
+  print(t.test(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+               y = c(82, 40, 20, 88, 81, 40, 104, 30, 133, 14), var.equal = FALSE))
 
   print("*** SE * Self vs. ACER ****")
-  ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
-          y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73))
+  print(1 / ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+                    y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73)))
+  print("--ttest--")
+  print(t.test(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+               y = c(34, 18, 102, 28, 44, 22, 21, 20, 30, 73), var.equal = FALSE))
 
   print("*** SE * Self vs. TRPO ****")
-  ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
-          y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272))
+  print(1 / ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+                    y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272)))
+  print("--ttest--")
+  print(t.test(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+               y = c(18, 28, 180, 27, 144, 28, 154, 30, 18, 272), var.equal = FALSE))
 
   print("*** SE * Self vs. A2C ****")
-  ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
-          y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14))
+  print(1 / ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+                    y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14)))
+  print("--ttest--")
+  print(t.test(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+               y = c(40, 83, 33, 12, 46, 84, 36, 26, 219, 14), var.equal = FALSE))
 
   print("*** SE * Self vs. PPO2 ****")
-  ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
-          y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26))
+  print(1 / ttestBF(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+                    y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26)))
+  print("--ttest--")
+  print(t.test(x = c(26, 13, 19, 28, 48, 20, 20, 34, 18, 41),
+               y = c(34, 26, 36, 49, 140, 95, 34, 14, 18, 26)))
 
 
   print("*** SE * 0 ****")

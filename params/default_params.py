@@ -2,7 +2,8 @@ import random
 import string
 import argparse
 import inspect
-from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
+from stable_baselines import PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
+from stable_baselines3 import DQN
 from params.param_dicts import param_abbreviations, params
 import os
 
@@ -50,7 +51,7 @@ class DefaultParams:
         if self.params['load_game'] is None:
             self.params['load_game'] = self.params['game_type']
 
-        game_str = "_game_shuffled_{}".format(self.params['shuffle_each']) if self.params['shuffle_keys'] else "_game_0"
+        game_str = "_game_shuffled_{}".format(self.params['shuffle_each']) if self.params['shuffle_keys'] else "_game"
         if self.params['different_self_color']:
             game_str = game_str + "_diff_color"
         game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"

@@ -58,7 +58,7 @@ params = {
     'single_loc': False,
     'shuffle_each': 1,  # Shuffle each n levels
     'different_self_color': False,
-    'load_str': '',
+    'load_str': '',  # Select which saved model to load
 
     'baselines_version': 2
 }
