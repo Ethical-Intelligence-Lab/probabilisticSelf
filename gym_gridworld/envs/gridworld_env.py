@@ -12,7 +12,7 @@ import json
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
 COLORS = {0: [0.0, 0.0, 0.0], 1: [0.5, 0.5, 0.5], \
           2: [0.0, 0.0, 1.0], 3: [0.0, 1.0, 0.0], \
-          4: [1.0, 0.0, 0.0], 6: [1.0, 0.0, 1.0], \
+          4: [1.0, 1.0, 1.0], 6: [1.0, 0.0, 1.0], \
           7: [1.0, 1.0, 0.0], 8: [1.0, 0.0, 0.0],
           9: [1.0, 0.0, 0.0], 10: [1.0, 0.0, 0.0]}
 
@@ -33,6 +33,49 @@ class MockSelf:
 
     def is_rushing(self):
         return self.rushing_to_goal
+
+    # Navigate towards reward
+    def navigate(self):
+        dist_vertical = 10 - self.location[0]
+        dist_horiz = 10 - self.location[1]
+
+        vertical_or_horizontal = random.randint(0, 1)
+
+        if not self.rushing_to_goal:
+            return random.randint(0, 3)
+
+        if (dist_horiz == 0 and (dist_vertical == -1 or dist_vertical == 1)) or (
+                dist_vertical == 0 and (dist_horiz == 1 or dist_horiz == -1)):
+            self.rushing_to_goal = False
+            if dist_vertical == -1:
+                return random.choice([0, 2, 3])
+            if dist_vertical == 1:
+                return random.choice([1, 2, 3])
+            if dist_horiz == -1:
+                return random.choice([0, 1, 2])
+            if dist_horiz == 1:
+                return random.choice([0, 1, 3])
+
+        def check_vertical():
+            if dist_vertical > 0:
+                return 1
+            elif dist_vertical < 0:
+                return 0
+            else:
+                return check_horizontal()  # Vertical distance = 0
+
+        def check_horizontal():
+            if dist_horiz > 0:
+                return 3
+            elif dist_horiz < 0:
+                return 2
+            else:
+                return check_vertical()  # Horizontal distance = 0
+
+        if vertical_or_horizontal == 1:
+            return check_vertical()
+        else:
+            return check_horizontal()
 
 
 class GridworldEnv(gym.Env):
@@ -101,8 +144,7 @@ class GridworldEnv(gym.Env):
 
             if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
                 rn = random.randint(0, 3)
-                self.grid_map_path = os.path.join(self.this_file_path,
-                                                  self.game_type + '/plan{}.txt'.format(rn))
+                self.grid_map_path = os.path.join(self.this_file_path, 'change_agent_extended/plan{}.txt'.format(rn))
 
                 # Set the location of the mock self, to keep track of it
                 if rn == 0:
@@ -369,8 +411,6 @@ class GridworldEnv(gym.Env):
         if self.step_counter % 7 != 0:
             return
 
-        print("Switching embodiment!")
-
         # Rush to goal after embodiment changes
         self.mock_s.toggle_rush()
 
@@ -415,7 +455,7 @@ class GridworldEnv(gym.Env):
         nxt_ns_states = copy.deepcopy(self.ns_states)
         for i, agent in enumerate(self.ns_states):
             stay = False
-            if nxt_ns_states[
+            if "extended_2" not in self.game_type or nxt_ns_states[
                 i] != self.mock_s.get_location():  # Move towards the goal, if not already there and then move away
                 action = random.randint(0, 3)
                 next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
@@ -437,58 +477,15 @@ class GridworldEnv(gym.Env):
                         next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                            nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
             else:
-                if not self.mock_s.is_rushing():
-                    action = random.randint(0, 1) if self.mock_s.get_location()[1] == 10 else random.randint(2, 3)
+                action = self.mock_s.navigate()
+                next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                   nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
-                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
-
-                    if next_color != 0:  # Not possible to move, so stay
-                        stay = True
-
-                    if not stay:
-                        self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                  nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
-                else:  # Rush to the goal
-                    if self.mock_s.get_location()[0] == 10:
-                        if self.mock_s.get_location()[1] > 10:
-                            action = 2
-                        else:
-                            action = 3
-
-                    if self.mock_s.get_location()[1] == 10:
-                        if self.mock_s.get_location()[0] > 10:
-                            action = 0
-                        else:
-                            action = 1
-
-                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
-
-                    if next_color == 3:  # Got to the goal, so make another self, the "mock self", i.e., moves towards the reward
-                        self.mock_s.toggle_rush()
-
-                        if self.mock_s.get_location()[0] == 10:
-                            if action == 2:
-                                action = 3
-                            else:
-                                action = 2
-
-                        if self.mock_s.get_location()[1] == 10:
-                            if action == 0:
-                                action = 1
-                            else:
-                                action = 0
-
-                    next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                       nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
-
-                    if next_color != 0:  # Not possible to move, so stay
-                        stay = True
-
-                    if not stay:
-                        self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                  nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
+                if next_color == 0:  # Not possible to move, so stay
+                    self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                              nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
+                else:
+                    stay = True
 
             # Update ns positions
             if stay is False:
@@ -667,8 +664,7 @@ class GridworldEnv(gym.Env):
 
             if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
                 rn = random.randint(0, 3)
-                self.grid_map_path = os.path.join(self.this_file_path,
-                                                  self.game_type + '/plan{}.txt'.format(rn))
+                self.grid_map_path = os.path.join(self.this_file_path, 'change_agent_extended/plan{}.txt'.format(rn))
 
                 # Set the location of the mock self, to keep track of it
                 if rn == 0:
