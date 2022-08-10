@@ -2,14 +2,15 @@ import random
 import string
 import argparse
 import inspect
-from stable_baselines import PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from stable_baselines3 import DQN
+from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
+from stable_baselines3 import DQN as DQN3
+
 from params.param_dicts import param_abbreviations, params
-import os
+import os, sys
 
 
 class DefaultParams:
-    def __init__(self, player):
+    def __init__(self, player, baselines_v):
         self.player = player
         self.param_abbreviations = param_abbreviations
         self.params = params
@@ -18,8 +19,10 @@ class DefaultParams:
 
         if player not in ['human', 'self_class', 'random']:
             # Get arguments of particular algorithm
-            param_names = inspect.getfullargspec(globals()[player])[0][1:]
-            param_defaults = inspect.getfullargspec(globals()[player])[3]
+            if baselines_v == 3 and self.params['player'] == 'DQN':
+                self.params['player'] = 'DQN3'
+            param_names = inspect.getfullargspec(globals()[self.params['player']])[0][1:]
+            param_defaults = inspect.getfullargspec(globals()[self.params['player']])[3]
             param_names = [name for name in param_names if name not in ['env', 'model_class', 'policy']]
         else:
             param_names = []
@@ -51,9 +54,14 @@ class DefaultParams:
         if self.params['load_game'] is None:
             self.params['load_game'] = self.params['game_type']
 
+        root_path = ''
+        if self.params['use_scratch_space']:
+            root_path = '/export/scratch/auguralp/'
+
         game_str = "_game_shuffled_{}".format(self.params['shuffle_each']) if self.params['shuffle_keys'] else "_game"
         if self.params['different_self_color']:
             game_str = game_str + "_diff_color"
+
         game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"
         if self.params['player'] not in ['human', 'random', 'self_class']:
             algo_params_str = ""
@@ -72,32 +80,32 @@ class DefaultParams:
             letters = string.ascii_uppercase
             r_str = ''.join(random.choice(letters) for i in range(10))
             load_str = "1" if self.params['load'] else "0"
-            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
+            self.params['data_save_dir'] = root_path + 'data/' + self.params['game_type'] + game_str + self.params['player'] + '/' + \
                                            "seed" + str(self.params['seed']) + "-" + r_str + '-' \
-                                           "load=" + load_str + "-" + "n_ts=" + str(
+                                                                                             "load=" + load_str + "-" + "n_ts=" + str(
                 "{:.2e}".format(self.params['n_timesteps'])) + "/"
 
             # Set save path
-
-            self.params['save_path'] = 'saved_models/' + self.params['game_type'] + game_str + self.params[
-                'player'] + '/' + \
-                                       "seed" + str(self.params['seed']) + "-" + r_str + "-"
+            self.params['save_path'] = root_path + 'saved_models/' + self.params['game_type'] + game_str + self.params[
+                'player'] + '/' + "seed" + str(self.params['seed']) + "-" + r_str + "-"
 
             if self.params['load_str'] != '' and self.params['load']:
-                self.params['save_path'] = 'saved_models/' + self.params['load_game'] + game_str + self.params[
+                self.params['save_path'] = root_path + 'saved_models/' + self.params['load_game'] + game_str + self.params[
                     'player'] + '/' + \
                                            "seed" + str(self.params['seed']) + "-" + self.params['load_str'] + "-"
 
 
         elif self.params['player'] != 'human':  # Random or self class
-            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + \
+            self.params['data_save_dir'] = root_path + 'data/' + self.params['game_type'] + game_str + \
                                            self.params['player'] + '/' + "iter" + str(self.params['seed']) + '/'
         else:  # Human
             letters = string.digits
             rand_id = ''.join(random.choice(letters) for i in range(10))
-            self.params['data_save_dir'] = 'data/' + self.params['game_type'] + game_str + self.params[
+            self.params['data_save_dir'] = root_path + 'data/' + self.params['game_type'] + game_str + self.params[
                 'player'] + '/' + "player" + str(
                 rand_id) + '/'
+
+        # Create save and load folders, if DNE
 
         return self.params
 
@@ -113,13 +121,14 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def get_cmd_line_args():
+def get_cmd_line_args(baselines_v):
     parser = argparse.ArgumentParser()
 
+    dqn_version = 'DQN3' if baselines_v == 3 else 'DQN'
     all_possible_params = {"seed": 0,
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['DQN'])[0][1:] if
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(dqn_version)])[0][1:] if
                                         v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['DQN'])[3]))),
+                                       inspect.getfullargspec(globals()['{}'.format(dqn_version)])[3]))),
                            **(dict(zip([v for v in inspect.getfullargspec(globals()['PPO2'])[0][1:] if
                                         v not in ['env', 'policy']],
                                        inspect.getfullargspec(globals()['PPO2'])[3]))),

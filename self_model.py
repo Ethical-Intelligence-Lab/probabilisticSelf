@@ -85,7 +85,7 @@ class Self_class():
                 action = self.predict_contingency(env)
             else:
                 action = self.predict_shuffled(env)
-        if env.game_type == 'change_agent':
+        if env.game_type in ['change_agent', 'change_agent_1', 'change_agent_2']:
             action = self.predict_change_agent(env)
         return action
 

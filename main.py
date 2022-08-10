@@ -6,6 +6,7 @@ import gym_l.gym as gym
 import gym_gridworld
 from utils.keys import key_converter
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
+from stable_baselines3 import DQN as DQN3
 from stable_baselines.common.cmd_util import make_vec_env
 from params.default_params import DefaultParams, get_cmd_line_args
 import neptune.new as neptune
@@ -17,17 +18,28 @@ if __name__ == '__main__':
     load_dotenv()  # take environment variables from .env.
 
     arg_string = "python main.py"
+    baselines_v = 99999
     for i, arg in enumerate(sys.argv):
         if i != 0:
             arg_string = arg_string + " " + arg
 
+        if arg in ['-baselines_version', '--baselines_version']:
+            baselines_v = i + 1
+
+        if baselines_v == i:
+            if arg.isnumeric() and (arg in ['2', '3']):
+                baselines_v = int(arg)
+            else:
+                print("Baseline version should be an integer, i.e., 2 or 3")
+                exit(1)
+
     print(arg_string)
 
     # Get cmd line arguments, and integrate with default params
-    args = get_cmd_line_args()
+    args = get_cmd_line_args(baselines_v)
     player = args['player'].split('_')[0].upper() if args['player'] not in ['human', 'self_class', 'random'] else args[
         'player']
-    def_params = DefaultParams(player)
+    def_params = DefaultParams(player, baselines_v)
     def_params.update_params(args)
     P = def_params.params
 
@@ -104,8 +116,6 @@ if __name__ == '__main__':
         if P['baselines_version'] == 2:  # Stable Baselines 2
             ALGO = class_for_name('stable_baselines', player)
         elif P['baselines_version'] == 3:  # Stable Baselines 3
-            print("Not supported yet.")
-            exit(1)
             ALGO = class_for_name('stable_baselines3', player)
         else:
             ALGO = None
@@ -125,10 +135,17 @@ if __name__ == '__main__':
         if original_env:
             original_env.set_model(model)
         env.set_model(model)
+        #model.save_replay_buffer("./rbtest")
         if P['save']:
-            model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
+            if P['baselines_version'] == 2:
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
+            else:
+                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
         else:
-            model.learn(total_timesteps=P['n_timesteps'], run=run)
+            if P['baselines_version'] == 2:
+                model.learn(total_timesteps=P['n_timesteps'], run=run)
+            else:
+                model.learn(total_timesteps=P['n_timesteps'])
         print("Training Finished. Exiting...")
         if run:
             run.stop()

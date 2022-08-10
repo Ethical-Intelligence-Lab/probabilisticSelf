@@ -59,6 +59,7 @@ params = {
     'shuffle_each': 1,  # Shuffle each n levels
     'different_self_color': False,
     'load_str': '',  # Select which saved model to load
+    'use_scratch_space': False,  # Save to scratch space
 
     'baselines_version': 2
 }
