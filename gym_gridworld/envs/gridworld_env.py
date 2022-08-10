@@ -638,8 +638,17 @@ class GridworldEnv(gym.Env):
                     if not os.path.exists(path):
                         os.makedirs(path)
 
+                    if self.player == 'dqn_training' and self.metadata['save_and_load_replay_buffer']:
+                        rb_path = self.metadata['save_path'] + "replay_buffer"
+
+                        if not os.path.exists(rb_path):
+                            os.makedirs(rb_path)
+
+                        self.model.save_replay_buffer(rb_path)
+
                     if self.model is not None:
                         self.model.save(path)
+
                     sys.exit(0)
 
                 # reset variables

@@ -60,6 +60,6 @@ params = {
     'different_self_color': False,
     'load_str': '',  # Select which saved model to load
     'use_scratch_space': False,  # Save to scratch space
-
+    'save_and_load_replay_buffer': False,
     'baselines_version': 2
 }
