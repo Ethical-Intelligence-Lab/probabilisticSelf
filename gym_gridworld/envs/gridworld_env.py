@@ -633,10 +633,13 @@ class GridworldEnv(gym.Env):
 
                 self.levels_count += 1
                 if self.levels_count == self.metadata['levels_count']:
-                    path = self.metadata['save_path'] + "lastSave/weights"
+                    if self.metadata['save']:
+                        path = self.metadata['save_path'] + "lastSave/weights"
+                        if not os.path.exists(path):
+                            os.makedirs(path)
 
-                    if not os.path.exists(path):
-                        os.makedirs(path)
+                        if self.model is not None:
+                            self.model.save(path)
 
                     if self.player == 'dqn_training' and self.metadata['save_and_load_replay_buffer']:
                         rb_path = self.metadata['save_path'] + "replay_buffer"
@@ -645,9 +648,6 @@ class GridworldEnv(gym.Env):
                             os.makedirs(rb_path)
 
                         self.model.save_replay_buffer(rb_path)
-
-                    if self.model is not None:
-                        self.model.save(path)
 
                     sys.exit(0)
 
