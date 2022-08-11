@@ -131,16 +131,17 @@ if __name__ == '__main__':
             model = ALGO(def_params.get_policy(), env, **algo_params)
         else:  # Continue Training on Saved Model
             model = ALGO.load(load_path, env, verbose=P['verbose'])
+            if P['save_and_load_replay_buffer']:
+                model.load_replay_buffer(P['save_path'] + "replay_buffer")
 
         if original_env:
             original_env.set_model(model)
         env.set_model(model)
-        #model.save_replay_buffer("./rbtest")
         if P['save']:
             if P['baselines_version'] == 2:
                 model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)
             else:
-                model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P))
+                model.learn(total_timesteps=P['n_timesteps'])
         else:
             if P['baselines_version'] == 2:
                 model.learn(total_timesteps=P['n_timesteps'], run=run)
