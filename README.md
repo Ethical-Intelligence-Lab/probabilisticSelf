@@ -15,12 +15,14 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 
 ##  Basic set up
 (1) Clone the repo
+
         ```
         git clone https://github.com/juliandefreitas/probabilisticSelf2.git;
         cd probabilisticSelf2
         ```
 
 (2) Create virtualenv in python 3.6--either from a conda environment or from your system (via python3 xyz)--and install requirements
+
         ```
         python -m venv env [make sure this is created using python 3.6]
         source env/bin/activate
