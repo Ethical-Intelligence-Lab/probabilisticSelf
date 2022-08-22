@@ -13,7 +13,7 @@ agents = c('self_class')
 game_datas <- c()
 all_stats <- c()
 
-## BAYESIAN ANALYSIS
+## Human v. Self Class for the First Hundred Levels -- BAYESIAN ANALYSIS
 for (game in games) {
   filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
   game_data <- fromJSON(file = filename)
