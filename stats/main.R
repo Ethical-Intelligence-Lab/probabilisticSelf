@@ -53,6 +53,8 @@ for (game in games) {
 
 }
 
+all_stats
+
 ## Compare First and Last Level
 human_first <- game_datas[[game]]$human[[1]]
 human_last <- game_datas[[game]]$human[[100]]
