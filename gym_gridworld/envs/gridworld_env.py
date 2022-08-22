@@ -1,7 +1,7 @@
-import gym_l.gym as gym
+import gym
 import os
 import copy
-from gym_l.gym import spaces
+from gym import spaces
 import numpy as np
 import matplotlib.pyplot as plt
 import random
