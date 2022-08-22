@@ -8,7 +8,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 ## Requirements
 
 - Windows, OS X, or Linux 
-- Python 3.5.2 (later versions might be fine)
+- Python 3.6 (later versions might be fine)
 - Tensorflow
 - See `requirements.txt` for all other dependencies. 
 - Gpu not necessary
