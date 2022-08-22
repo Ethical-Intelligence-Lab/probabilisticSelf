@@ -38,7 +38,8 @@ params = {
     'seed': 0,
     'env_id': 'gridworld-v0',
     'singleAgent': False,
-    'game_type': 'logic',  # logic or contingency or change_agent
+    'game_type': 'logic',  # logic, contingency, change_agent, logic_extended, contingency_extended,
+                           # change_agent_extended, change_agent_extended_2
     'player': 'random',  # random, human, dqn_training, self_class, ppo2_training
     'exp_name': 'train_',
     'verbose': False,

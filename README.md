@@ -29,12 +29,14 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         ```
 
 (3) Clone other relevant repos and rename them to avoid conflicts with official packages
+
         ```
         git clone https://github.com/openai/gym.git; #[2c50315 of master]
         mv gym gym_l #rename gym to gym_l, to avoid confusion with pip package;
 
         git clone https://github.com/hill-a/stable-baselines.git; #[259f278 of master]
         mv stable-baselines baselines_l 
+        pip install ./baselines_l
         ```
 
 (4) You may need to also implement the following tensorflow fixes.
@@ -54,6 +56,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         ```
         python main.py -verbose 1 -player human -game_type contingency
         ```
+    - For more parameters, see `params/param_dicts.py`
 
 (5) Data
 - Available in the project's OSF repository. Simply unzip the .zip folder in the project repo, such that the 'data' directory is visible. 
