@@ -34,6 +34,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         ```
         git clone https://github.com/openai/gym.git; #[2c50315 of master]
         mv gym gym_l #rename gym to gym_l, to avoid confusion with pip package;
+        pip install ./gym_l
 
         git clone https://github.com/hill-a/stable-baselines.git; #[259f278 of master]
         mv stable-baselines baselines_l 
