@@ -21,20 +21,20 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         cd probabilisticSelf2
         ```
 
-(2) Create virtualenv in python 3.6--either from a conda environment or from your system (via python3 xyz)--and install requirements
+(2) Create virtualenv in python 3.6--either from a conda environment or from your system (via python3 xyz)
 
         ```
         python -m venv env [make sure this is created using python 3.6]
         source env/bin/activate
-        pip install -r requirements.txt
         ```
 
-(3) Clone other relevant repos and rename them to avoid conflicts with official packages
+(3) Clone other relevant repos and rename them to avoid conflicts with official packages -- and install requirements
 
         ```
         git clone https://github.com/akaanug/stable-baselines.git
         mv stable-baselines baselines_l 
         pip install ./baselines_l
+        pip install -r requirements.txt # Make sure you run this after installing baselines_l
         ```
 
 (4) You may need to also implement the following tensorflow fixes.
