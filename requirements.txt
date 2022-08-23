@@ -87,3 +87,4 @@ stable-baselines3==1.3.0
 jupyterlab
 rpy2==3.4.5
 scikit-image==0.16.1
+moviepy
