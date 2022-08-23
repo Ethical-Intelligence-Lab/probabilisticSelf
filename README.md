@@ -34,7 +34,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         git clone https://github.com/akaanug/stable-baselines.git
         mv stable-baselines baselines_l 
         pip install ./baselines_l
-        pip install -r requirements.txt
+        pip install -r requirements.txt # Make sure you run this after installing baselines_l
         ```
 
 (4) You may need to also implement the following tensorflow fixes.
