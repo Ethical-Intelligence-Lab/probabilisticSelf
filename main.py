@@ -2,7 +2,7 @@ import os
 import sys
 import importlib
 from self_model import Self_class
-import gym_l.gym as gym
+import gym
 import gym_gridworld
 from utils.keys import key_converter
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
