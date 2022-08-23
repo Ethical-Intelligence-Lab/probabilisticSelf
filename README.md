@@ -31,6 +31,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 (3) Clone other relevant repos and rename them to avoid conflicts with official packages -- and install requirements
 
         ```
+        cd probabilisticSelf2
         git clone https://github.com/akaanug/stable-baselines.git
         mv stable-baselines baselines_l 
         pip install ./baselines_l
