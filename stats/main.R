@@ -12,6 +12,7 @@ games = c('logic_game', 'contingency_game', 'change_agent_game', 'contingency_ga
 agents = c('self_class')
 game_datas <- c()
 all_stats <- c()
+all_bfs_binary <- c()
 
 ## Human v. Self Class for the First Hundred Levels -- BAYESIAN ANALYSIS
 for (game in games) {
@@ -20,7 +21,7 @@ for (game in games) {
   game_datas[[game]] <- game_data
 
   print(paste("******", game, "*******"))
-  bfs <- c()
+  bfs_binary <- c()
   ts <- c()
   bf_corr <- c()
   for (agent in agents) {
@@ -43,12 +44,13 @@ for (game in games) {
       } else {
         result_bf <- 1
       }
-      bfs <- append(bfs, result_bf)
+      bfs_binary <- append(bfs_binary, result_bf)
 
 
       #t.test(game_datas[[game]]$human[[level]] ~ game_datas[[game]]$self_class_first_100[[level]], paired=FALSE, var.equal=FALSE)
     }
     all_stats[[game]] <- c('Bayes Factors' = bf_corr, 't-values' = ts)
+    all_bfs_binary[[game]] <- bfs_binary
   }
 
 }
