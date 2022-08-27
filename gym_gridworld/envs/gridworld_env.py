@@ -10,6 +10,8 @@ import json
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
+from params.default_params import get_cmd_line_args, DefaultParams
+
 COLORS = {0: [0.0, 0.0, 0.0], 1: [0.5, 0.5, 0.5], \
           2: [0.0, 0.0, 1.0], 3: [0.0, 1.0, 0.0], \
           4: [1.0, 0.0, 0.0], 6: [1.0, 0.0, 1.0], \
@@ -240,10 +242,10 @@ class GridworldEnv(gym.Env):
         #     return (self.observation, 0, False, info)
         if nxt_s_state[0] < 0 or nxt_s_state[0] >= self.grid_map_shape[0]:
             info['success'] = False
-            return (self.observation, 0, False, info)
+            return (self.observation, -1 if self.metadata.get('neg_reward', False) else 0, False, info)
         if nxt_s_state[1] < 0 or nxt_s_state[1] >= self.grid_map_shape[1]:
             info['success'] = False
-            return (self.observation, 0, False, info)
+            return (self.observation, -1 if self.metadata.get('neg_reward', False) else 0, False, info)
 
         # successful behavior
         org_s_color = self.current_grid_map[self.s_state[0], self.s_state[1]]
@@ -278,8 +280,17 @@ class GridworldEnv(gym.Env):
                 info['success'] = True
                 return (target_observation, 1, True, info)
         else:
-            info['success'] = True
-            return (self.observation, 0, False, info)
+            info['success'] = False
+
+            # If self collided with wall, give negative reward
+            if not self.metadata.get('neg_reward', False):
+                return (self.observation, 0, False, info)
+            else:
+                if (new_s_color == 1) | (new_s_color == 8):  # Collides with wall or non-self
+                    return (self.observation, -1, False, info)
+                else:
+                    return (self.observation, 0, False, info)
+
 
     def step_contingency(self, action):
         self.total_steps_counter += 1
@@ -401,9 +412,8 @@ class GridworldEnv(gym.Env):
                 info['success'] = True
                 return (target_observation, 1, True, info)
         else:
-            info['success'] = True
+            info['success'] = False
             return (self.observation, 0, False, info)
-        print("CONTINGENCY FAIL")
 
     ''' change the self to another possible self every 7 steps '''
 
@@ -557,7 +567,7 @@ class GridworldEnv(gym.Env):
                 info['success'] = True
                 return (target_observation, 1, True, info)
         else:
-            info['success'] = True
+            info['success'] = False
             return (self.observation, 0, False, info)
 
     def get_ns_limits(self):
@@ -650,6 +660,13 @@ class GridworldEnv(gym.Env):
                         self.model.save_replay_buffer(rb_path)
 
                     sys.exit(0)
+
+                # Modify the environment to 'modify_to'
+                elif self.metadata['mid_modify'] and self.levels_count == int(self.metadata['modify_at']):
+                    print("modifying to: ", self.metadata['modify_to'])
+                    self.game_type = self.metadata['modify_to']
+                    if self.game_type == "contingency_extended":
+                        self.oscil_dirs.append(random.randint(0, 1))
 
                 # reset variables
                 self.data = {'game_type': [], 'player': [], 'map': [], 'level': [], 'self_start_loc': [],

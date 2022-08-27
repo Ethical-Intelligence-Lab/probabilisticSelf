@@ -39,7 +39,7 @@ params = {
     'env_id': 'gridworld-v0',
     'singleAgent': False,
     'game_type': 'logic',  # logic, contingency, change_agent, logic_extended, contingency_extended,
-                           # change_agent_extended, change_agent_extended_2
+    # change_agent_extended, change_agent_extended_2
     'player': 'random',  # random, human, dqn_training, self_class, ppo2_training
     'exp_name': 'train_',
     'verbose': False,
@@ -62,5 +62,11 @@ params = {
     'load_str': '',  # Select which saved model to load
     'use_scratch_space': False,  # Save to scratch space
     'save_and_load_replay_buffer': False,
-    'baselines_version': 2
+    'baselines_version': 2,
+    'mid_modify': False,
+    'modify_at': None,  # Modify the environment at 'modify_at' * 'n_levels' levels
+    # Modify the environment to 'modify_to' after 2000 levels. Input levels_count as 40 to run for 4000 levels, if you set 'mid_modify' to True
+    'modify_to': None,  # logic, contingency, change_agent, logic_extended, contingency_extended,
+    # change_agent_extended, change_agent_extended_2
+    'neg_reward': False
 }

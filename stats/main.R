@@ -7,13 +7,30 @@ pacman::p_load('rjson')
 # Manually enter directory path if you are not using Rstudio
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-games = c('logic_game', 'contingency_game', 'change_agent_game', 'contingency_game_shuffled_1')
+games = c('logic_game', 'contingency_game')
 
 agents = c('self_class')
 game_datas <- c()
 all_stats <- c()
 all_bfs_binary <- c()
 
+# TODO: Look at the t-tests, simulate equal sample size
+# TODO: Inf t value
+
+# Note. ‘.’= p < .1, ‘**’ = p < .01, ‘***’ = p < .001.
+print_sig <- function(p) {
+  if( p < 0.001 ) {
+        print("***")
+      } else if( p < 0.01 ) {
+        print("**")
+      } else if( p < 0.05 ) {
+        print("*")
+      } else if( p < 0.1 ) {
+        print(".")
+      } else {
+        print("not significant")
+      }
+}
 ## Human v. Self Class for the First Hundred Levels -- BAYESIAN ANALYSIS
 for (game in games) {
   filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
@@ -29,10 +46,14 @@ for (game in games) {
     print(paste("--------- FIRST 100: Human vs. ", agent, " ---------"))
     for (level in levels) {
       # Favors Alternative Hypothesis (mu =/= 0)
-      result <- 1 / ttestBF(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]])
+      x <- game_datas[[game]]$human[[level]]
+      y <- game_datas[[game]]$self_class_first_100[[level]]
+      rept <- length(x) - length(y)
+      y <- c(y, y[1:rept])
+      result <- 1/ttestBF(x = x, y = y)
 
-      var_result <- var.test(game_datas[[game]]$human[[level]], game_datas[[game]]$self_class_first_100[[level]])
-      result_ttest <- t.test(x = game_datas[[game]]$human[[level]], y = game_datas[[game]]$self_class_first_100[[level]], var.equal = var_result$p.value > 0.05)
+      var_result <- var.test(x, y)
+      result_ttest <- t.test(x = x, y = y, var.equal = var_result$p.value > 0.05)
 
       result_bf <- exp(result@bayesFactor$bf)
 
@@ -46,16 +67,12 @@ for (game in games) {
       }
       bfs_binary <- append(bfs_binary, result_bf)
 
-
-      #t.test(game_datas[[game]]$human[[level]] ~ game_datas[[game]]$self_class_first_100[[level]], paired=FALSE, var.equal=FALSE)
     }
     all_stats[[game]] <- c('Bayes Factors' = bf_corr, 't-values' = ts)
     all_bfs_binary[[game]] <- bfs_binary
   }
 
 }
-
-all_stats
 
 ## Compare First and Last Level
 human_first <- game_datas[[game]]$human[[1]]
@@ -72,6 +89,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$dqn_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$human[[1]], game_datas[[game]]$dqn_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$dqn_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -81,6 +99,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$dqn_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$self_class_first_100[[1]], game_datas[[game]]$dqn_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$dqn_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -90,6 +109,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$ppo2_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$human[[1]], game_datas[[game]]$ppo2_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$ppo2_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -99,6 +119,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$ppo2_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$self_class_first_100[[1]], game_datas[[game]]$ppo2_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$ppo2_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -108,6 +129,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$trpo_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$human[[1]], game_datas[[game]]$trpo_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$trpo_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -118,6 +140,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$trpo_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$self_class_first_100[[1]], game_datas[[game]]$trpo_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$trpo_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -128,6 +151,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$acer_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$human[[1]], game_datas[[game]]$acer_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$acer_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -138,6 +162,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$acer_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$self_class_first_100[[1]], game_datas[[game]]$acer_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$acer_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -147,6 +172,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$a2c_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$human[[1]], game_datas[[game]]$a2c_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$human[[1]], y = game_datas[[game]]$a2c_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -157,6 +183,7 @@ for (game in games) {
   result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$a2c_training_first_100[[1]])
   var_result <- var.test(game_datas[[game]]$self_class_first_100[[1]], game_datas[[game]]$a2c_training_first_100[[1]])
   result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[1]], y = game_datas[[game]]$a2c_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
+  print_sig(result_ttest$p.value)
 
   summary(result)
   print(result_ttest)
@@ -167,6 +194,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$dqn_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$human[[100]], game_datas[[game]]$dqn_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$dqn_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -176,6 +204,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$dqn_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$self_class_first_100[[100]], game_datas[[game]]$dqn_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$dqn_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -185,6 +214,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$ppo2_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$human[[100]], game_datas[[game]]$ppo2_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$ppo2_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -194,6 +224,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$ppo2_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$self_class_first_100[[100]], game_datas[[game]]$ppo2_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$ppo2_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -203,6 +234,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$trpo_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$human[[100]], game_datas[[game]]$trpo_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$trpo_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -213,6 +245,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$trpo_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$self_class_first_100[[100]], game_datas[[game]]$trpo_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$trpo_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -223,6 +256,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$acer_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$human[[100]], game_datas[[game]]$acer_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$acer_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -234,6 +268,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$acer_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$self_class_first_100[[100]], game_datas[[game]]$acer_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$acer_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -243,6 +278,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$a2c_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$human[[100]], game_datas[[game]]$a2c_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$human[[100]], y = game_datas[[game]]$a2c_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -254,6 +290,7 @@ for (game in games) {
     result <- 1 / ttestBF(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$a2c_training_last_100[[100]])
     var_result <- var.test(game_datas[[game]]$self_class_first_100[[100]], game_datas[[game]]$a2c_training_last_100[[100]])
     result_ttest <- t.test(x = game_datas[[game]]$self_class_first_100[[100]], y = game_datas[[game]]$a2c_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
@@ -264,6 +301,7 @@ for (game in games) {
 ## different from each other using independent samples t-test
 
 # Contingency Game
+# On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels
 human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
 self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_100))
 

@@ -3,7 +3,7 @@ import sys
 import importlib
 from self_model import Self_class
 import gym
-import gym_gridworld
+import gym_gridworld  # Registering our environment here
 from utils.keys import key_converter
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
 from stable_baselines3 import DQN as DQN3
@@ -11,10 +11,17 @@ from stable_baselines.common.cmd_util import make_vec_env
 from params.default_params import DefaultParams, get_cmd_line_args
 import neptune.new as neptune
 from dotenv import load_dotenv
+import tensorflow as tf
 
 import custom_callback
 
+# Suppresses warnings about future deprecation. These warnings mostly appear because we are using
+# and older version of tensorflow.
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 if __name__ == '__main__':
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     load_dotenv()  # take environment variables from .env.
 
     arg_string = "python main.py"
@@ -43,7 +50,7 @@ if __name__ == '__main__':
     def_params.update_params(args)
     P = def_params.params
 
-    # Initilize env and Self Class
+    # Initialize env and Self Class
     if P['agent_location_random'] is False and P['game_type'] != "contingency":
         print("Not implemented yet")
         exit(0)
@@ -51,6 +58,7 @@ if __name__ == '__main__':
     env = gym.make(P['env_id'])
     env.seed(P['seed'])
     env.make_game(P)
+    tf.compat.v1.set_random_seed(P['seed'])
 
     self_class = Self_class(P['seed'])
 
@@ -125,7 +133,7 @@ if __name__ == '__main__':
         original_env = None
         if player in ['A2C', 'ACER', 'PPO2']:
             original_env = env
-            env = make_vec_env(lambda: env, n_envs=1)  # Vectorize the environment
+            env = make_vec_env(lambda: env, n_envs=1, seed=P['seed'])  # Vectorize the environment
 
         if not P['load']:  # Train From Zero
             model = ALGO(def_params.get_policy(), env, **algo_params)
