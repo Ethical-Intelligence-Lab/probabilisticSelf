@@ -136,7 +136,7 @@ class GridworldEnv(gym.Env):
             COLORS[4] = [0.0, 0.0, 1.0]
 
         ''' set game_type-specific env config '''
-        if self.game_type == 'logic' or self.game_type == 'logic_extended':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
             self.agent_start_locs = [[1, 1], [1, 7], [7, 1], [7, 7]]
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
@@ -208,7 +208,7 @@ class GridworldEnv(gym.Env):
     def step(self, action):
         if self.verbose:
             print('taking a step')
-        if self.game_type == 'logic' or self.game_type == 'logic_extended':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type in ['contingency', 'contingency_extended']:
             new_obs, rew, done, info = self.step_contingency(action)
@@ -290,7 +290,6 @@ class GridworldEnv(gym.Env):
                     return (self.observation, -1, False, info)
                 else:
                     return (self.observation, 0, False, info)
-
 
     def step_contingency(self, action):
         self.total_steps_counter += 1
@@ -428,7 +427,7 @@ class GridworldEnv(gym.Env):
         self.current_grid_map[temp[0], temp[1]] = 0
         rand_num = random.randint(0, 2)
 
-        # Mock self cannot be the self
+        # Mock self cannot be the real self
         if "extended_1" in self.game_type or "extended_2" in self.game_type:
             while (self.ns_states[rand_num] == self.mock_s.get_location()):
                 rand_num = random.randint(0, 2)
@@ -465,8 +464,19 @@ class GridworldEnv(gym.Env):
         nxt_ns_states = copy.deepcopy(self.ns_states)
         for i, agent in enumerate(self.ns_states):
             stay = False
-            if "extended_2" not in self.game_type or nxt_ns_states[
-                i] != self.mock_s.get_location():  # Move towards the goal, if not already there and then move away
+            if "extended_2" in self.game_type and nxt_ns_states[
+                i] == self.mock_s.get_location():  # Move the mock self towards the goal, if not already there and then move away
+                action = self.mock_s.navigate()
+                next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                                   nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
+
+                if next_color == 0:  # Not possible to move, so stay
+                    self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
+                                              nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
+                else:
+                    stay = True
+
+            else:  # Not mock self
                 action = random.randint(0, 3)
                 next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                    nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
@@ -486,16 +496,12 @@ class GridworldEnv(gym.Env):
                         cc[action] = cc[action] + 1
                         next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                            nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
-            else:
-                action = self.mock_s.navigate()
-                next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
-                                                   nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
-                if next_color == 0:  # Not possible to move, so stay
+                # Update location of mock_s
+                if nxt_ns_states[i] == self.mock_s.get_location() and "extended_1" in self.game_type:
                     self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                               nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
-                else:
-                    stay = True
+
 
             # Update ns positions
             if stay is False:
@@ -636,7 +642,7 @@ class GridworldEnv(gym.Env):
 
             with open(
                     self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json",
-                    'w')  as fp:
+                    'w') as fp:
                 json.dump(final_data, fp)
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
@@ -682,7 +688,7 @@ class GridworldEnv(gym.Env):
                 # sys.exit(0)
 
         ''' get new self location '''
-        if self.game_type == 'logic' or self.game_type == 'logic_extended':
+        if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
         elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
@@ -830,7 +836,7 @@ class GridworldEnv(gym.Env):
             plt.suptitle("CHANGE")
 
         fig.canvas.draw()
-        plt.pause(0.000001)
+        # plt.pause(0.000001)
         return
 
     def change_start_state(self, sp):
