@@ -3,7 +3,7 @@ import string
 import argparse
 import inspect
 from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from stable_baselines3 import DQN as DQN3
+from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
 
 from params.param_dicts import param_abbreviations, params
 import os, sys
@@ -21,6 +21,11 @@ class DefaultParams:
             # Get arguments of particular algorithm
             if baselines_v == 3 and self.params['player'] == 'DQN':
                 self.params['player'] = 'DQN3'
+            elif baselines_v == 3 and self.params['player'] == 'A2C':
+                self.params['player'] = 'A2C3'
+            elif baselines_v == 3 and self.params['player'] == 'PPO':
+                self.params['player'] = 'PPO3'
+
             param_names = inspect.getfullargspec(globals()[self.params['player']])[0][1:]
             param_defaults = inspect.getfullargspec(globals()[self.params['player']])[3]
             param_names = [name for name in param_names if name not in ['env', 'model_class', 'policy']]
@@ -61,6 +66,9 @@ class DefaultParams:
         game_str = "_game_shuffled_{}".format(self.params['shuffle_each']) if self.params['shuffle_keys'] else "_game"
         if self.params['different_self_color']:
             game_str = game_str + "_diff_color"
+
+        if self.params['modify_to'] == 'change_agent_extended_2':
+            game_str = game_str + '_harder'
 
         game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"
         if self.params['player'] not in ['human', 'random', 'self_class']:
@@ -125,13 +133,15 @@ def get_cmd_line_args(baselines_v):
     parser = argparse.ArgumentParser()
 
     dqn_version = 'DQN3' if baselines_v == 3 else 'DQN'
+    a2c_version = 'A2C3' if baselines_v == 3 else 'A2C'
+    ppo_version = 'PPO3' if baselines_v == 3 else 'PPO2'
     all_possible_params = {"seed": 0,
                            **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(dqn_version)])[0][1:] if
                                         v not in ['env', 'policy']],
                                        inspect.getfullargspec(globals()['{}'.format(dqn_version)])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['PPO2'])[0][1:] if
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(ppo_version)])[0][1:] if
                                         v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['PPO2'])[3]))),
+                                       inspect.getfullargspec(globals()['{}'.format(ppo_version)])[3]))),
                            **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if
                                         v not in ['env', 'policy']],
                                        inspect.getfullargspec(globals()['TRPO'])[3]))),
@@ -144,9 +154,9 @@ def get_cmd_line_args(baselines_v):
                            **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if
                                         v not in ['env', 'policy']],
                                        inspect.getfullargspec(globals()['ACKTR'])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['A2C'])[0][1:] if
+                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(a2c_version)])[0][1:] if
                                         v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['A2C'])[3]))),
+                                       inspect.getfullargspec(globals()['{}'.format(a2c_version)])[3]))),
                            **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if
                                         v not in ['env', 'policy']],
                                        inspect.getfullargspec(globals()['ACER'])[3]))),

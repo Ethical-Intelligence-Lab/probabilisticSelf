@@ -39,7 +39,7 @@ params = {
     'env_id': 'gridworld-v0',
     'singleAgent': False,
     'game_type': 'logic',  # logic, contingency, change_agent, logic_extended, contingency_extended,
-    # change_agent_extended, change_agent_extended_2
+    # change_agent_extended (mock self can be the real self), change_agent_extended_1 (mock self cannot be the real self), change_agent_extended_2 (harder)
     'player': 'random',  # random, human, dqn_training, self_class, ppo2_training
     'exp_name': 'train_',
     'verbose': False,
@@ -68,5 +68,6 @@ params = {
     # Modify the environment to 'modify_to' after 2000 levels. Input levels_count as 40 to run for 4000 levels, if you set 'mid_modify' to True
     'modify_to': None,  # logic, contingency, change_agent, logic_extended, contingency_extended,
     # change_agent_extended, change_agent_extended_2
-    'neg_reward': False
+    'neg_reward': False,
+    'n_cpu_tf_sess': 1
 }
