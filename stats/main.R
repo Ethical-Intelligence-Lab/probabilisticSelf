@@ -7,7 +7,7 @@ pacman::p_load('rjson')
 # Manually enter directory path if you are not using Rstudio
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-games = c('logic_game')
+games = c('logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game')
 
 agents = c('self_class')
 game_datas <- c()
@@ -49,8 +49,6 @@ for (game in games) {
       # Favors Alternative Hypothesis (mu =/= 0)
       x <- game_datas[[game]]$human[[level]]
       y <- game_datas[[game]]$self_class_first_100[[level]]
-      rept <- length(x) - length(y)
-      y <- c(y, y[1:rept])
       result <- 1 / ttestBF(x = x, y = y)
 
       var_result <- var.test(x, y)
@@ -71,6 +69,7 @@ for (game in games) {
 
     }
     all_stats[[game]][['Bayes Factors']] <- bf_corr
+    all_stats[[game]][['Binary Bayes Factors']] <- bfs_binary
     all_stats[[game]][['t-values']] <- ts
     all_stats[[game]][['p-values']] <- ps
 
