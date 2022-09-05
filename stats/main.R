@@ -72,13 +72,6 @@ for (game in games) {
 
 }
 
-## Compare First and Last Level
-human_first <- game_datas[[game]]$human[[1]]
-human_last <- game_datas[[game]]$human[[100]]
-
-self_first <- game_datas[[game]]$self_class_first_100[[1]]
-self_last <- game_datas[[game]]$self_class_first_100[[100]]
-
 for (game in games) {
   print(paste("*-*-*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*-*-*"))
 
