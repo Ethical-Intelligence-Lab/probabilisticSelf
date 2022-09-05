@@ -14,9 +14,6 @@ game_datas <- c()
 all_stats <- c()
 all_bfs_binary <- c()
 
-# TODO: Look at the t-tests, simulate equal sample size
-# TODO: Inf t value
-
 # Note. ‘.’= p < .1, ‘**’ = p < .01, ‘***’ = p < .001.
 print_sig <- function(p) {
   if( p < 0.001 ) {
@@ -36,15 +33,12 @@ for (game in games) {
   filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
   game_data <- fromJSON(file = filename)
   game_datas[[game]] <- game_data
-
-  #print(paste("******", game, "*******"))
   bfs_binary <- c()
   ts <- c()
   ps <- c()
   bf_corr <- c()
   for (agent in agents) {
     levels <- 1:100
-    #print(paste("--------- FIRST 100: Human vs. ", agent, " ---------"))
     for (level in levels) {
       # Favors Alternative Hypothesis (mu =/= 0)
       x <- game_datas[[game]]$human[[level]]
