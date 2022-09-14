@@ -36,8 +36,9 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         pip install ./baselines_l
         pip install -r requirements.txt # Make sure you run this after installing baselines_l
         ```
+(4) You may need to install OpenMPI, CMake, and zlib. For installation, please refer here: https://stable-baselines.readthedocs.io/en/master/guide/install.html
 
-(4) You may need to also implement the following tensorflow fixes.
+(5) You may also need to also implement the following tensorflow fixes.
         ```
         pip uninstall tensorflow-gpu;
         pip install tensorflow==1.15.0 --ignore-installed 
@@ -56,6 +57,6 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
         ```
     - For more parameters, see `params/param_dicts.py`
 
-(5) Data
+(6) Data
 - Available in the project's OSF repository. Simply unzip the .zip folder in the project repo, such that the 'data' directory is visible. 
 
