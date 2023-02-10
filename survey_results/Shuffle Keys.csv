@@ -1,0 +1,110 @@
+StartDate,EndDate,Status,IPAddress,Progress,Duration (in seconds),Finished,RecordedDate,ResponseId,RecipientLastName,RecipientFirstName,RecipientEmail,ExternalReference,LocationLatitude,LocationLongitude,DistributionChannel,UserLanguage,consent,att1,att2,mturk_id,completion_code,comp1,comp2,Q4,Q4_4_TEXT,Q5,Q5_6_TEXT,Q6,Q7,Q7_8_TEXT,Q8_1,Random ID,workerId,Set a Value Now,finished_game
+Start Date,End Date,Response Type,IP Address,Progress,Duration (in seconds),Finished,Recorded Date,Response ID,Recipient Last Name,Recipient First Name,Recipient Email,External Data Reference,Location Latitude,Location Longitude,Distribution Channel,User Language,"Participation is voluntary
+It is your choice whether or not to participate in this research. If you choose to participate, you may change your mind and leave the study at any time. Refusal to participate or stopping your participation will involve no penalty or loss of benefits to which you are otherwise entitled.
+
+
+
+What is the purpose of this research?
+
+The purpose of this research is to examine human visual performance and judgments. All data from this experiment are gathered for scientific purposes. These data may be published in scientific journals so that other researchers may have access to these data.
+
+
+
+How long will I take part in this research?
+
+Your participation will take approximately 40 minutes to complete.
+
+
+What can I expect if I take part in this research?
+As a participant, you will be asked to play a game using key presses. You will also be asked to complete a demographics form at the end.
+
+
+
+What are the risks and possible discomforts?
+
+If you choose to participate, the effects should be comparable to those you would experience from viewing a computer monitor for 40 minutes and using a mouse or keyboard, e.g., eye fatigue. You are free to take breaks throughout the session.
+
+
+
+Will I be compensated for participating in this research?
+
+You will be compensated $4 for this study.  
+
+If I take part in this research, how will my privacy be protected? What happens to the information you collect?
+
+Your participation in this experiment will remain confidential, and your identity will not be stored with your data.
+
+
+
+If I have any questions, concerns or complaints about this research study, who can I talk to?
+
+The researcher for this study is Julian De Freitas who can be reached at 626.559.6401; #161 Morgan Hall, 15 Harvard Way, Boston MA, 02163; jdefreitas@hbs.edu. If you have questions, concerns, or complaints,
+• If you would like to talk to the research team,
+• If you think the research has harmed you, or
+• If you wish to withdraw from the study.
+
+
+
+If you have any technical difficulties during the experiment, you can send an email to: auguralp@fas.harvard.edu
+
+
+
+This research has been reviewed by the Committee on the Use of Human Subjects in Research at Harvard University. They can be reached at 617-496-2847, 1350 Massachusetts Avenue, Suite 935, Cambridge, MA 02138, or cuhs@harvard.edu for any of the following:
+• If your questions, concerns, or complaints are not being answered by the research team,
+• If you cannot reach the research team,
+• If you want to talk to someone besides the research team, or
+• If you have questions about your rights as a research participant.","Before we begin, here are some checks to make sure you're paying attention.
+
+
+
+John is taller than Paul. Who is shorter?","What is the color of grass?
+
+The fresh, uncut grass. To make sure you are paying attention, we want you to select purple.","What is your MTURK ID?
+
+Please note that this response should auto-fill with the correct ID",Important: Please enter the exact completion code you received at the end of the game.,How many red squares were present in each level of the game you just played?,How many levels were there in the game?,What is your gender? - Selected Choice,What is your gender? - Other (please specify) - Text,What is your ethnicity? - Selected Choice,What is your ethnicity? - Other (please Specify) - Text,What is your age (in years)?,Please indicate the highest level of education completed. - Selected Choice,Please indicate the highest level of education completed. - Other (please specify) - Text,"How much experience do you have with playing computer games?
+[1=None at all, 100=A lot] - 1",Random ID,workerId,Set a Value Now,finished_game
+"{""ImportId"":""startDate"",""timeZone"":""America/Denver""}","{""ImportId"":""endDate"",""timeZone"":""America/Denver""}","{""ImportId"":""status""}","{""ImportId"":""ipAddress""}","{""ImportId"":""progress""}","{""ImportId"":""duration""}","{""ImportId"":""finished""}","{""ImportId"":""recordedDate"",""timeZone"":""America/Denver""}","{""ImportId"":""_recordId""}","{""ImportId"":""recipientLastName""}","{""ImportId"":""recipientFirstName""}","{""ImportId"":""recipientEmail""}","{""ImportId"":""externalDataReference""}","{""ImportId"":""locationLatitude""}","{""ImportId"":""locationLongitude""}","{""ImportId"":""distributionChannel""}","{""ImportId"":""userLanguage""}","{""ImportId"":""QID108""}","{""ImportId"":""QID115""}","{""ImportId"":""QID116""}","{""ImportId"":""QID123_TEXT""}","{""ImportId"":""QID122_TEXT""}","{""ImportId"":""QID117""}","{""ImportId"":""QID118""}","{""ImportId"":""QID102""}","{""ImportId"":""QID102_4_TEXT""}","{""ImportId"":""QID103""}","{""ImportId"":""QID103_6_TEXT""}","{""ImportId"":""QID105_TEXT""}","{""ImportId"":""QID106""}","{""ImportId"":""QID106_8_TEXT""}","{""ImportId"":""QID107_1""}","{""ImportId"":""Random ID""}","{""ImportId"":""workerId""}","{""ImportId"":""Set a Value Now""}","{""ImportId"":""finished_game""}"
+2023-01-19 00:09:36,2023-01-19 00:26:44,IP Address,5.25.159.197,100,1027,True,2023-01-19 00:26:44,R_AGnpdaiFl59TzVL,,,,,39.9205,32.8372,anonymous,EN,"I consent, begin the study",Paul,Purple,A_WORKER_ID2,3395-4818-7764-3402,Four,100,Male,,White or European,,23,College Graduate (4 year),,82,44269,A_WORKER_ID,,yes
+2023-01-19 00:08:55,2023-01-19 01:32:14,IP Address,5.25.159.197,100,4999,True,2023-01-19 01:32:15,R_2YD0R5s8dc2aWSU,,,,,39.9205,32.8372,anonymous,EN,"I consent, begin the study",Paul,Purple,1996," 0462-7946-7857-8012",Four,100,Female,,White or European,,6,College Graduate (4 year),,9,29491,,,yes
+2023-01-19 05:06:12,2023-01-19 05:49:57,IP Address,172.58.5.175,100,2625,True,2023-01-19 05:49:58,R_42yVHGKpxRyCJvX,,,,,33.9395,-84.2008,anonymous,EN,"I consent, begin the study",Paul,Purple,A3DW6KSQPG6GVQ,6394-2448-8267-4694,Four,100,Female,,Mixed,,35,College Graduate (4 year),,91,91875,A3DW6KSQPG6GVQ,,yes
+2023-01-19 05:35:15,2023-01-19 06:12:48,IP Address,71.80.205.190,100,2252,True,2023-01-19 06:12:48,R_2CkYLNKKmaG01uw,,,,,43.227,-123.5158,anonymous,EN,"I consent, begin the study",Paul,Purple,ABX5OQLR6UNBC,2141-0059-3204-7898,Four,100,Female,,White or European,,49,Some College,,70,15872,ABX5OQLR6UNBC,,yes
+2023-01-19 05:43:17,2023-01-19 06:23:54,IP Address,71.237.25.97,100,2437,True,2023-01-19 06:23:55,R_3EYCicT0LdUO88M,,,,,39.7351,-105.0269,anonymous,EN,"I consent, begin the study",Paul,Purple,A1YZ0ETOCJO1B2,7885-0419-8742-1067,Four,100,Male,,Hispanic or Latino,,38,College Graduate (4 year),,67,32594,A1YZ0ETOCJO1B2,,yes
+2023-01-19 05:20:20,2023-01-19 06:27:37,IP Address,65.215.43.163,100,4036,True,2023-01-19 06:27:38,R_2WNe4HDInDLGQRX,,,,,40.7961,-73.9513,anonymous,EN,"I consent, begin the study",Paul,Purple,A3KVIZLKSASAES,1694-5204-1997-9893,Four,100,Female,,White or European,,46,College Graduate (4 year),,78,38343,A3KVIZLKSASAES,,yes
+2023-01-19 05:56:01,2023-01-19 06:35:18,IP Address,121.91.225.157,100,2357,True,2023-01-19 06:35:18,R_3PiZqTeRZjGTvXF,,,,,47.6859,-122.2994,anonymous,EN,"I consent, begin the study",Paul,Purple,A3VV07FCCSZ7JY,A3VV07FCCSZ7JY,Four,100,Male,,White or European,,49,Masters Degree (MS),,100,96637,A3VV07FCCSZ7JY,,no
+2023-01-19 05:07:35,2023-01-19 06:37:07,IP Address,50.231.88.196,100,5371,True,2023-01-19 06:37:08,R_22lc1BG2KSNNkx4,,,,,40.7149,-73.9893,anonymous,EN,"I consent, begin the study",Paul,Purple,A22PT6K5XNIFLA,6795-0943-5141-3665,Four,100,Female,,Black or African American,,40,Masters Degree (MS),,100,81534,A22PT6K5XNIFLA,,yes
+2023-01-19 05:59:27,2023-01-19 06:50:17,IP Address,68.198.167.82,100,3050,True,2023-01-19 06:50:18,R_2UX7KcIfdyhRKX3,,,,,40.7606,-72.9844,anonymous,EN,"I consent, begin the study",Paul,Purple,A1F2APQMJSQVFK,6889-9012-5017-8414,Four,100,Female,,Mixed,,28,College Graduate (4 year),,85,20692,A1F2APQMJSQVFK,,yes
+2023-01-19 06:52:48,2023-01-19 07:03:41,IP Address,73.130.172.144,100,652,True,2023-01-19 07:03:41,R_2SB5jLBofbI8hfD,,,,,40.3102,-76.0388,anonymous,EN,"I consent, begin the study",Paul,Purple,A11TOEFVA0X3PL,"A11TOEFVA0X3PL ",Four,10,Female,,White or European,,35,Masters Degree (MS),,74,30601,A11TOEFVA0X3PL,,no
+2023-01-19 06:38:27,2023-01-19 07:12:17,IP Address,202.182.74.83,100,2030,True,2023-01-19 07:12:17,R_1N9eYXgGAcd2BCe,,,,,40.7123,-74.0068,anonymous,EN,"I consent, begin the study",Paul,Purple,A2CRCL0Q5X3G0M,4601-6801-5031-0909,Four,100,Female,,Black or African American,,44,Masters Degree (MS),,100,44272,A2CRCL0Q5X3G0M,,yes
+2023-01-19 06:26:40,2023-01-19 07:19:07,IP Address,202.182.73.249,100,3146,True,2023-01-19 07:19:07,R_W05GIqF3DIiTBUR,,,,,41.8874,-87.6318,anonymous,EN,"I consent, begin the study",Paul,Purple,A13PDVBEOE58CJ,7775-1308-7262-2256,Four,100,Female,,Asian,,48,College Graduate (4 year),,100,93070,A13PDVBEOE58CJ,,yes
+2023-01-19 07:13:42,2023-01-19 07:26:12,IP Address,99.61.109.6,100,750,True,2023-01-19 07:26:13,R_xtv047pwBpnl3LH,,,,,28.5727,-80.8206,anonymous,EN,"I consent, begin the study",Paul,Purple,A1TW2BZRRS874Z,A1TW2BZRRS874Z,Four,50,Male,,White or European,,39,Some College,,94,81990,A1TW2BZRRS874Z,,no
+2023-01-19 06:53:16,2023-01-19 07:31:38,IP Address,100.11.31.119,100,2301,True,2023-01-19 07:31:38,R_1JLX9ycfRaaAtJf,,,,,40.1215,-75.3269,anonymous,EN,"I consent, begin the study",Paul,Purple,A2SL8R5B6QX4Q0,9705-7191-2113-7752,Four,100,Male,,White or European,,41,College Graduate (4 year),,100,10587,A2SL8R5B6QX4Q0,,yes
+2023-01-19 07:06:53,2023-01-19 07:46:56,IP Address,174.86.56.150,100,2403,True,2023-01-19 07:46:58,R_1LO4m0d13nJMux1,,,,,38.5682,-89.8965,anonymous,EN,"I consent, begin the study",Paul,Purple,A38DHLB88V8DL8,0917-8926-9978-6712,Four,100,Female,,White or European,,48,College Graduate (4 year),,83,48494,A38DHLB88V8DL8,,yes
+2023-01-19 07:32:56,2023-01-19 07:56:12,IP Address,173.70.60.41,100,1396,True,2023-01-19 07:56:13,R_3jdglbdBknOAx2r,,,,,40.8462,-74.7056,anonymous,EN,"I consent, begin the study",Paul,Purple,A4W9APAHFWVLO,6396-6122-5157-0765,Four,50,Male,,White or European,,41,College Graduate (4 year),,75,21372,A4W9APAHFWVLO,,yes
+2023-01-19 07:29:28,2023-01-19 08:03:06,IP Address,107.11.182.13,100,2018,True,2023-01-19 08:03:06,R_3I6xizEeAzdWoIb,,,,,40.2738,-81.8662,anonymous,EN,"I consent, begin the study",Paul,Purple,A1JJYY622DGE5L,3133-7593-9533-2848,Four,100,Female,,White or European,,47,College Graduate (4 year),,75,62732,A1JJYY622DGE5L,,yes
+2023-01-19 07:34:08,2023-01-19 08:17:26,IP Address,73.10.51.169,100,2597,True,2023-01-19 08:17:27,R_2YeLxdyaY5nJ0PX,,,,,39.6999,-74.2633,anonymous,EN,"I consent, begin the study",Paul,Purple,AKMPWFRGTRTI0,5036-0332-9020-4397,Ten,100,Male,,White or European,,57,Masters Degree (MS),,83,96018,AKMPWFRGTRTI0,,yes
+2023-01-19 07:27:11,2023-01-19 08:23:58,IP Address,73.118.245.192,100,3407,True,2023-01-19 08:23:58,R_0v7G0eqbykagRJD,,,,,47.6092,-122.1168,anonymous,EN,"I consent, begin the study",Paul,Purple,A2EL5K6THWY8CH,8794-4531-9370-4690,Four,100,Male,,White or European,,67,College Graduate (4 year),,71,32840,A2EL5K6THWY8CH,,yes
+2023-01-19 07:10:49,2023-01-19 08:59:39,IP Address,73.235.98.147,100,6529,True,2023-01-19 08:59:39,R_3iqySYVJdUZtsU3,,,,,38.0253,-121.3009,anonymous,EN,"I consent, begin the study",Paul,Purple,A3MN72E1H7H6IS,A3MN72E1H7H6IS,Four,100,Male,,White or European,,27,Doctoral Degree (PhD),,81,56786,A3MN72E1H7H6IS,,no
+2023-01-19 08:45:16,2023-01-19 09:54:48,IP Address,76.102.30.220,100,4172,True,2023-01-19 09:54:49,R_2zbzDoAGElFvOiY,,,,,37.4025,-121.866,anonymous,EN,"I consent, begin the study",Paul,Purple,A1PTNS6H2RZTGL,A1PTNS6H2RZTGL,Four,100,Male,,White or European,,27,Doctoral Degree (PhD),,88,68533,A1PTNS6H2RZTGL,,no
+2023-01-19 09:47:52,2023-01-19 10:07:59,IP Address,174.27.76.183,100,1206,True,2023-01-19 10:08:04,R_22WCvlomYfJAACv,,,,,43.6342,-116.341,anonymous,EN,"I consent, begin the study",Paul,Purple,A33Z6BHAJUGCHY,5971-7114-3973-9929,Four,100,Male,,White or European,,28,College Graduate (4 year),,80,61472,A33Z6BHAJUGCHY,,yes
+2023-01-19 10:23:59,2023-01-19 10:25:13,IP Address,5.25.159.197,100,74,True,2023-01-19 10:25:14,R_2WMfX0YjY5gGSi0,,,,,39.9205,32.8372,anonymous,EN,"I consent, begin the study",Paul,Purple,dmwqkdm,1694-5204-1997-9892,Four,100,Male,,White or European,,,Vocational/Technical School (2 year),,55,27352,,,yes
+2023-01-19 10:32:11,2023-01-19 10:32:53,IP Address,5.25.159.197,100,42,True,2023-01-19 10:32:53,R_OPgaRenEiConKGl,,,,,39.9205,32.8372,anonymous,EN,"I consent, begin the study",John,Purple,A_WORKER_ID,"1234-1234-1234-1234 ",Four,100,Female,,Hispanic or Latino,,12,Some College,,43,36505,A_WORKER_ID,,yes
+2023-01-19 10:41:32,2023-01-19 11:13:18,IP Address,47.33.171.33,100,1905,True,2023-01-19 11:13:19,R_2RX6VDEIpygB8ad,,,,,42.3956,-123.3528,anonymous,EN,"I consent, begin the study",Paul,Purple,A1YV7SCB1OHMUT,8104-9635-1857-9893,Four,100,Male,,White or European,,49,College Graduate (4 year),,70,64082,A1YV7SCB1OHMUT,,yes
+2023-01-19 10:35:13,2023-01-19 11:41:04,IP Address,81.161.5.95,100,3950,True,2023-01-19 11:41:04,R_4Iw2UOfH5EkFwyd,,,,,40.7662,-74.0178,anonymous,EN,"I consent, begin the study",John,Purple,A9500TJQDB94E,8156-4258-6673-5814,Four,100,Female,,White or European,,28,Masters Degree (MS),,100,90485,A9500TJQDB94E,,yes
+2023-01-19 12:03:29,2023-01-19 12:29:26,IP Address,168.220.170.137,100,1557,True,2023-01-19 12:29:27,R_2Xc8p8RO03B54WG,,,,,34.6546,-80.3681,anonymous,EN,"I consent, begin the study",Paul,Purple,AYW62R027PUT1,2175-3990-2000-7589,Four,100,Male,,White or European,,47,College Graduate (4 year),,30,76097,AYW62R027PUT1,,yes
+2023-01-19 12:01:08,2023-01-19 13:08:45,IP Address,73.209.180.232,100,4056,True,2023-01-19 13:08:45,R_3DecBjzPa9sCjfY,,,,,42.0354,-87.737,anonymous,EN,"I consent, begin the study",Paul,Purple,A1VAZ4O0J5QD7S,8178-2987-5765-7919,Four,100,Female,,White or European,,32,Masters Degree (MS),,28,49048,A1VAZ4O0J5QD7S,,yes
+2023-01-19 14:03:40,2023-01-19 15:01:49,IP Address,72.180.182.28,100,3488,True,2023-01-19 15:01:50,R_2algx4nXlRbnadA,,,,,25.9729,-97.4695,anonymous,EN,"I consent, begin the study",Paul,Purple,AH4LSAYFLV68I,5192-6144-7333-4701,Four,100,Female,,White or European,,45,College Graduate (4 year),,68,47470,AH4LSAYFLV68I,,yes
+2023-01-19 05:04:27,2023-01-19 05:04:39,IP Address,46.1.122.94,23,12,False,2023-01-26 05:04:41,R_73YcDLjExsbMuFH,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,,,,,,,,,,,,,84741,,,
+2023-01-19 05:06:10,2023-01-19 05:08:12,IP Address,73.64.157.27,27,122,False,2023-01-26 05:08:20,R_2ZHPmN95RrJYgYM,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,ARVXIBUCA8WDZ,,,,,,,,,,,,43739,ARVXIBUCA8WDZ,,
+2023-01-19 05:06:56,2023-01-19 05:10:11,IP Address,68.4.166.206,27,195,False,2023-01-26 05:10:13,R_25XgM99rlswpCs4,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,ALYR5CI2SM2JC,,,,,,,,,,,,82044,ALYR5CI2SM2JC,,
+2023-01-19 05:09:06,2023-01-19 05:11:58,IP Address,67.81.160.77,27,171,False,2023-01-26 05:11:58,R_Y4U1qnUM01HvKpz,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,AHYTT3T8W9Y9Y,,,,,,,,,,,,25096,AHYTT3T8W9Y9Y,,
+2023-01-19 05:10:22,2023-01-19 05:13:24,IP Address,99.23.146.214,27,182,False,2023-01-26 05:13:25,R_32R5YImFE8Kbzem,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A2LR1HKNOVDTJ8,,,,,,,,,,,,74543,A2LR1HKNOVDTJ8,,
+2023-01-19 05:14:16,2023-01-19 05:18:03,IP Address,76.182.23.198,27,227,False,2023-01-26 05:18:07,R_12DSmh7TV1UeChI,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A2IQ0QCTQ3KWLT,,,,,,,,,,,,65245,A2IQ0QCTQ3KWLT,,
+2023-01-19 05:16:42,2023-01-19 05:19:50,IP Address,174.82.78.75,27,187,False,2023-01-26 05:19:54,R_w15d0Vhcoh1bqTL,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,ACJ6NSCIWMUZI,,,,,,,,,,,,48346,ACJ6NSCIWMUZI,,
+2023-01-19 05:26:56,2023-01-19 05:27:26,IP Address,50.231.88.211,27,30,False,2023-01-26 05:27:29,R_2BmNnobMlBFt6vA,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A24IWWIUPASCQJ,,,,,,,,,,,,33889,A24IWWIUPASCQJ,,
+2023-01-19 05:29:14,2023-01-19 05:32:54,IP Address,68.204.208.53,27,220,False,2023-01-26 05:32:58,R_2wtxX2wj0Fg9oBZ,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A1DUPOUC9RNU4L,,,,,,,,,,,,28502,A1DUPOUC9RNU4L,,
+2023-01-19 05:40:49,2023-01-19 05:50:38,IP Address,47.25.107.106,27,588,False,2023-01-26 05:50:39,R_272r6WFcCv6DUca,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A1KZ97QBNRPVCT,,,,,,,,,,,,63578,A1KZ97QBNRPVCT,,
+2023-01-19 05:31:46,2023-01-19 05:50:39,IP Address,24.170.231.140,27,1132,False,2023-01-26 05:50:44,R_31TqJk6Bv6nGO1d,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A3DM3K0QT4RMH0,,,,,,,,,,,,30708,A3DM3K0QT4RMH0,,
+2023-01-19 06:01:00,2023-01-19 06:10:53,IP Address,69.113.168.239,27,592,False,2023-01-26 06:10:55,R_2SIepXgJLwlRMAO,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A2V27A9GZA1NR2,,,,,,,,,,,,91796,A2V27A9GZA1NR2,,
+2023-01-19 06:22:19,2023-01-19 06:25:46,IP Address,174.84.35.123,27,206,False,2023-01-26 06:25:48,R_C4DASfjaE0HPnxf,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A2KW87ZD2ELYNG,,,,,,,,,,,,74628,A2KW87ZD2ELYNG,,
+2023-01-19 06:57:36,2023-01-19 06:58:02,IP Address,68.198.167.82,5,25,False,2023-01-26 06:58:05,R_3HU1gmW8Rpq7NaA,,,,,,,anonymous,EN,"I consent, begin the study",,,,,,,,,,,,,,,51392,A1F2APQMJSQVFK,,
+2023-01-19 11:21:29,2023-01-19 11:25:18,IP Address,47.7.149.96,27,228,False,2023-01-26 11:25:21,R_2VPAJgIiLj4A46Y,,,,,,,anonymous,EN,"I consent, begin the study",Paul,Purple,A345ZKNQSVPJ6G,,,,,,,,,,,,22504,A345ZKNQSVPJ6G,,
