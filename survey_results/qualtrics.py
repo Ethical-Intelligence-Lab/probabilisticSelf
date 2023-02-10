@@ -1,4 +1,5 @@
 import csv
+import pandas as pd
 
 workers = {'logic': ["A2APG8MSLJ6G2K",
                      "A3S3WYVCVWW8IZ",
@@ -82,7 +83,6 @@ for i, row in enumerate(csvreader):
             data[w]['genders'].append(row[23])
             data[w]['ages'].append(int(row[27]))
 
-
 file.close()
 
 for w in workers.keys():
@@ -90,4 +90,30 @@ for w in workers.keys():
     print("Female proportion: " + str(data[w]['genders'].count('Female') / len(data[w]['genders'])))
     print("Avg age: " + str(sum(data[w]['ages']) / len(data[w]['ages'])))
 
+##### Logic Perturbed #####
+print("****** Logic Perturbed ******")
+data = pd.read_csv('Logic Perturbed.csv')
+data = data[(data['finished_game'] == 'yes') & (data['workerId'] != 'A_WORKER_ID')]
+print("Female proportion: ", len(data[(data['Q4'] =='Female')]) / len(data))
+print("Mean age: ", (data['Q6'].astype(int).mean()))
 
+##### Contigency Perturbed #####
+print("****** Contingency perturbed ******")
+data = pd.read_csv('Contingency Perturbed.csv')
+data = data[(data['finished_game'] == 'yes')]
+print("Female proportion: ,", len(data[(data['Q4'] == 'Female')]) / len(data))
+print("Mean age: ", (data['Q6'].astype(int).mean()))
+
+##### Self Centering #####
+print("****** Self Centering ******")
+data = pd.read_csv('Self Centering.csv')
+data = data[(data['finished_game'] == 'yes') & (data['workerId'] != 'ABCD1435')]
+print("Female proportion: ,", len(data[(data['Q4'] == 'Female')]) / len(data))
+print("Mean age: ", (data['Q6'].astype(int).mean()))
+
+##### Shuffle Keys #####
+print("****** Shuffle Keys ******")
+data = pd.read_csv('Shuffle Keys.csv')
+data = data[(data['finished_game'] == 'yes') & (data['workerId'] != 'A_WORKER_ID') & (data['workerId'] != '') & (data['workerId'].notnull())]
+print("Female proportion: ,", len(data[(data['Q4'] == 'Female')]) / len(data))
+print("Mean age: ", (data['Q6'].astype(int).mean()))
