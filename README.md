@@ -64,4 +64,4 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 ## Setup for HRL:
 - Create Python 3.9 environment.
 - Install the requirements in `requirements_hrl.txt`
-- Install ray nightly from the wheel `pip install -U "ray[default] @ LINK_TO_WHEEL.whl"`. You can find the links to install the wheel here: https://docs.ray.io/en/latest/ray-overview/installation.html
+- Install ray nightly from the wheel `pip install -U LINK_TO_WHEEL.whl`. You can find the links to install the wheel here: https://docs.ray.io/en/latest/ray-overview/installation.html

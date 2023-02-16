@@ -34,10 +34,9 @@ google-pasta==0.2.0
 googleapis-common-protos==1.58.0
 gpustat==1.0.0
 grpcio==1.47.0
-gym==0.23.1
-gym-notices==0.0.8
-gymnasium==0.27.1
-gymnasium-notices==0.0.1
+pandas
+gym
+gymnasium
 h11==0.14.0
 h5py==3.7.0
 idna==3.3
@@ -56,7 +55,6 @@ lz4==4.3.2
 Markdown==3.4.1
 markdown-it-py==2.1.0
 MarkupSafe==2.1.1
-matplotlib==3.5.3
 mdurl==0.1.2
 msgpack==1.0.4
 multidict==6.0.4
@@ -121,3 +119,6 @@ Werkzeug==2.2.2
 wrapt==1.14.1
 yarl==1.8.2
 zipp==3.8.1
+ray[tune]
+scikit-image
+lz4
