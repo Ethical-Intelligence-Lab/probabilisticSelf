@@ -665,6 +665,7 @@ class GridworldEnv(gym.Env):
                     self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json",
                     'w') as fp:
                 json.dump(final_data, fp)
+                print("Data save dir: ", self.metadata['data_save_dir'])
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
 
