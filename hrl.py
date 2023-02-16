@@ -69,7 +69,7 @@ parser.add_argument(
     "--stop-reward", type=float, default=0.0, help="Reward at which we stop training."
 )
 parser.add_argument(
-    "--episodes-total", type=int, default=120, help="Number of episodes to train."
+    "--episodes-total", type=int, default=2000, help="Number of episodes to train."
 )
 parser.add_argument(
     "--no-tune",
