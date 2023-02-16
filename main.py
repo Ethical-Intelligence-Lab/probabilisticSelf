@@ -2,21 +2,21 @@ import os
 import sys
 import importlib
 from self_model import Self_class
-import gym
+import gym_l.gym as gym
 import gym_gridworld  # Registering our environment here
 from utils.keys import key_converter
 from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from stable_baselines3 import DQN as DQN3
+from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
 from stable_baselines.common.cmd_util import make_vec_env
+from stable_baselines3.common.env_util import make_vec_env as make_vec_env3
 from params.default_params import DefaultParams, get_cmd_line_args
 import neptune.new as neptune
 from dotenv import load_dotenv
 import tensorflow as tf
-
 import custom_callback
 
 # Suppresses warnings about future deprecation. These warnings mostly appear because we are using
-# and older version of tensorflow.
+# an older version of tensorflow.
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -81,6 +81,10 @@ if __name__ == '__main__':
         load_path = P['save_path'] + str(P['timestamp']) + "k/weights.zip"
 
     algo_params = def_params.get_algorithm_params()
+
+    if algo_params.get('n_cpu_tf_sess', False) != False:
+        print("N-cpu = 1")
+        algo_params['n_cpu_tf_sess'] = 1
     while True:
         if P['player'] in ['human', 'self_class', 'random']:
             if P['player'] == 'random':
@@ -133,7 +137,11 @@ if __name__ == '__main__':
         original_env = None
         if player in ['A2C', 'ACER', 'PPO2']:
             original_env = env
-            env = make_vec_env(lambda: env, n_envs=1, seed=P['seed'])  # Vectorize the environment
+
+            if baselines_v == 2:
+                env = make_vec_env(lambda: env, n_envs=1, seed=P['seed'])  # Vectorize the environment
+            else:
+                env = make_vec_env3(env, n_envs=1, seed=P['seed'])
 
         if not P['load']:  # Train From Zero
             model = ALGO(def_params.get_policy(), env, **algo_params)
@@ -142,9 +150,9 @@ if __name__ == '__main__':
             if P['save_and_load_replay_buffer']:
                 model.load_replay_buffer(P['save_path'] + "replay_buffer")
 
-        if original_env:
-            original_env.set_model(model)
-        env.set_model(model)
+        #if original_env:
+        #    original_env.set_model(model)
+        #env.set_model(model)
         if P['save']:
             if P['baselines_version'] == 2:
                 model.learn(total_timesteps=P['n_timesteps'], callback=custom_callback.CustomCallback(P), run=run)

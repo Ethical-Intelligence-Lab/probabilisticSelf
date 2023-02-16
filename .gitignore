@@ -4,6 +4,7 @@ models/
 data/
 saved_models/
 .neptune
+useless/
 
 #file extentions
 .zip
@@ -12,6 +13,7 @@ saved_models/
 .svg
 .idea
 .zip
+*.sh
 
 #repos
 baselines_l
