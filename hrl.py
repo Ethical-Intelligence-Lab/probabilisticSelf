@@ -136,7 +136,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(f"Running with following CLI options: {args}")
 
-    ray.init(local_mode=args.local_mode)
+    ray.init(local_mode=args.local_mode, num_cpus=int(os.getenv("LSB_MAX_NUM_PROCESSORS", 1)))
 
     # Can also register the env creator function explicitly with:
     def_params = DefaultParams(player="ppo", baselines_v=-1)
@@ -194,7 +194,7 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        .resources(num_gpus=1 if os.getenv('LSB_QUEUE') == 'gpu' else 0, num_cpus=int(os.getenv("LSB_MAX_NUM_PROCESSORS", 1)))
+        .resources(num_gpus=1 if os.getenv('LSB_QUEUE') == 'gpu' else 0)
     )
 
     if args.no_tune:
