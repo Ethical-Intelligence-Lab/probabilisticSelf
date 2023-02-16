@@ -2,8 +2,11 @@ import random
 import string
 import argparse
 import inspect
-from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
+
+sb = False  # Running stable baselines
+if sb:
+    from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
+    from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
 
 from params.param_dicts import param_abbreviations, params
 import os, sys
@@ -16,6 +19,13 @@ class DefaultParams:
         self.params = params
         self.params['player'] = player
         self.params['save_path'] = ''
+
+        if baselines_v == -1:
+            self.algo_only = {}
+            return
+
+        from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
+        from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
 
         if player not in ['human', 'self_class', 'random']:
             # Get arguments of particular algorithm

@@ -1,16 +1,26 @@
-import gym
+sb = False  # Running stable baselines
+if sb:
+    import gym
+else:
+    import gymnasium as gym
+    from ray.rllib.env import MultiAgentEnv
 import os
 import copy
-from gym import spaces
+
+if sb:
+    from gym import spaces
+else:
+    from gymnasium import spaces
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 import sys
 import json
 
+from params.param_dicts import params
+
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
-from params.default_params import get_cmd_line_args, DefaultParams
 
 COLORS = {0: [0.0, 0.0, 0.0], 1: [0.5, 0.5, 0.5], \
           2: [0.0, 0.0, 1.0], 3: [0.0, 1.0, 0.0], \
@@ -84,8 +94,10 @@ class GridworldEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     num_env = 0
 
-    def __init__(self):
+    def __init__(self, P=None):
         print('initializing environment')
+        self.P = P
+        self._obs_type = 'image'
         self.num_envs = 1
         self._seed = 0
         self.model = None
@@ -105,6 +117,9 @@ class GridworldEnv(gym.Env):
         ''' set observation space '''
         self.obs_shape = [128, 128, 3]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
+
+        if P:
+            self.make_game(P)
 
     def make_game(self, P):
         '''
@@ -502,7 +517,6 @@ class GridworldEnv(gym.Env):
                     self.mock_s.set_location([nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                               nxt_ns_states[i][1] + self.action_pos_dict[action][1]])
 
-
             # Update ns positions
             if stay is False:
                 nxt_ns_states[i][0] = nxt_ns_states[i][0] + self.action_pos_dict[action][0]
@@ -588,6 +602,13 @@ class GridworldEnv(gym.Env):
                               ]
 
     def reset(self):
+        print("Level finished, ", self.level_counter)
+
+        try:
+            self.verbose
+        except AttributeError:
+            self.make_game(self.P)
+
         if self.verbose:
             print('reset environment')
         ''' save data '''
@@ -832,7 +853,7 @@ class GridworldEnv(gym.Env):
         if self.step_counter != 0:
             plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
 
-        if self.step_counter != 0 and self.game_type == "change_agent" and self.step_counter % 7 == 0:
+        if self.step_counter != 0 and self.game_type == "change_agent_extended_2" and self.step_counter % 7 == 0:
             plt.suptitle("CHANGE")
 
         fig.canvas.draw()
@@ -893,6 +914,15 @@ class GridworldEnv(gym.Env):
         ''' get current target state '''
         return self.agent_target_state
 
+    def _get_new_pos(self, pos, direction):
+        nxt_s_state = (pos[0] + self.action_pos_dict[direction][0],
+                       pos[1] + self.action_pos_dict[direction][1])
+
+        if (nxt_s_state[0] < 0) or (nxt_s_state[0] >= self.grid_map_shape[0]) or (nxt_s_state[1] < 0) or (nxt_s_state[1] >= self.grid_map_shape[1]) or (self.current_grid_map[nxt_s_state[0], nxt_s_state[1]] in [1,8]): # Check if the self can move
+            return pos  # Did not move!
+        else:
+            return nxt_s_state
+
     def _jump_to_state(self, to_state):
         ''' move agent to another state '''
         info = {}
@@ -948,3 +978,85 @@ class GridworldEnv(gym.Env):
 
     def set_model(self, model):
         self.model = model
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class HierarchicalGridworldEnv(MultiAgentEnv):
+    def __init__(self, env_config):
+        super().__init__()
+        self._skip_env_checking = True
+        self.flat_env = GridworldEnv(env_config)
+
+    def reset(self, *, seed=None, options=None):
+        self.cur_obs = self.flat_env.reset()
+        infos = {}
+        self.current_goal = None
+        self.steps_remaining_at_level = None
+        self.num_high_level_steps = 0
+        # current low level agent id. This must be unique for each high level
+        # step since agent ids cannot be reused.
+        self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
+        return {
+            "high_level_agent": self.cur_obs,
+        }, {"high_level_agent": infos}
+
+    def step(self, action_dict):
+        assert len(action_dict) == 1, action_dict
+        if "high_level_agent" in action_dict:
+            return self._high_level_step(action_dict["high_level_agent"])
+        else:
+            return self._low_level_step(list(action_dict.values())[0])
+
+    def _high_level_step(self, action):
+        logger.debug("High level agent sets goal")
+        self.current_goal = action
+        self.steps_remaining_at_level = 25
+        self.num_high_level_steps += 1
+        self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
+        obs = {self.low_level_agent_id: [self.cur_obs, self.current_goal]}
+        rew = {self.low_level_agent_id: 0}
+        done = truncated = {"__all__": False}
+        return obs, rew, done, truncated, {}
+
+    def _low_level_step(self, action):
+        logger.debug("Low level agent step {}".format(action))
+        self.steps_remaining_at_level -= 1
+        cur_pos = self.flat_env.s_state
+        goal_pos = self.flat_env._get_new_pos(cur_pos, self.current_goal)
+
+        # Step in the actual env
+        f_obs, f_rew, f_terminated, info = self.flat_env.step(action)
+        f_truncated = f_terminated
+        new_pos = self.flat_env.s_state
+        self.cur_obs = f_obs
+
+        # Calculate low-level agent observation and reward
+        obs = {self.low_level_agent_id: [f_obs, self.current_goal]}
+        if new_pos != cur_pos:
+            if new_pos == goal_pos:
+                rew = {self.low_level_agent_id: 1}
+            else:
+                rew = {self.low_level_agent_id: -1}
+        else:
+            rew = {self.low_level_agent_id: 0}
+
+        # Handle env termination & transitions back to higher level.
+        terminated = {"__all__": False}
+        truncated = {"__all__": False}
+        if f_terminated or f_truncated:
+            terminated["__all__"] = f_terminated
+            truncated["__all__"] = f_truncated
+            logger.debug("high level final reward {}".format(f_rew))
+            rew["high_level_agent"] = f_rew
+            obs["high_level_agent"] = f_obs
+        elif self.steps_remaining_at_level == 0:
+            terminated[self.low_level_agent_id] = True
+            truncated[self.low_level_agent_id] = False
+            rew["high_level_agent"] = 0
+            obs["high_level_agent"] = f_obs
+
+        return obs, rew, terminated, truncated, {self.low_level_agent_id: info}
