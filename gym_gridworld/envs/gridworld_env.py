@@ -1,4 +1,4 @@
-sb = False  # Running stable baselines
+sb = True  # Running stable baselines
 if sb:
     import gym
 else:
@@ -127,6 +127,9 @@ class GridworldEnv(gym.Env):
         Normally the contents of this function would be in init, but we can't add arguments to openai's init method.
         '''
 
+        print("MAKING GAME: ", P)
+
+        self.P = P
         self.metadata = P
         self._seed = P['seed']
         random.seed(self._seed)
@@ -602,7 +605,7 @@ class GridworldEnv(gym.Env):
                               ]
 
     def reset(self):
-        print("Level finished, ", self.level_counter)
+        print("Level finished, ", self.level_counter, " with ", self.step_counter, " steps.")
 
         try:
             self.verbose
@@ -658,15 +661,16 @@ class GridworldEnv(gym.Env):
             # with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
             #    pickle.dump(self.steps[2:], f)
 
-            if not os.path.exists(self.metadata['data_save_dir']):
-                os.makedirs(self.metadata['data_save_dir'])
+            root_dir = "" #"/export/home/rcsguest/rcs_auguralp/Desktop/probabilisticSelf2/"
+            if not os.path.exists(root_dir + self.metadata['data_save_dir']):
+                os.makedirs(root_dir + self.metadata['data_save_dir'])
 
             with open(
-                    self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json",
+                    root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json",
                     'w') as fp:
                 json.dump(final_data, fp)
-                print("Data save dir: ", self.metadata['data_save_dir'])
-                print(self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json")
+                print("Data save dir: ", root_dir + self.metadata['data_save_dir'])
+                print(root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json")
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
 
@@ -986,79 +990,79 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+if not sb:
+    class HierarchicalGridworldEnv(MultiAgentEnv):
+        def __init__(self, env_config):
+            super().__init__()
+            self._skip_env_checking = True
+            self.flat_env = GridworldEnv(env_config)
 
-class HierarchicalGridworldEnv(MultiAgentEnv):
-    def __init__(self, env_config):
-        super().__init__()
-        self._skip_env_checking = True
-        self.flat_env = GridworldEnv(env_config)
+        def reset(self, *, seed=None, options=None):
+            self.cur_obs = self.flat_env.reset()
+            infos = {}
+            self.current_goal = None
+            self.steps_remaining_at_level = None
+            self.num_high_level_steps = 0
+            # current low level agent id. This must be unique for each high level
+            # step since agent ids cannot be reused.
+            self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
+            return {
+                "high_level_agent": self.cur_obs,
+            }, {"high_level_agent": infos}
 
-    def reset(self, *, seed=None, options=None):
-        self.cur_obs = self.flat_env.reset()
-        infos = {}
-        self.current_goal = None
-        self.steps_remaining_at_level = None
-        self.num_high_level_steps = 0
-        # current low level agent id. This must be unique for each high level
-        # step since agent ids cannot be reused.
-        self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
-        return {
-            "high_level_agent": self.cur_obs,
-        }, {"high_level_agent": infos}
-
-    def step(self, action_dict):
-        assert len(action_dict) == 1, action_dict
-        if "high_level_agent" in action_dict:
-            return self._high_level_step(action_dict["high_level_agent"])
-        else:
-            return self._low_level_step(list(action_dict.values())[0])
-
-    def _high_level_step(self, action):
-        logger.debug("High level agent sets goal")
-        self.current_goal = action
-        self.steps_remaining_at_level = 25
-        self.num_high_level_steps += 1
-        self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
-        obs = {self.low_level_agent_id: [self.cur_obs, self.current_goal]}
-        rew = {self.low_level_agent_id: 0}
-        done = truncated = {"__all__": False}
-        return obs, rew, done, truncated, {}
-
-    def _low_level_step(self, action):
-        logger.debug("Low level agent step {}".format(action))
-        self.steps_remaining_at_level -= 1
-        cur_pos = self.flat_env.s_state
-        goal_pos = self.flat_env._get_new_pos(cur_pos, self.current_goal)
-
-        # Step in the actual env
-        f_obs, f_rew, f_terminated, info = self.flat_env.step(action)
-        f_truncated = f_terminated
-        new_pos = self.flat_env.s_state
-        self.cur_obs = f_obs
-
-        # Calculate low-level agent observation and reward
-        obs = {self.low_level_agent_id: [f_obs, self.current_goal]}
-        if new_pos != cur_pos:
-            if new_pos == goal_pos:
-                rew = {self.low_level_agent_id: 1}
+        def step(self, action_dict):
+            assert len(action_dict) == 1, action_dict
+            if "high_level_agent" in action_dict:
+                return self._high_level_step(action_dict["high_level_agent"])
             else:
-                rew = {self.low_level_agent_id: -1}
-        else:
+                return self._low_level_step(list(action_dict.values())[0])
+
+        def _high_level_step(self, action):
+            logger.debug("High level agent sets goal")
+            self.current_goal = action
+            self.steps_remaining_at_level = 25
+            self.num_high_level_steps += 1
+            self.low_level_agent_id = "low_level_{}".format(self.num_high_level_steps)
+            obs = {self.low_level_agent_id: [self.cur_obs, self.current_goal]}
             rew = {self.low_level_agent_id: 0}
+            done = truncated = {"__all__": False}
+            return obs, rew, done, truncated, {}
 
-        # Handle env termination & transitions back to higher level.
-        terminated = {"__all__": False}
-        truncated = {"__all__": False}
-        if f_terminated or f_truncated:
-            terminated["__all__"] = f_terminated
-            truncated["__all__"] = f_truncated
-            logger.debug("high level final reward {}".format(f_rew))
-            rew["high_level_agent"] = f_rew
-            obs["high_level_agent"] = f_obs
-        elif self.steps_remaining_at_level == 0:
-            terminated[self.low_level_agent_id] = True
-            truncated[self.low_level_agent_id] = False
-            rew["high_level_agent"] = 0
-            obs["high_level_agent"] = f_obs
+        def _low_level_step(self, action):
+            logger.debug("Low level agent step {}".format(action))
+            self.steps_remaining_at_level -= 1
+            cur_pos = self.flat_env.s_state
+            goal_pos = self.flat_env._get_new_pos(cur_pos, self.current_goal)
 
-        return obs, rew, terminated, truncated, {self.low_level_agent_id: info}
+            # Step in the actual env
+            f_obs, f_rew, f_terminated, info = self.flat_env.step(action)
+            f_truncated = f_terminated
+            new_pos = self.flat_env.s_state
+            self.cur_obs = f_obs
+
+            # Calculate low-level agent observation and reward
+            obs = {self.low_level_agent_id: [f_obs, self.current_goal]}
+            if new_pos != cur_pos:
+                if new_pos == goal_pos:
+                    rew = {self.low_level_agent_id: 1}
+                else:
+                    rew = {self.low_level_agent_id: -1}
+            else:
+                rew = {self.low_level_agent_id: 0}
+
+            # Handle env termination & transitions back to higher level.
+            terminated = {"__all__": False}
+            truncated = {"__all__": False}
+            if f_terminated or f_truncated:
+                terminated["__all__"] = f_terminated
+                truncated["__all__"] = f_truncated
+                logger.debug("high level final reward {}".format(f_rew))
+                rew["high_level_agent"] = f_rew
+                obs["high_level_agent"] = f_obs
+            elif self.steps_remaining_at_level == 0:
+                terminated[self.low_level_agent_id] = True
+                truncated[self.low_level_agent_id] = False
+                rew["high_level_agent"] = 0
+                obs["high_level_agent"] = f_obs
+
+            return obs, rew, terminated, truncated, {self.low_level_agent_id: info}
