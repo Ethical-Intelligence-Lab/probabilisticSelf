@@ -66,7 +66,7 @@ params = {
     'mid_modify': False,
     'modify_at': None,  # Modify the environment at 'modify_at' * 'n_levels' levels
     # Modify the environment to 'modify_to' after 2000 levels. Input levels_count as 40 to run for 4000 levels, if you set 'mid_modify' to True
-    'modify_to': None,  # logic, contingency, change_agent, logic_extended, contingency_extended,
+    'modify_to': None,  # logic, contingency, change_agent, logic_extended, contingency_extended
     # change_agent_extended, change_agent_extended_2
     'neg_reward': False,
     'n_cpu_tf_sess': 1
