@@ -139,7 +139,7 @@ class GridworldEnv(gym.Env):
         self.singleAgent = P['singleAgent']
         self.verbose = P['verbose']
         self.log_neptune = P['log_neptune']
-        self.n_levels = P['n_levels']
+        self.n_levels = int(P['n_levels'])
         self.single_loc = P['single_loc']
         self.shuffle_keys = P['shuffle_keys']
         self.shuffle_each = P['shuffle_each']
@@ -666,16 +666,16 @@ class GridworldEnv(gym.Env):
                 os.makedirs(root_dir + self.metadata['data_save_dir'])
 
             with open(
-                    root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json",
+                    root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * self.n_levels) + ".json",
                     'w') as fp:
                 json.dump(final_data, fp)
                 print("Data save dir: ", root_dir + self.metadata['data_save_dir'])
-                print(root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * 100) + ".json")
+                print(root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * self.n_levels) + ".json")
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
 
                 self.levels_count += 1
-                if self.levels_count == self.metadata['levels_count']:
+                if self.levels_count == int(self.metadata['levels_count']):
                     if self.metadata['save']:
                         path = self.metadata['save_path'] + "lastSave/weights"
                         if not os.path.exists(path):

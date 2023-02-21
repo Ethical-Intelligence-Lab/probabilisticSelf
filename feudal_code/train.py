@@ -1,3 +1,4 @@
+import sys
 from itertools import count
 
 import torch
@@ -32,7 +33,6 @@ def train(
     torch.manual_seed(seed)
 
     env = create_atari_env(args.env_name, P)
-    env.seed(seed)
     model = FeudalNet(env.observation_space, env.action_space, channel_first=True)
 
     if optimizer is None:
