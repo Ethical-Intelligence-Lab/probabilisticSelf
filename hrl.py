@@ -44,9 +44,9 @@ from ray.tune.registry import get_trainable_cls
 
 import sys
 
-orig_stdout = sys.stdout
-f = open('/export/home/rcsguest/rcs_auguralp/Desktop/probabilisticSelf2/out.txt', 'w')
-sys.stdout = f
+#orig_stdout = sys.stdout
+#f = open('/export/home/rcsguest/rcs_auguralp/Desktop/probabilisticSelf2/out.txt', 'w')
+#sys.stdout = f
 
 tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
@@ -174,7 +174,8 @@ if __name__ == "__main__":
         .framework(args.framework)
         .rollouts(num_rollout_workers=0)
         .training(lr=0.0001, entropy_coeff=0.01, sgd_minibatch_size = 4, clip_param=0.2, vf_loss_coeff=0.5,
-                  train_batch_size = 800,
+                  num_sgd_iter = 1,
+                  train_batch_size = 4,
                   model={
                       "custom_model": "my_model",
                       "vf_share_layers": True,
@@ -216,7 +217,7 @@ if __name__ == "__main__":
     else:
         print("Training automatically with Ray Tune")
         results = tune.Tuner(
-            "PPO_GPU",
+            "PPO",
             param_space=config.to_dict(),
             run_config=air.RunConfig(stop=stop, verbose=1)
         ).fit()
