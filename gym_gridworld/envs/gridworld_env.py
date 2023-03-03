@@ -1,4 +1,4 @@
-sb = True  # Running stable baselines
+sb = False  # Running stable baselines
 if sb:
     import gym
 else:
@@ -120,6 +120,8 @@ class GridworldEnv(gym.Env):
 
         if P:
             self.make_game(P)
+        else:
+            self.make_game(None)
 
     def make_game(self, P):
         '''
@@ -127,10 +129,14 @@ class GridworldEnv(gym.Env):
         Normally the contents of this function would be in init, but we can't add arguments to openai's init method.
         '''
 
+        if P is None:
+            P = params
+
         print("MAKING GAME: ", P)
 
         self.P = P
         self.metadata = P
+        self.run = P['run'] if 'run' in P.keys() else None
         self._seed = P['seed']
         random.seed(self._seed)
         self.game_type = P['game_type']
@@ -673,6 +679,8 @@ class GridworldEnv(gym.Env):
                 print(root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * self.n_levels) + ".json")
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
+                if self.run:
+                    self.run["train/steps"].append(self.total_steps_counter)
 
                 self.levels_count += 1
                 if self.levels_count == int(self.metadata['levels_count']):
