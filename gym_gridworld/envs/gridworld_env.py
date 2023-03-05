@@ -118,11 +118,6 @@ class GridworldEnv(gym.Env):
         self.obs_shape = [128, 128, 3]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
 
-        if P:
-            self.make_game(P)
-        else:
-            self.make_game(None)
-
     def seed(self, seed):
         self._seed = seed
         random.seed(self._seed)
@@ -140,7 +135,10 @@ class GridworldEnv(gym.Env):
 
         self.P = P
         self.run = P['run'] if 'run' in P.keys() else None
-        P['run'] = None
+
+        if 'run' in P.keys():
+            P.pop('run')
+            
         self.metadata = P
 
         print(self.metadata)
@@ -238,7 +236,6 @@ class GridworldEnv(gym.Env):
             self._render()
 
     def step(self, action):
-        self.run["train/total_steps"] = self.total_steps_counter
         if self.verbose:
             print('taking a step')
         if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
@@ -622,10 +619,9 @@ class GridworldEnv(gym.Env):
     def reset(self):
         print("Level finished, ", self.level_counter, " with ", self.step_counter, " steps.")
 
-        try:
-            self.verbose
-        except AttributeError:
-            self.make_game(self.P)
+        if self.run:
+            print("SAVING TO NEPTUNE  ... ", self.level_counter)
+            self.run["train/level_steps"].append(self.step_counter)
 
         if self.verbose:
             print('reset environment')
@@ -686,7 +682,7 @@ class GridworldEnv(gym.Env):
                 print('******* CONGRATS, YOU FINISHED ' + str(self.levels_count) + ' WITH ' + str(
                     self.total_steps_counter) + ' STEPS !************')
                 if self.run:
-                    self.run["train/steps"].append(self.total_steps_counter)
+                    self.run["train/total_steps"].append(self.total_steps_counter)
 
                 self.levels_count += 1
                 if self.levels_count == int(self.metadata['levels_count']):
