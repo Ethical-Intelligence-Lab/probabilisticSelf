@@ -26,7 +26,7 @@ class OptionCriticConv(nn.Module):
         self.in_channels = in_features
         self.num_actions = num_actions
         self.num_options = num_options
-        self.magic_number = 1024
+        self.magic_number = 14400
         self.device = device
         self.testing = testing
 
@@ -37,12 +37,15 @@ class OptionCriticConv(nn.Module):
         self.eps_test  = eps_test
         self.num_steps = 0
 
+        #import pdb
+        #pdb.set_trace()
+
         self.features = nn.Sequential(
-            nn.Conv2d(self.in_channels, 32, kernel_size=1, stride=4),
+            nn.Conv2d(self.in_channels, 32, kernel_size=8, stride=4, padding=4),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=1, stride=2),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=4),
             nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=1, stride=1),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=4),
             nn.ReLU(),
             nn.modules.Flatten(),
             nn.Linear(self.magic_number, 512),
