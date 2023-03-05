@@ -68,9 +68,7 @@ if __name__ == "__main__":
     def_params = DefaultParams(player="feudal", baselines_v=-1)
     def_params.update_params(vars(args))
     P = def_params.params
-
-    print(args)
-    P['args'] = args
+    P['args'] = vars(args)
 
     # Data logging to neptune AI
     if P['log_neptune']:
