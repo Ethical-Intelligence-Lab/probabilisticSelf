@@ -21,3 +21,6 @@ gym_l
 __pycache__
 
 plots/
+fn_code/
+logs/
+runs/
