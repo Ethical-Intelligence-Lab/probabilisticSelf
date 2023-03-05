@@ -705,6 +705,7 @@ class GridworldEnv(gym.Env):
 
                         self.model.save_replay_buffer(rb_path)
 
+                    self.run.stop()
                     sys.exit(0)
 
                 # Modify the environment to 'modify_to'

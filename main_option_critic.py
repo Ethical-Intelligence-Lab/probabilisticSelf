@@ -15,7 +15,7 @@ from params.param_dicts import params
 from gym_gridworld.envs.gridworld_env import GridworldEnv
 
 from dotenv import load_dotenv
-import neptune.new as neptune
+import neptune
 import sys
 import time
 import os
@@ -166,7 +166,7 @@ if __name__=="__main__":
     P['args'] = vars(args)
 
     if P['log_neptune']:
-        run_n = neptune.init(project='akaanug/Probabilistic-Self',
+        run_n = neptune.init_run(project='akaanug/Probabilistic-Self',
                            api_token=os.environ['NEPTUNE_API_TOKEN'])  # your credentials
         run_n["model/parameters"] = P
         run_n["model/param_string"] = arg_string
