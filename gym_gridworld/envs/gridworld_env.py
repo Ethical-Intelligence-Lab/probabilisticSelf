@@ -238,6 +238,7 @@ class GridworldEnv(gym.Env):
             self._render()
 
     def step(self, action):
+        self.run["train/total_steps"] = self.total_steps_counter
         if self.verbose:
             print('taking a step')
         if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':

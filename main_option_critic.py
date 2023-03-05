@@ -153,7 +153,7 @@ def run(args, P):
 if __name__=="__main__":
     load_dotenv()  # take environment variables from .env.
 
-    arg_string = "python feudal.py"
+    arg_string = "python main_option_critic.py"
     for i, arg in enumerate(sys.argv):
         if i != 0:
             arg_string = arg_string + " " + arg
