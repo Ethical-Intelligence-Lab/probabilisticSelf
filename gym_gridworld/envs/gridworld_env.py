@@ -1,4 +1,4 @@
-sb = False  # Running stable baselines
+sb = True  # Running stable baselines
 if sb:
     import gym
 else:
@@ -123,6 +123,10 @@ class GridworldEnv(gym.Env):
         else:
             self.make_game(None)
 
+    def seed(self, seed):
+        self._seed = seed
+        random.seed(self._seed)
+
     def make_game(self, P):
         '''
         Initialize env properties, given game type, player, and no. agents
@@ -135,8 +139,12 @@ class GridworldEnv(gym.Env):
         print("MAKING GAME: ", P)
 
         self.P = P
-        self.metadata = P
         self.run = P['run'] if 'run' in P.keys() else None
+        P['run'] = None
+        self.metadata = P
+
+        print(self.metadata)
+        
         self._seed = P['seed']
         random.seed(self._seed)
         self.game_type = P['game_type']
@@ -663,9 +671,6 @@ class GridworldEnv(gym.Env):
             final_data = {}
             final_data['data'] = self.data
             final_data['metadata'] = self.metadata
-
-            # with open('data/' + self.player + '_' + str(self.exp_name) + '.pkl', 'wb') as f:
-            #    pickle.dump(self.steps[2:], f)
 
             root_dir = "" #"/export/home/rcsguest/rcs_auguralp/Desktop/probabilisticSelf2/"
             if not os.path.exists(root_dir + self.metadata['data_save_dir']):
