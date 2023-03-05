@@ -37,8 +37,6 @@ class OptionCriticConv(nn.Module):
         self.eps_test  = eps_test
         self.num_steps = 0
 
-        #import pdb
-        #pdb.set_trace()
 
         self.features = nn.Sequential(
             nn.Conv2d(self.in_channels, 32, kernel_size=8, stride=4, padding=4),
