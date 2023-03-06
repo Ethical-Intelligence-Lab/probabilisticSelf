@@ -68,8 +68,6 @@ def run(args, P):
     option_critic_prime = deepcopy(option_critic)
 
     optim = torch.optim.RMSprop(option_critic.parameters(), lr=args.learning_rate)
-
-    import pdb; pdb.set_trace()
     np.random.seed(int(args.seed))
     torch.manual_seed(int(args.seed))
     env.seed(int(args.seed))
