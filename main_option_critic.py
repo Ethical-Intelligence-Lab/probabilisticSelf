@@ -69,11 +69,12 @@ def run(args, P):
 
     optim = torch.optim.RMSprop(option_critic.parameters(), lr=args.learning_rate)
 
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    env.seed(args.seed)
+    import pdb; pdb.set_trace()
+    np.random.seed(int(args.seed))
+    torch.manual_seed(int(args.seed))
+    env.seed(int(args.seed))
 
-    buffer = ReplayBuffer(capacity=args.max_history, seed=args.seed)
+    buffer = ReplayBuffer(capacity=args.max_history, seed=int(args.seed))
 
     steps = 0 ;
     if args.switch_goal: print(f"Current goal {env.goal}")
@@ -166,6 +167,6 @@ if __name__=="__main__":
         run_n["model/param_string"] = arg_string
         P['run'] = run_n
 
-    torch.manual_seed(P['seed'])
+    torch.manual_seed(int(P['seed']))
 
     run(args, P)
