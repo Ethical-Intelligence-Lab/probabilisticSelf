@@ -9,7 +9,6 @@ from option_critic.option_critic import actor_loss as actor_loss_fn
 
 from option_critic.experience_replay import ReplayBuffer
 from option_critic.utils import make_env, to_tensor
-from option_critic.logger import Logger
 from params.default_params import DefaultParams
 from params.param_dicts import params
 from gym_gridworld.envs.gridworld_env import GridworldEnv
@@ -75,7 +74,6 @@ def run(args, P):
     env.seed(args.seed)
 
     buffer = ReplayBuffer(capacity=args.max_history, seed=args.seed)
-    logger = Logger(logdir=args.logdir, run_name=f"{OptionCriticFeatures.__name__}-{args.env}-{args.exp}-{time.ctime()}")
 
     steps = 0 ;
     if args.switch_goal: print(f"Current goal {env.goal}")
@@ -91,14 +89,14 @@ def run(args, P):
         # Goal switching experiment: run for 1k episodes in fourrooms, switch goals and run for another
         # 2k episodes. In option-critic, if the options have some meaning, only the policy-over-options
         # should be finedtuned (this is what we would hope).
-        if args.switch_goal and logger.n_eps == 1000:
+        if args.switch_goal:
             torch.save({'model_params': option_critic.state_dict(),
                         'goal_state': env.goal},
                         f'models/option_critic_seed={args.seed}_1k')
             env.switch_goal()
             print(f"New goal {env.goal}")
 
-        if args.switch_goal and logger.n_eps > 2000:
+        if args.switch_goal:
             torch.save({'model_params': option_critic.state_dict(),
                         'goal_state': env.goal},
                         f'models/option_critic_seed={args.seed}_2k')
@@ -145,10 +143,6 @@ def run(args, P):
             ep_steps += 1
             curr_op_len += 1
             obs = next_obs
-
-            logger.log_data(steps, actor_loss, critic_loss, entropy.item(), epsilon)
-
-        logger.log_episode(steps, rewards, option_lengths, ep_steps, epsilon)
 
 if __name__=="__main__":
     load_dotenv()  # take environment variables from .env.
