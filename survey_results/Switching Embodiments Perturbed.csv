@@ -1,0 +1,90 @@
+StartDate,EndDate,Status,IPAddress,Progress,Duration (in seconds),Finished,RecordedDate,ResponseId,RecipientLastName,RecipientFirstName,RecipientEmail,ExternalReference,LocationLatitude,LocationLongitude,DistributionChannel,UserLanguage,consent,att1,att2,mturk_id,completion_code,comp1,comp2,gender,gender_4_TEXT,ethnicity,ethnicity_6_TEXT,age,edu,edu_8_TEXT,game_exp_1,Random ID,workerId,Set a Value Now,finished_game
+Start Date,End Date,Response Type,IP Address,Progress,Duration (in seconds),Finished,Recorded Date,Response ID,Recipient Last Name,Recipient First Name,Recipient Email,External Data Reference,Location Latitude,Location Longitude,Distribution Channel,User Language,"Participation is voluntary
+It is your choice whether or not to participate in this research. If you choose to participate, you may change your mind and leave the study at any time. Refusal to participate or stopping your participation will involve no penalty or loss of benefits to which you are otherwise entitled.
+
+
+
+What is the purpose of this research?
+
+The purpose of this research is to examine human visual performance and judgments. All data from this experiment are gathered for scientific purposes. These data may be published in scientific journals so that other researchers may have access to these data.
+
+
+How long will I take part in this research?
+
+Your participation will take approximately 30 minutes to complete.
+
+
+What can I expect if I take part in this research?
+As a participant, you will be asked to play a game using key presses. You will also be asked to complete a demographics form at the end.
+
+
+
+What are the risks and possible discomforts?
+
+If you choose to participate, the effects should be comparable to those you would experience from viewing a computer monitor for 30 minutes and using a mouse or keyboard, e.g., eye fatigue. You are free to take breaks throughout the session.
+
+
+
+Will I be compensated for participating in this research?
+
+You will be compensated $3 for this study.  
+
+If I take part in this research, how will my privacy be protected? What happens to the information you collect?
+
+Your participation in this experiment will remain confidential, and your identity will not be stored with your data.
+
+
+
+If I have any questions, concerns or complaints about this research study, who can I talk to?
+
+The researcher for this study is Julian De Freitas who can be reached at 626.559.6401; #161 Morgan Hall, 15 Harvard Way, Boston MA, 02163; jdefreitas@hbs.edu. If you have questions, concerns, or complaints,
+• If you would like to talk to the research team,
+• If you think the research has harmed you, or
+• If you wish to withdraw from the study.
+
+
+
+If you have any technical difficulties during the experiment, you can send an email to: auguralp@fas.harvard.edu
+
+
+
+This research has been reviewed by the Committee on the Use of Human Subjects in Research at Harvard University. They can be reached at 617-496-2847, 1350 Massachusetts Avenue, Suite 935, Cambridge, MA 02138, or cuhs@harvard.edu for any of the following:
+• If your questions, concerns, or complaints are not being answered by the research team,
+• If you cannot reach the research team,
+• If you want to talk to someone besides the research team, or
+• If you have questions about your rights as a research participant.","Before we begin, here are some checks to make sure you're paying attention.
+
+
+
+John is taller than Paul. Who is shorter?","What is the color of grass?
+The fresh, uncut grass. To make sure you are paying attention, we want you to select purple.","What is your MTURK ID?
+
+Please note that this response should auto-fill with the correct ID",Important: Please enter the exact completion code you received at the end of the game.,How many red squares were present in the last level of the game you just played?,How many levels were there in the game?,What is your gender? - Selected Choice,What is your gender? - Other (please specify) - Text,What is your ethnicity? - Selected Choice,What is your ethnicity? - Other (please Specify) - Text,What is your age (in years)?,Please indicate the highest level of education completed. - Selected Choice,Please indicate the highest level of education completed. - Other (please specify) - Text,"How much experience do you have with playing computer games?
+[1=None at all, 100=A lot] - 1",Random ID,workerId,Set a Value Now,finished_game
+"{""ImportId"":""startDate"",""timeZone"":""America/Denver""}","{""ImportId"":""endDate"",""timeZone"":""America/Denver""}","{""ImportId"":""status""}","{""ImportId"":""ipAddress""}","{""ImportId"":""progress""}","{""ImportId"":""duration""}","{""ImportId"":""finished""}","{""ImportId"":""recordedDate"",""timeZone"":""America/Denver""}","{""ImportId"":""_recordId""}","{""ImportId"":""recipientLastName""}","{""ImportId"":""recipientFirstName""}","{""ImportId"":""recipientEmail""}","{""ImportId"":""externalDataReference""}","{""ImportId"":""locationLatitude""}","{""ImportId"":""locationLongitude""}","{""ImportId"":""distributionChannel""}","{""ImportId"":""userLanguage""}","{""ImportId"":""QID108""}","{""ImportId"":""QID115""}","{""ImportId"":""QID116""}","{""ImportId"":""QID123_TEXT""}","{""ImportId"":""QID122_TEXT""}","{""ImportId"":""QID117""}","{""ImportId"":""QID118""}","{""ImportId"":""QID102""}","{""ImportId"":""QID102_4_TEXT""}","{""ImportId"":""QID103""}","{""ImportId"":""QID103_6_TEXT""}","{""ImportId"":""QID105_TEXT""}","{""ImportId"":""QID106""}","{""ImportId"":""QID106_8_TEXT""}","{""ImportId"":""QID107_1""}","{""ImportId"":""Random ID""}","{""ImportId"":""workerId""}","{""ImportId"":""Set a Value Now""}","{""ImportId"":""finished_game""}"
+2023-02-16 12:33:14,2023-02-16 13:00:41,0,24.44.249.201,100,1646,1,2023-02-16 13:00:43,R_32Q3lPIxBNZnFAf,,,,,40.7051,-73.243,anonymous,EN,1,2,1,A2FB5UQTR3E0NX,1392-5934-1984-3659,2,2,2,,3,,38,4,,70,90720,A2FB5UQTR3E0NX,,yes
+2023-02-16 12:41:15,2023-02-16 13:00:55,0,72.231.188.191,100,1180,1,2023-02-16 13:00:56,R_2AWOuGb7QXKahUH,,,,,42.9102,-78.6625,anonymous,EN,1,2,1,A1KN5CEN4GQ3E8,1886-5306-8170-8301,2,2,2,,3,,41,4,,91,14945,A1KN5CEN4GQ3E8,,yes
+2023-02-16 12:47:18,2023-02-16 13:02:12,0,72.24.86.34,100,893,1,2023-02-16 13:02:12,R_yyJwt1LZWkHIwG5,,,,,33.7422,-96.5515,anonymous,EN,1,2,1,A33X52IN60MSOE,1844-0554-2533-0121,2,2,1,,3,,41,1,,76,60130,A33X52IN60MSOE,,yes
+2023-02-16 12:53:15,2023-02-16 13:03:56,0,216.15.66.107,100,641,1,2023-02-16 13:03:57,R_110VgO0dGx6okiM,,,,,40.625,-75.3953,anonymous,EN,1,2,1,AWWR9PY50W0Z9,4346-3140-9319-7169,2,2,1,,3,,37,1,,73,97802,AWWR9PY50W0Z9,,yes
+2023-02-16 12:50:35,2023-02-16 13:07:22,0,98.45.179.230,100,1007,1,2023-02-16 13:07:23,R_3lKc03AV15RotTE,,,,,37.3479,-122.0351,anonymous,EN,1,1,1,AC5PVOOS79W2B,9436-6290-3642-7728,2,2,2,,3,,35,3,,87,24534,AC5PVOOS79W2B,,yes
+2023-02-16 12:39:27,2023-02-16 13:07:25,0,76.27.53.123,100,1677,1,2023-02-16 13:07:25,R_1dsJi9gBkOCngVs,,,,,41.2627,-111.9837,anonymous,EN,1,2,1,A3BDMR7VKG8GRZ,7222-0476-4791-8105,2,2,1,,1,,41,3,,91,14585,A3BDMR7VKG8GRZ,,yes
+2023-02-16 12:54:00,2023-02-16 13:07:56,0,66.102.231.91,100,835,1,2023-02-16 13:07:56,R_3ekJno4giC5XHAI,,,,,30.6293,-97.6687,anonymous,EN,1,2,1,A3EBIC3PKUSKCL,7900-3258-7564-2399,2,2,1,,3,,30,1,,93,95528,A3EBIC3PKUSKCL,,yes
+2023-02-16 12:47:05,2023-02-16 13:10:39,0,71.88.61.45,100,1413,1,2023-02-16 13:10:39,R_3fIQSwptKVJ1sjT,,,,,41.9279,-73.0694,anonymous,EN,1,2,1,A27VFM67RPD2L5,6195-1019-8099-0900,2,2,2,,3,,51,1,,100,96654,A27VFM67RPD2L5,,yes
+2023-02-16 12:40:36,2023-02-16 13:14:07,0,73.117.51.224,100,2011,1,2023-02-16 13:14:08,R_2uwThbbit4fgDs2,,,,,40.3052,-79.5418,anonymous,EN,1,2,1,AP23YBUB6HJK9,9624-6921-5390-3688,2,2,1,,4,,57,5,,76,30698,AP23YBUB6HJK9,,yes
+2023-02-16 12:33:09,2023-02-16 13:15:34,0,104.182.73.53,100,2544,1,2023-02-16 13:15:34,R_2SkJ7rPfbJyDt25,,,,,38.7987,-90.5034,anonymous,EN,1,2,1,APVZGZM1RA3AZ,4205-8673-3504-0987,2,2,2,,3,,64,4,,4,27393,APVZGZM1RA3AZ,,yes
+2023-02-16 13:03:05,2023-02-16 13:15:45,0,216.106.158.239,100,759,1,2023-02-16 13:15:45,R_3k7GWoga6AWPr1L,,,,,35.2878,-93.1296,anonymous,EN,1,2,1,A2CEGS0NVDBCPT,4926-6503-3457-7474,2,2,2,,1,,26,4,,81,92635,A2CEGS0NVDBCPT,,yes
+2023-02-16 12:41:30,2023-02-16 13:20:25,0,23.132.80.64,100,2334,1,2023-02-16 13:20:25,R_2ay6n13cZ06Cv0T,,,,,43.9477,-86.2753,anonymous,EN,1,2,1,A25FH7PXC446RG,0412-2912-4072-6087,2,2,2,,3,,56,3,,0,38346,A25FH7PXC446RG,,yes
+2023-02-16 12:35:31,2023-02-16 13:26:23,0,73.111.209.176,100,3052,1,2023-02-16 13:26:24,R_3MbeyiEVPQHto89,,,,,41.6227,-86.2452,anonymous,EN,1,2,1,A10MMKNAZMBTEI,2154-6047-4278-5582,2,2,2,,3,,65,5,,51,78782,A10MMKNAZMBTEI,,yes
+2023-02-16 13:14:37,2023-02-16 13:36:46,0,107.180.207.187,100,1328,1,2023-02-16 13:36:46,R_1Q9KjktsPziz3Mf,,,,,37.751,-97.822,anonymous,EN,1,2,1,A1RBZCR7E3IIQN,6962-1420-7555-4106,2,2,2,,3,,43,5,,83,48902,A1RBZCR7E3IIQN,,yes
+2023-02-16 13:13:17,2023-02-16 13:50:26,0,204.242.183.238,100,2228,1,2023-02-16 13:50:26,R_2atQV3VWjWJbrZG,,,,,40.7235,-73.7021,anonymous,EN,1,2,1,A2GPQMBH0QNJ0J,2862-1097-7647-3369,2,2,2,,6,Native American,41,4,,82,60126,A2GPQMBH0QNJ0J,,yes
+2023-02-16 13:36:28,2023-02-16 13:54:27,0,72.183.133.117,100,1079,1,2023-02-16 13:54:28,R_do36XDwsGyZgdEd,,,,,30.0931,-97.8565,anonymous,EN,1,2,1,A38Y5MHF3HZARZ,1730-0236-1550-4806,2,2,1,,3,,36,5,,77,61448,A38Y5MHF3HZARZ,,yes
+2023-02-16 14:11:45,2023-02-16 14:27:12,0,108.185.71.126,100,927,1,2023-02-16 14:27:13,R_2AXelt2hzQjK3gO,,,,,33.9212,-118.1424,anonymous,EN,1,2,1,A2MUCL20GTQJA0,1207-6122-0148-1814,2,2,1,,2,,36,4,,88,23878,A2MUCL20GTQJA0,,yes
+2023-02-16 14:14:20,2023-02-16 14:27:17,0,66.25.40.80,100,777,1,2023-02-16 14:27:18,R_e8TrE1IEaFBABqh,,,,,33.1471,-95.9429,anonymous,EN,1,2,1,A3I40B0FATY8VH,3079-9127-7534-5694,2,2,1,,3,,29,1,,100,32071,A3I40B0FATY8VH,,yes
+2023-02-16 14:16:31,2023-02-16 14:29:33,0,76.113.133.172,100,781,1,2023-02-16 14:29:34,R_1jreX5LHZ7wswqt,,,,,44.9764,-93.224,anonymous,EN,1,2,1,A1KTPYX40PRLVW,9014-1925-4286-9917,2,2,2,,1,,35,4,,9,43011,A1KTPYX40PRLVW,,yes
+2023-02-16 12:41:58,2023-02-16 12:42:23,0,76.27.53.123,27,25,0,2023-02-23 12:42:24,R_3EXf21DOaRMgvlg,,,,,,,anonymous,EN,1,2,1,A3BDMR7VKG8GRZ,,,,,,,,,,,,56255,A3BDMR7VKG8GRZ,,
+2023-02-16 12:49:49,2023-02-16 12:52:46,0,71.230.6.27,27,176,0,2023-02-23 12:52:49,R_9WyKFzDnrDTu8al,,,,,,,anonymous,EN,1,2,1,A6ZLFXYDXQAKE,,,,,,,,,,,,53996,A6ZLFXYDXQAKE,,
+2023-02-16 12:52:54,2023-02-16 12:53:40,0,96.40.249.104,27,45,0,2023-02-23 12:53:41,R_1j6Nmqmg8AGX9C7,,,,,,,anonymous,EN,1,2,1,A35O3H71CM4LVZ,,,,,,,,,,,,35931,A35O3H71CM4LVZ,,
+2023-02-16 12:50:27,2023-02-16 13:01:23,0,64.188.179.234,27,655,0,2023-02-23 13:01:24,R_124LRKGv07xUKKJ,,,,,,,anonymous,EN,1,2,1,AA4JYAPLYB6QT,,,,,,,,,,,,17816,AA4JYAPLYB6QT,,
+2023-02-16 13:14:49,2023-02-16 13:15:14,0,173.170.197.182,27,24,0,2023-02-23 13:15:17,R_3MbyS5U7Npeo2LX,,,,,,,anonymous,EN,1,2,1,A107RJSS561Y7R,,,,,,,,,,,,35294,A107RJSS561Y7R,,
+2023-02-16 13:34:30,2023-02-16 13:41:37,0,73.82.100.137,27,426,0,2023-02-23 13:41:46,R_1BY0HLBOKsw6Toa,,,,,,,anonymous,EN,1,2,1,A25UQ2WHJ5AIEQ,,,,,,,,,,,,74796,A25UQ2WHJ5AIEQ,,
+2023-02-16 13:31:46,2023-02-16 13:42:23,0,24.17.142.26,27,636,0,2023-02-23 13:42:25,R_PM7edTJk1hg9dPr,,,,,,,anonymous,EN,1,2,1,A1B6B8EG4EJ3MO,,,,,,,,,,,,50253,A1B6B8EG4EJ3MO,,

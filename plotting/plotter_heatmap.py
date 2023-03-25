@@ -17,8 +17,6 @@ from skimage.metrics import mean_squared_error
 import statistics as pys
 from os.path import exists
 import pickle
-import sys
-
 
 game_titles = {
     "shuffleKeys_game": "Switching Mappings Game",
@@ -33,10 +31,10 @@ game_titles = {
     "change_agent_game": "Switching Embodiments Game"
 }
 
-agent_titles = {'human': 'Human', 'self_class': 'Self Class', 'random': 'Random', 'a2c_training': "A2C", 'trpo_training': 'TRPO', 'acer_training': 'ACER', 'ppo2_training': 'PPO2', 'dqn_training': 'DQN'}
+agent_titles = {'human': 'Human', 'self_class': 'Self Class', 'option_critic': 'OC'}
 
-agent_types = list(agent_titles.keys())
-game_types = ["logic_game", "contingency_game", "change_agent_game"]
+agent_types = ['option_critic']
+game_types = ["change_agent", ]
 
 
 def find_between( s, first, last ):
@@ -52,11 +50,6 @@ def get_seed_num_and_iter(x):
         return int(find_between(x.split("/")[-2], "seed", "-")) * 1000000000 + int(x.split("/")[-1][6:-5])
     else:
         return int(x.split("/")[-2].split("iter")[1]) * 1000000000 + int(x.split("/")[-1][6:-5])
-
-
-# In[40]:
-
-
 
 def combine_human_heatmaps(game_name, normalized=False):
     game_f = '_normalized' if normalized else ''
@@ -212,11 +205,18 @@ def plot_heatmap(normalize, state_counts, file, game_type, agent_type, avg=False
     print("Saving to: {}".format(filename))
     plt.savefig(filename, bbox_inches='tight', pad_inches=0, dpi=500)
     #plt.show()
+    plt.clf()
+    plt.close()
 
 
 # fl100 == 0 -> All levels, fl100 == 1 -> First 100 Only, fl100 == -1 -> Last 100 Only
 def make_heatmap(game_type, agent_type, normalize=False, fl100=0):
     files = glob.glob("/export/scratch/auguralp/data_finished/" + game_type + "/" + agent_type + "/*.json")
+
+    # Check if saved data exists
+    fpath = '/export/scratch/auguralp/heatmap_data/' + game_type + "_" + agent_type + "normalize={}".format(normalize) + "_" + str(fl100) + ".pickle"
+    if exists(fpath):
+        return pickle.load(open(fpath, 'rb'))
 
     if len(files) == 0:
         files = glob.glob("/export/scratch/auguralp/data_finished/" + game_type + "/" + agent_type + "/*/*.json") + glob.glob(
@@ -225,7 +225,7 @@ def make_heatmap(game_type, agent_type, normalize=False, fl100=0):
         return False
 
     # Skip stress test files
-    if agent_type not in ["human", "self_class", "random"]:
+    if agent_type not in ["human", "random"]:
         files = [x for x in files if int(x.split("/")[-1][6:-5]) <= 1900]
 
     seed = 0
@@ -261,7 +261,6 @@ def make_heatmap(game_type, agent_type, normalize=False, fl100=0):
 
     sorted_files = sorted(files, key=os.path.getmtime if agent_type == 'human' else get_seed_num_and_iter)
     for i, file in enumerate(sorted_files):
-        print("getting ", file)
         curr_file_count += 1
 
         if i == 0:
@@ -324,9 +323,6 @@ def make_heatmap(game_type, agent_type, normalize=False, fl100=0):
     return True
 
 
-# In[28]:
-
-
 # Source: https://www.pyimagesearch.com/2014/09/15/python-compare-two-images/
 def mse(imageA, imageB):
     # the 'Mean Squared Error' between the two images is the
@@ -379,83 +375,133 @@ def compare_images(imageA, imageB, game_type, agent_type, title, folder_appx, fl
         filename = path + agent_type + ".jpg"
 
         fig.savefig(filename, format='jpg', dpi=500)
+        plt.clf()
+        plt.close()
     return m, s
 
 
-# In[ ]:
-
-
-
-
-
-
-
-# In[ ]:
-
-
-# In[41]:
 if __name__ == "__main__":
     # Make heatmaps for all game and agent types
-    game = sys.argv[1]
-
+    fl100s = [-1, 0, 1] #, 1, 0
+    game_types = ["change_agent_game", ]
+    for fl100 in fl100s:
+        for game in game_types:
+            for agent in agent_types:
+                make_heatmap(game, agent, normalize=True, fl100=fl100) # Make normalized heatmaps
 
     errors_mse = {}
     errors_ssim = {}
 
     norm_errors_mse = {}
     norm_errors_ssim = {}
+    fl100s = [1, -1]
 
+
+    for fl100 in fl100s:
+        s = ""
+        tstr = ""
+        if fl100 == 1:
+            s = "first_100"
+            tstr = "First 100 Levels"
+        elif fl100 == -1:
+            s = "last_100"
+            tstr = "Last 100 Levels"
+
+        # Not normalized
+        """
+        for game in game_types:
+            errors_mse[game] = {}
+            errors_ssim[game] = {}
+            for agent in agent_types:
+                pathA = "/export/scratch/auguralp/plots/heatmaps/" + game + "_avg/" + "human" + "/" + "{}seeds_combined_heatmap.jpg".format(s)
+                pathB = "/export/scratch/auguralp/plots/heatmaps/" + game + "_avg/" + agent + "/" + "{}seeds_combined_heatmap.jpg".format(s)
+    
+                imgA = mpimg.imread(glob.glob(pathA)[0])
+                imgB = mpimg.imread(glob.glob(pathB)[0])
+                title = ("Human vs. " + agent_titles[agent] + " (" + game_titles[game] + ")" + "\n{}".format(tstr)) if 'shuffled' not in game else ("Human vs. " + agent_titles[agent] + " \n" + game_titles[game] + "\n{}".format(tstr))
+                msee, ssimi = compare_images(imgA, imgB, game_type=game, agent_type=agent,
+                               title=title, folder_appx='avg', fl100=fl100)
+                errors_mse[game][agent] = msee
+                errors_ssim[game][agent] = ssimi
+        """
+
+        # Normalized
+        for game in game_types:
+            norm_errors_mse[game] = {}
+            norm_errors_ssim[game] = {}
+            for agent in agent_types:
+                pathA = "/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + "human" + "/" + "{}seeds_combined_heatmap.jpg".format(s)
+                pathB = "/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + agent + "/" + "{}seeds_combined_heatmap.jpg".format(s)
+
+                imgA = mpimg.imread(glob.glob(pathA)[0])
+                imgB = mpimg.imread(glob.glob(pathB)[0])
+                title = ("Human vs. " + agent_titles[agent] + " (" + game_titles[game] + ")" + "\n{}".format(tstr)) if 'shuffled' not in game else ("Human vs. " + agent_titles[agent] + " \n" + game_titles[game] + "\n{}".format(tstr))
+                msee, ssimi = compare_images(imgA, imgB, game_type=game, agent_type=agent,
+                               title=title,
+                               folder_appx='normalized_avg', fl100=fl100)
+                norm_errors_mse[game][agent] = msee
+                norm_errors_ssim[game][agent] = ssimi
+
+        # Calculate mean errors
+        for game in game_types:
+            mean_err_mse = np.array(list(norm_errors_mse[game].values())).mean()
+            print("Mean MSE error for {} = {} (Not-normalized, {})".format(game, mean_err_mse, s))
+
+            mean_norm_err_mse = np.array(list(norm_errors_mse[game].values())).mean()
+            print("Mean MSE error for {} = {} (Normalized, {})".format(game, mean_norm_err_mse, s))
 
     ### COMPARISON OF COMPARISONS (MSE)
 
     comparisons = {}
     # Initialize dictionaries:
-    comparisons[game] = {}
-    for fl in ["first_100", "s", "last_100"]: # First Hundred, All, Last Hundred
-        comparisons[game][fl] = {}
-        for agent in ["dqn_training", "acer_training", "a2c_training", "trpo_training", "ppo2_training", "human"]:
-            comparisons[game][fl][agent] = []
+    for game in ["change_agent_game", ]:#"change_agent_game"]:
+        comparisons[game] = {}
+        for fl in ["first_100", "s", "last_100"]: # First Hundred, All, Last Hundred
+            comparisons[game][fl] = {}
+            for agent in ["human", "option_critic", "a2c_training", "dqn_training", "trpo_training", "ppo2_training", "trpo_training", "acer_training"]:
+                comparisons[game][fl][agent] = []
 
     # Compare difference of differences:
     # Comparing "Human v. Self" with "RL Algorithms v. Self" for First Hundred, All, and Last Hundred Levels:::
-    for fl in ["s", "first_100", "last_100"]: # All, First Hundred, Last Hundred
-        print("******************** {} - {} ********************".format(game, fl))
-        self_class_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized/" + "self_class" + "/" + "{}*.jpg".format(fl))
+    for game in ["change_agent_game",  ]:#"change_agent_game"]:
+        for fl in ["s", "first_100", "last_100"]: # All, First Hundred, Last Hundred
+            print("******************** {} - {} ********************".format(game, fl))
+            self_class_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized/" + "self_class" + "/" + "{}*.jpg".format(fl))
 
-        ############# Compare average of humans to each self class:
-        human_file = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + "human" + "/" + "seeds_combined_heatmap.jpg")[0]
+            ############# Compare average of humans to each self class:
+            human_file = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + "human" + "/" + "seeds_combined_heatmap.jpg")[0]
 
-        def get_seed_num(x):
-            if x.split("_")[-2].isnumeric():
-                return int(x.split("_")[-2])
+            def get_seed_num(x):
+                if x.split("_")[-2].isnumeric():
+                    return int(x.split("_")[-2])
 
-        ############# Now compare each seed to self class, for each agent
-        for agent in ["human", "dqn_training", "acer_training", "a2c_training", "trpo_training", "ppo2_training"]:
-            if agent == "human":
-                agent_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + "human" + "/" + "seeds_combined_heatmap.jpg")
-            else:
-                agent_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized/" + agent + "/" + "{}*.jpg".format(fl))
-
-            sorted_agent_files = sorted(agent_files, key=get_seed_num)
-            for j, self_file in enumerate(sorted(self_class_files, key=get_seed_num)):
+            ############# Now compare each seed to self class, for each agent
+            for agent in ["human", "option_critic", "a2c_training", "dqn_training", "trpo_training", "ppo2_training", "trpo_training", "acer_training"]:
                 if agent == "human":
-                    agent_file = sorted_agent_files[0]
+                    agent_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized_avg/" + "human" + "/" + "seeds_combined_heatmap.jpg")
                 else:
-                    agent_file = sorted_agent_files[j]
-                print("Comparing: {} vs Self-Class, Seed={}, Files={}, {}...".format(agent, j, agent_file, self_file))
-                imgA = mpimg.imread(glob.glob(self_file)[0])
-                imgB = mpimg.imread(glob.glob(agent_file)[0])
-                msee, ssimi = compare_images(imgA, imgB, game_type=game, agent_type='human',
-                           title="",
-                           folder_appx='normalized_avg', fl100=0, plot=False)
+                    agent_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized/" + agent + "/" + "{}*.jpg".format(fl))
 
-                print("MSE: {}".format(msee))
-                comparisons[game][fl][agent].append(msee)
+                sorted_agent_files = sorted(agent_files, key=get_seed_num)
+                for j, self_file in enumerate(sorted(self_class_files, key=get_seed_num)):
+                    if agent == "human":
+                        agent_file = sorted_agent_files[0]
+                    else:
+                        agent_file = sorted_agent_files[j]
+                    print("Comparing: {} vs Self-Class, Seed={}, Files={}, {}...".format(agent, j, agent_file, self_file))
+                    imgA = mpimg.imread(glob.glob(self_file)[0])
+                    imgB = mpimg.imread(glob.glob(agent_file)[0])
+                    msee, ssimi = compare_images(imgA, imgB, game_type=game, agent_type='human',
+                               title="",
+                               folder_appx='normalized_avg', fl100=0, plot=False)
 
-    with open('mse_comparisons_final_{}.json'.format(game), 'w') as fp:
+                    print("MSE: {}".format(msee))
+                    comparisons[game][fl][agent].append(msee)
+
+    with open('mse_comparisons.json', 'w') as fp:
         json.dump(comparisons, fp, indent=4)
 
-    with open('mse_comparisons_2_final_{}.json'.format(game), 'w') as fp:
+    with open('mse_comparisons_2.json', 'w') as fp:
         json.dump(comparisons, fp)
 
 
