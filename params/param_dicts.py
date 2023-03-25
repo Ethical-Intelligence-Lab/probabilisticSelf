@@ -40,7 +40,7 @@ params = {
     'singleAgent': False,
     'game_type': 'logic',  # logic, contingency, change_agent, logic_extended, contingency_extended,
     # change_agent_extended (mock self can be the real self), change_agent_extended_1 (mock self cannot be the real self), change_agent_extended_2 (harder)
-    'player': 'hrl_feudal',  # random, human, dqn_training, self_class, ppo2_training
+    'player': 'option_critic',  # random, human, dqn_training, self_class, ppo2_training
     'exp_name': 'train_',
     'verbose': False,
     'n_levels': 100,

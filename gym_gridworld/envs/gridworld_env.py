@@ -138,7 +138,7 @@ class GridworldEnv(gym.Env):
 
         if 'run' in P.keys():
             P.pop('run')
-            
+
         self.metadata = P
 
         print(self.metadata)
@@ -154,7 +154,7 @@ class GridworldEnv(gym.Env):
         self.n_levels = int(P['n_levels'])
         self.single_loc = P['single_loc']
         self.shuffle_keys = P['shuffle_keys']
-        self.shuffle_each = P['shuffle_each']
+        self.shuffle_each = int(P['shuffle_each'])
         self.agent_location_random = P['agent_location_random']
         self.different_self_color = P['different_self_color']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -616,11 +616,13 @@ class GridworldEnv(gym.Env):
                               [agent[0], agent[1] + self.perim]
                               ]
 
+    def get_total_level_count(self):
+        return (self.level_counter + self.n_levels * self.levels_count)
+
     def reset(self):
         print("Level finished, ", self.level_counter, " with ", self.step_counter, " steps.")
 
         if self.run:
-            print("SAVING TO NEPTUNE  ... ", self.level_counter)
             self.run["train/level_steps"].append(self.step_counter)
 
         if self.verbose:
@@ -855,6 +857,7 @@ class GridworldEnv(gym.Env):
         for i in range(grid_map.shape[0]):
             for k in range(grid_map.shape[1]):
                 observation[i * gs0:(i + 1) * gs0, k * gs1:(k + 1) * gs1] = np.array(COLORS[grid_map[i, k]])
+
         return observation
 
     def _render(self):

@@ -5,6 +5,7 @@ data/
 saved_models/
 .neptune
 useless/
+data_finished/
 
 #file extentions
 .zip
@@ -24,3 +25,4 @@ plots/
 fn_code/
 logs/
 runs/
+*.zip

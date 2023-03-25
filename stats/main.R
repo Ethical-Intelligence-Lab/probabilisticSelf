@@ -1,3 +1,4 @@
+rm(list = ls())
 if (!require(pacman)) { install.packages(pacman) }
 
 pacman::p_load('effsize')
@@ -7,11 +8,10 @@ pacman::p_load('Dict')
 pacman::p_load('ggpubr')
 
 # Manually enter directory path if you are not using Rstudio
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(getwd())
 
-games = c('logic_game')
+games = c('change_agent_game')
 
-agents = c('self_class')
 game_datas <- c()
 all_stats <- c()
 all_bfs_binary <- c()
@@ -31,25 +31,44 @@ print_sig <- function(p) {
     }
 }
 
-## Human v. Self Class for the First Hundred Levels -- BAYESIAN ANALYSIS
+# *-*-*-*-*-*-*-*-* BAYESIAN TESTS *-*-*-*-*-*-*-*-* #
+## Human v. Self Class for the First Level Levels
 for (game in games) {
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_data <- fromJSON(file = filename)
     game_datas[[game]] <- game_data
-    bfs_binary <- c()
-    ts <- c()
-    ps <- c()
-    bf_corr <- c()
-    for (agent in agents) {
-        levels <- 1:150
+
+    if(game != 'contingency_game_shuffled_1') {  # Switching mappings does not have perturbation task
+        perturbation_c <- c(TRUE, FALSE)
+    } else {
+        perturbation_c <- c(FALSE)
+    }
+
+    for(perturbation in perturbation_c) { # Two separate tests for perturbation task and regular
+        bfs_binary <- c()
+        ts <- c()
+        ps <- c()
+        bf_corr <- c()
+
+        if(perturbation) { levels <- 1:150 } else { levels <- 1:100 }
+
+        if (game == "change_agent_game" && perturbation) { levels <- 1:30 } # 30 Levels in change_agent_game perturbation
+        
         for (level in levels) {
             # Favors Alternative Hypothesis (mu =/= 0)
-            x <- game_datas[[game]]$human_extended[[level]]
+            if(perturbation) {
+                x <- game_datas[[game]]$human_extended[[level]]
+            } else {
+                x <- game_datas[[game]]$human[[level]]
+            }
+            
             y <- game_datas[[game]]$self_class_first_150[[level]]
             result <- 1 / ttestBF(x = x, y = y)
 
             var_result <- var.test(x, y)
             result_ttest <- t.test(x = x, y = y, var.equal = var_result$p.value > 0.05)
+            print(level)
+            print(result_ttest)
 
             result_bf <- exp(result@bayesFactor$bf)
 
@@ -64,22 +83,73 @@ for (game in games) {
             }
             bfs_binary <- append(bfs_binary, result_bf)
 
-        }
-        all_stats[[game]][['Bayes Factors']] <- bf_corr
-        all_stats[[game]][['Binary Bayes Factors']] <- bfs_binary
-        all_stats[[game]][['t-values']] <- ts
-        all_stats[[game]][['p-values']] <- ps
+            if(perturbation) {
+                perturbation_s <- "perturbated"
+            } else {
+                perturbation_s <- "normal"
+            }
+            all_stats[[game]][[perturbation_s]][["Bayes Factors"]] <- bf_corr
+            all_stats[[game]][[perturbation_s]][['Binary Bayes Factors']] <- bfs_binary
+            all_stats[[game]][[perturbation_s]][['t-values']] <- ts
+            all_stats[[game]][[perturbation_s]][['p-values']] <- ps
 
-        all_bfs_binary[[game]] <- bfs_binary
+            all_bfs_binary[[game]][[perturbation_s]] <- bfs_binary
+       }
     }
-
 }
 
+
+### Save binary bayes results
+json_data <- toJSON(all_bfs_binary)
+write(json_data, paste0(game, "_bfs.json"))
+
+
+### Did humans do more steps after the perturbation?
+print("Did humans do more steps after the perturbation?")
+if( game %in% c('contingency_game', 'change_agent_game') ) {
+    if (game == 'change_agent_game') {
+        level_means <- lapply(game_datas[[game]][['human_extended']], mean)
+        var_result <- var.test(unlist(level_means[0:19]), unlist(level_means[20:30]))
+        result_ttest <- t.test(x = unlist(level_means[0:19]), y = unlist(level_means[20:30]), var.equal = var_result$p.value > 0.05)
+        print(result_ttest)
+        print(cohen.d(unlist(level_means[0:19]), unlist(level_means[20:30])))
+    } else {
+        level_means <- lapply(game_datas[[game]][['human_extended']], mean)
+        var_result <- var.test(unlist(level_means[0:99]), unlist(level_means[100:150]))
+        result_ttest <- t.test(x = unlist(level_means[0:99]), y = unlist(level_means[100:150]), var.equal = var_result$p.value > 0.05)
+        print(result_ttest)
+        print(cohen.d(unlist(level_means[0:99]), unlist(level_means[100:150])))
+    }
+}
+
+################ T-Tests ################
 for (game in games) {
     print(paste("*-*-*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*-*-*"))
 
     print("**** LAST *****")
-    print("Human vs DQN (LAST HUNDRED):")
+    print("Human vs OC (Last Level):")
+
+    game_d <- game_datas[[game]]
+
+    result <- 1 / ttestBF(x = game_d$human[[100]], y = game_d$option_critic_last_100[[100]])
+    var_result <- var.test(game_d$human[[100]], game_d$option_critic_last_100[[100]])
+    result_ttest <- t.test(x = game_d$human[[100]], y = game_d$option_critic_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
+
+    summary(result)
+    print(result_ttest)
+
+    print("Self vs OC (Last Level):")
+
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$option_critic_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$option_critic_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$option_critic_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    print_sig(result_ttest$p.value)
+
+    summary(result)
+    print(result_ttest)
+
+    print("Human vs DQN (Last Level):")
 
     game_d <- game_datas[[game]]
 
@@ -91,17 +161,17 @@ for (game in games) {
     summary(result)
     print(result_ttest)
 
-    print("Self vs DQN (LAST HUNDRED):")
+    print("Self vs DQN (Last Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[100]], y = game_d$dqn_training_last_100[[100]])
-    var_result <- var.test(game_d$self_class_first_100[[100]], game_d$dqn_training_last_100[[100]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[100]], y = game_d$dqn_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$dqn_training_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$dqn_training_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$dqn_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
     print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
 
-    print("Human vs PPO2 (LAST HUNDRED):")
+    print("Human vs PPO2 (Last Level):")
 
     result <- 1 / ttestBF(x = game_d$human[[100]], y = game_d$ppo2_training_last_100[[100]])
     var_result <- var.test(game_d$human[[100]], game_d$ppo2_training_last_100[[100]])
@@ -111,17 +181,17 @@ for (game in games) {
     summary(result)
     print(result_ttest)
 
-    print("Self vs. PPO2 (LAST HUNDRED):")
+    print("Self vs. PPO2 (Last Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[100]], y = game_d$ppo2_training_last_100[[100]])
-    var_result <- var.test(game_d$self_class_first_100[[100]], game_d$ppo2_training_last_100[[100]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[100]], y = game_d$ppo2_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$ppo2_training_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$ppo2_training_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$ppo2_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
     print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
 
-    print("Human vs TRPO (LAST HUNDRED):")
+    print("Human vs TRPO (Last Level):")
 
     result <- 1 / ttestBF(x = game_d$human[[100]], y = game_d$trpo_training_last_100[[100]])
     var_result <- var.test(game_d$human[[100]], game_d$trpo_training_last_100[[100]])
@@ -132,18 +202,18 @@ for (game in games) {
     print(result_ttest)
 
 
-    print("Self vs TRPO (LAST HUNDRED):")
+    print("Self vs TRPO (Last Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[100]], y = game_d$trpo_training_last_100[[100]])
-    var_result <- var.test(game_d$self_class_first_100[[100]], game_d$trpo_training_last_100[[100]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[100]], y = game_d$trpo_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$trpo_training_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$trpo_training_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$trpo_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
     print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
 
 
-    print("Human vs ACER (LAST HUNDRED):")
+    print("Human vs ACER (Last Level):")
 
     result <- 1 / ttestBF(x = game_d$human[[100]], y = game_d$acer_training_last_100[[100]])
     var_result <- var.test(game_d$human[[100]], game_d$acer_training_last_100[[100]])
@@ -154,17 +224,17 @@ for (game in games) {
     print(result_ttest)
 
 
-    print("Self vs ACER (LAST HUNDRED):")
+    print("Self vs ACER (Last Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[100]], y = game_d$acer_training_last_100[[100]])
-    var_result <- var.test(game_d$self_class_first_100[[100]], game_d$acer_training_last_100[[100]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[100]], y = game_d$acer_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$acer_training_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$acer_training_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$acer_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
     print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
 
-    print("Human vs A2C (LAST HUNDRED):")
+    print("Human vs A2C (Last Level):")
 
     result <- 1 / ttestBF(x = game_d$human[[100]], y = game_d$a2c_training_last_100[[100]])
     var_result <- var.test(game_d$human[[100]], game_d$a2c_training_last_100[[100]])
@@ -175,150 +245,155 @@ for (game in games) {
     print(result_ttest)
 
 
-    print("Self vs A2C (LAST HUNDRED):")
+    print("Self vs A2C (Last Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[100]], y = game_d$a2c_training_last_100[[100]])
-    var_result <- var.test(game_d$self_class_first_100[[100]], game_d$a2c_training_last_100[[100]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[100]], y = game_d$a2c_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
+    result <- 1 / ttestBF(x = game_d$self_class_first_150[[150]], y = game_d$a2c_training_last_100[[100]])
+    var_result <- var.test(game_d$self_class_first_150[[150]], game_d$a2c_training_last_100[[100]])
+    result_ttest <- t.test(x = game_d$self_class_first_150[[150]], y = game_d$a2c_training_last_100[[100]], var.equal = var_result$p.value > 0.05)
     print_sig(result_ttest$p.value)
 
     summary(result)
     print(result_ttest)
 
 
-    print("***** FIRST HUNDRED ******")
-    print("Human vs DQN (FIRST HUNDRED):")
+    if(FALSE) {
+        print("***** First Level ******")
+        print("Human vs DQN (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$dqn_training_first_100[[1]])
-    var_result <- var.test(game_d$human[[1]], game_d$dqn_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$human[[1]], y = game_d$dqn_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$dqn_training_first_150[[1]])
+        var_result <- var.test(game_d$human[[1]], game_d$dqn_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$dqn_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
-    print("Self vs DQN (FIRST HUNDRED):")
+        print("Self vs DQN (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[1]], y = game_d$dqn_training_first_100[[1]])
-    var_result <- var.test(game_d$self_class_first_100[[1]], game_d$dqn_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[1]], y = game_d$dqn_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$dqn_training_first_150[[1]])
+        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$dqn_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$dqn_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
-    print("Human vs PPO2 (FIRST HUNDRED):")
+        print("Human vs PPO2 (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$ppo2_training_first_100[[1]])
-    var_result <- var.test(game_d$human[[1]], game_d$ppo2_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$human[[1]], y = game_d$ppo2_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$ppo2_training_first_150[[1]])
+        var_result <- var.test(game_d$human[[1]], game_d$ppo2_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$ppo2_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
-    print("Self vs. PPO2 (FIRST HUNDRED):")
+        print("Self vs. PPO2 (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[1]], y = game_d$ppo2_training_first_100[[1]])
-    var_result <- var.test(game_d$self_class_first_100[[1]], game_d$ppo2_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[1]], y = game_d$ppo2_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$ppo2_training_first_150[[1]])
+        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$ppo2_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$ppo2_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
-    print("Human vs TRPO (FIRST HUNDRED):")
+        print("Human vs TRPO (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$trpo_training_first_100[[1]])
-    var_result <- var.test(game_d$human[[1]], game_d$trpo_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$human[[1]], y = game_d$trpo_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$trpo_training_first_150[[1]])
+        var_result <- var.test(game_d$human[[1]], game_d$trpo_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$trpo_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
-
-
-    print("Self vs TRPO (FIRST HUNDRED):")
-
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[1]], y = game_d$trpo_training_first_100[[1]])
-    var_result <- var.test(game_d$self_class_first_100[[1]], game_d$trpo_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[1]], y = game_d$trpo_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
-
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
 
-    print("Human vs ACER (FIRST HUNDRED):")
+        print("Self vs TRPO (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$acer_training_first_100[[1]])
-    var_result <- var.test(game_d$human[[1]], game_d$acer_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$human[[1]], y = game_d$acer_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$trpo_training_first_150[[1]])
+        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$trpo_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$trpo_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
-
-
-    print("Self vs ACER (FIRST HUNDRED):")
-
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[1]], y = game_d$acer_training_first_100[[1]])
-    var_result <- var.test(game_d$self_class_first_100[[1]], game_d$acer_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[1]], y = game_d$acer_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
-
-    summary(result)
-    print(result_ttest)
-
-    print("Human vs A2C (FIRST HUNDRED):")
-
-    result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$a2c_training_first_100[[1]])
-    var_result <- var.test(game_d$human[[1]], game_d$a2c_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$human[[1]], y = game_d$a2c_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
-
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
 
 
-    print("Self vs A2C (FIRST HUNDRED):")
+        print("Human vs ACER (First Level):")
 
-    result <- 1 / ttestBF(x = game_d$self_class_first_100[[1]], y = game_d$a2c_training_first_100[[1]])
-    var_result <- var.test(game_d$self_class_first_100[[1]], game_d$a2c_training_first_100[[1]])
-    result_ttest <- t.test(x = game_d$self_class_first_100[[1]], y = game_d$a2c_training_first_100[[1]], var.equal = var_result$p.value > 0.05)
-    print_sig(result_ttest$p.value)
+        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$acer_training_first_150[[1]])
+        var_result <- var.test(game_d$human[[1]], game_d$acer_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$acer_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
 
-    summary(result)
-    print(result_ttest)
+        summary(result)
+        print(result_ttest)
+
+
+        print("Self vs ACER (First Level):")
+
+        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$acer_training_first_150[[1]])
+        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$acer_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$acer_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
+
+        summary(result)
+        print(result_ttest)
+
+        print("Human vs A2C (First Level):")
+
+        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$a2c_training_first_150[[1]])
+        var_result <- var.test(game_d$human[[1]], game_d$a2c_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$a2c_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
+
+        summary(result)
+        print(result_ttest)
+
+
+        print("Self vs A2C (First Level):")
+
+        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$a2c_training_first_150[[1]])
+        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$a2c_training_first_150[[1]])
+        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$a2c_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
+        print_sig(result_ttest$p.value)
+
+        summary(result)
+        print(result_ttest)
+    }
+    
 }
 
 
 ## Check whether the distributions of steps for the two games are
 ## different from each other using independent samples t-test
 
-# Contingency Game
-# On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels
-human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
-self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_100))
+if(FALSE) {
+    # Contingency Game
+    # On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels
+    human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
+    self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_150))
 
-vr <- var.test(human_means_cont, self_means_cont)
-t.test(human_means_cont, self_means_cont, var.equal = vr$p.value > 0.05)
-cohen.d(human_means_cont, self_means_cont)
+    vr <- var.test(human_means_cont, self_means_cont)
+    t.test(human_means_cont, self_means_cont, var.equal = vr$p.value > 0.05)
+    cohen.d(human_means_cont, self_means_cont)
 
-# Switching Mappings Game
-human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
-self_means_sm <- colMeans(do.call(rbind, game_datas$
-    contingency_game_shuffled_1$
-    self_class_first_100))
+    # Switching Mappings Game
+    human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
+    self_means_sm <- colMeans(do.call(rbind, game_datas$
+        contingency_game_shuffled_1$
+        self_class_first_150))
 
-vr <- var.test(human_means_sm, self_means_sm)
-t.test(human_means_sm, self_means_sm, var.equal = vr$p.value > 0.05)
-cohen.d(human_means_sm, self_means_sm)
+    vr <- var.test(human_means_sm, self_means_sm)
+    t.test(human_means_sm, self_means_sm, var.equal = vr$p.value > 0.05)
+    cohen.d(human_means_sm, self_means_sm)
+}
 
 
 ################## SELF FINDING STUDIES ##################
 
-for (game in c('contingency_game', 'contingency_game_shuffled_1')) {
+if (game %in% c('contingency_game', 'contingency_game_shuffled_1')) { #'contingency_game'
     print(paste("*-*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*-*"))
     ## Check if participants performed differently in the self-finding game compared to the original run
     human_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$human))
@@ -342,19 +417,20 @@ for (game in c('contingency_game', 'contingency_game_shuffled_1')) {
         geom_point() +
         coord_fixed() +
         geom_smooth(method = 'lm', se = T, size = 1, alpha = 0.2, color = 'red') +
-        theme_bw(base_size = 20) +
-        theme(legend.position = "none", axis.line = element_line(color = 'black'), panel.grid.minor = element_blank(), panel.border = element_blank())
+        theme_bw(base_size = 22) +
+        theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.x=element_text(colour="black"), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks=element_line(size=unit(0.2,"inch"))) +
+        scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1)))))
 
     if (game == 'contingency_game') {
         plot <- plot +
             coord_cartesian(ylim = c(2, 7), xlim = c(8, 20)) +
-            stat_cor(method = "pearson", label.x = 12.6, label.y = 7, p.digits = 3, size = 5, cor.coef.name = "r")
+            stat_cor(method = "pearson", label.x = 11.7, label.y = 7, p.digits = 3, size = 7, cor.coef.name = "r")
     } else if (game == 'contingency_game_shuffled_1') {
         plot <- plot +
-            stat_cor(method = "pearson", label.x = 35, label.y = 45, p.digits = 3, size = 5, cor.coef.name = "r") +
+            stat_cor(method = "pearson", label.x = 35, label.y = 45, p.digits = 3, size = 7, cor.coef.name = "r") +
             coord_cartesian(ylim = c(5, 45), xlim = c(20, 65))
     }
 
-    ggsave(paste0("scatter_self_orient_", game, ".png"), plot = plot, units = "cm")
+    ggsave(paste0("scatter_self_orient_", game, ".png"), plot = plot, units = "cm", width=21.8, height=12.1, dpi=1000)
 
 }
