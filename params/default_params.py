@@ -146,7 +146,6 @@ def str2bool(v):
 
 
 def get_algo_cmd_line_args(baselines_v):
-    import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
 
     dqn_version = 'DQN3' if baselines_v == 3 else 'DQN'

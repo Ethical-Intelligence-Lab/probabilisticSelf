@@ -212,7 +212,6 @@ class Self_class():
 
             # (3) If only one agent moved in direction of keypress, navigate it to the reward 
             if (len(self.candidates) == 1):
-                #import pdb; pdb.set_trace()
                 print('*** Found myself! Navigating to the reward ***')
                 self.mode = 'navigation'
                 self.prev_action = self.navigate(target, SELF, env)
