@@ -303,7 +303,6 @@ class Self_class():
     def predict_change_agent(self, env):
         print("*-*-*-*---- PREDICTING ----*-*-*-*")
         self.action_counter += 1
-        import pdb; pdb.set_trace()
 
         # Get env state
         grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
