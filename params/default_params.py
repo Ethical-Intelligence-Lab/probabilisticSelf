@@ -3,10 +3,13 @@ import string
 import argparse
 import inspect
 
-sb = True  # Running stable baselines
-if sb:
+try:
     from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
     from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
+    sb_available = True
+except ModuleNotFoundError as err:
+    print(err)
+    sb_available = False
 
 from params.param_dicts import param_abbreviations, params
 import os, sys
@@ -24,8 +27,11 @@ class DefaultParams:
             self.algo_only = {}
             return
 
-        from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
-        from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
+        try:
+            from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
+            from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
+        except ModuleNotFoundError as err:
+            print(err)
 
         if player not in ['human', 'self_class', 'random']:
             # Get arguments of particular algorithm
@@ -139,38 +145,41 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def get_cmd_line_args(baselines_v):
+def get_algo_cmd_line_args(baselines_v):
     parser = argparse.ArgumentParser()
 
     dqn_version = 'DQN3' if baselines_v == 3 else 'DQN'
     a2c_version = 'A2C3' if baselines_v == 3 else 'A2C'
     ppo_version = 'PPO3' if baselines_v == 3 else 'PPO2'
-    all_possible_params = {"seed": 0,
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(dqn_version)])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['{}'.format(dqn_version)])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(ppo_version)])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['{}'.format(ppo_version)])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['TRPO'])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['GAIL'])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['GAIL'])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['HER'])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['HER'])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['ACKTR'])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(a2c_version)])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['{}'.format(a2c_version)])[3]))),
-                           **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if
-                                        v not in ['env', 'policy']],
-                                       inspect.getfullargspec(globals()['ACER'])[3]))),
-                           **params}
+
+    all_possible_params = {}
+    if sb_available:
+        all_possible_params = {"seed": 0,
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(dqn_version)])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['{}'.format(dqn_version)])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(ppo_version)])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['{}'.format(ppo_version)])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['TRPO'])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['TRPO'])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['GAIL'])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['GAIL'])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['HER'])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['HER'])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['ACKTR'])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['ACKTR'])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['{}'.format(a2c_version)])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['{}'.format(a2c_version)])[3]))),
+                            **(dict(zip([v for v in inspect.getfullargspec(globals()['ACER'])[0][1:] if
+                                            v not in ['env', 'policy']],
+                                        inspect.getfullargspec(globals()['ACER'])[3]))),
+                            **params}
 
     all_possible_params['seed'] = 0
 

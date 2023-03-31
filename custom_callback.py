@@ -1,6 +1,9 @@
 import os
 
-from stable_baselines.common.callbacks import BaseCallback
+try:
+    from stable_baselines.common.callbacks import BaseCallback
+except ModuleNotFoundError as err:
+    print(err)
 
 
 # Callback to save the model every n steps and at the end
