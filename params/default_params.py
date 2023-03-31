@@ -3,7 +3,7 @@ import string
 import argparse
 import inspect
 
-sb = False  # Running stable baselines
+sb = True  # Running stable baselines
 if sb:
     from stable_baselines import PPO2, DQN, TRPO, GAIL, HER, ACKTR, A2C, ACER
     from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
