@@ -93,33 +93,34 @@ if __name__ == '__main__':
 
     # Random, Human, or Self Class
     while True:
-        if P['player'] == 'random':
-            while True:
-                obs, reward, done, info = env.step(env.action_space.sample())
-                env._render()
-                if done:
-                    print('done')
-                    env.reset()
-        elif P['player'] == 'human':
-            while True:
+        if P['player'] in ['human', 'self_class', 'random']:
+            if P['player'] == 'random':
                 while True:
-                    prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
-                    if prelim_action in ['w', 'a', 's', 'd']:
-                        action = key_converter(prelim_action)
-                        break
-                    else:
-                        print("Please enter a valid key (w, a, s, or d).")
-                        continue
-                obs, reward, done, info = env.step(action)
-                if done:
-                    env.reset()
-        elif P['player'] == 'self_class':
-            while True:
-                action = self_class.predict(env)
-                obs, reward, done, info = env.step(action)
-                if done:
-                    env.reset()
-        exit(0)
+                    obs, reward, done, info = env.step(env.action_space.sample())
+                    env._render()
+                    if done:
+                        print('done')
+                        env.reset()
+            elif P['player'] == 'human':
+                while True:
+                    while True:
+                        prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
+                        if prelim_action in ['w', 'a', 's', 'd']:
+                            action = key_converter(prelim_action)
+                            break
+                        else:
+                            print("Please enter a valid key (w, a, s, or d).")
+                            continue
+                    obs, reward, done, info = env.step(action)
+                    if done:
+                        env.reset()
+            elif P['player'] == 'self_class':
+                while True:
+                    action = self_class.predict(env)
+                    obs, reward, done, info = env.step(action)
+                    if done:
+                        env.reset()
+            exit(0)
 
 
         def class_for_name(module_name, class_name):

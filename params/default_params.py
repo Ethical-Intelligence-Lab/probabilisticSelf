@@ -146,6 +146,7 @@ def str2bool(v):
 
 
 def get_algo_cmd_line_args(baselines_v):
+    import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
 
     dqn_version = 'DQN3' if baselines_v == 3 else 'DQN'
@@ -180,6 +181,8 @@ def get_algo_cmd_line_args(baselines_v):
                                             v not in ['env', 'policy']],
                                         inspect.getfullargspec(globals()['ACER'])[3]))),
                             **params}
+    else:
+        all_possible_params = params
 
     all_possible_params['seed'] = 0
 
