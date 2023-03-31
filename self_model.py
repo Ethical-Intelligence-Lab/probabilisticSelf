@@ -8,6 +8,7 @@ import copy
 class Self_class():
     def __init__(self, seed):
         self.me = None
+        self.game_type = None
         self.seed = seed
         self.tried_keys = []
         self.keys = [0, 1, 2, 3]  # U, D, L, R
@@ -30,6 +31,9 @@ class Self_class():
         self.candidates = []
         last_action = self.action_ref[self.prev_action]
         # Get direction in which agents moved
+
+        print(cur_agents)
+        print(self.prev_agents)
         for i, loc in enumerate(cur_agents):
             self.movements.append([cur_agents[i][0] - self.prev_agents[i][0],
                                    cur_agents[i][1] - self.prev_agents[i][1]
@@ -173,6 +177,13 @@ class Self_class():
         # Get env state
         grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
 
+        if self.game_type is None:
+            self.game_type = env.game_type
+        else:
+            if self.game_type != env.game_type: # Environment changed due to the perturbation task
+                self.last_grid = []
+                self.game_type = env.game_type
+
         # Whenever environment resets, we start in self discovery mode
         if len(self.last_grid) == 0:
             self.mode = 'self_discovery'
@@ -292,10 +303,18 @@ class Self_class():
     def predict_change_agent(self, env):
         print("*-*-*-*---- PREDICTING ----*-*-*-*")
         self.action_counter += 1
+        import pdb; pdb.set_trace()
 
         # Get env state
         grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
-        print(env.game_type)
+
+        if self.game_type is None:
+            self.game_type = env.game_type
+        else:
+            if self.game_type != env.game_type: # Environment changed due to the perturbation task
+                self.last_grid = []
+                self.game_type = env.game_type
+
         self.agent_locs.append(SELF)
 
         # Whenever environment resets, we start in self discovery mode
@@ -305,6 +324,9 @@ class Self_class():
             self.prev_candidates = []
 
         self.last_grid = copy.deepcopy(grid)
+
+        #if env.game_type == "change_agent_extended_2":
+        #    import pdb; pdb.set_trace()
 
         # Get current sorted agents
         cur_agents = []
@@ -353,7 +375,7 @@ class Self_class():
 
             elif len(self.candidates) > 1:
                 # (4) If > 1 agent moved in direction of keypress, take action in a different dimension
-                if len(self.prev_candidates) == 0:
+                if len(self.prev_candidates) == 0:  # Initial case
                     print('*** Found > 1 self candidate. Taking another action ***')
                     self.prev_candidates = copy.deepcopy(self.candidates)
                     self.candidates = []
@@ -361,7 +383,7 @@ class Self_class():
                     self.prev_action = key_converter(self.get_direction())
                     return self.prev_action
 
-                #  More than one candidates: Eliminate
+                #  More than one candidate: Eliminate
                 elif len(self.prev_candidates) > 0:
                     print('*** Eliminating candidates. ***')
 
