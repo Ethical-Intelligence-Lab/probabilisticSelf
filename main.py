@@ -2,18 +2,23 @@ import os
 import sys
 import importlib
 from self_model import Self_class
-import gym_l.gym as gym
+import gym
 import gym_gridworld  # Registering our environment here
 from utils.keys import key_converter
-from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
-from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
-from stable_baselines.common.cmd_util import make_vec_env
-from stable_baselines3.common.env_util import make_vec_env as make_vec_env3
-from params.default_params import DefaultParams, get_cmd_line_args
+
+try:
+    from stable_baselines import DQN, PPO2, TRPO, GAIL, HER, ACKTR, A2C, ACER
+    from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
+    from stable_baselines.common.cmd_util import make_vec_env
+    from stable_baselines3.common.env_util import make_vec_env as make_vec_env3
+    import custom_callback
+except ModuleNotFoundError as err:
+    print(err)
+
+from params.default_params import DefaultParams, get_algo_cmd_line_args
 #import neptune.new as neptune
 from dotenv import load_dotenv
 import tensorflow as tf
-import custom_callback
 
 # Suppresses warnings about future deprecation. These warnings mostly appear because we are using
 # an older version of tensorflow.
@@ -43,7 +48,7 @@ if __name__ == '__main__':
     print(arg_string)
 
     # Get cmd line arguments, and integrate with default params
-    args = get_cmd_line_args(baselines_v)
+    args = get_algo_cmd_line_args(baselines_v)
     player = args['player'].split('_')[0].upper() if args['player'] not in ['human', 'self_class', 'random'] else args[
         'player']
     def_params = DefaultParams(player, baselines_v)
