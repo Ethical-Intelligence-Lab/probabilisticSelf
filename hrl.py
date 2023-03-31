@@ -153,9 +153,9 @@ if __name__ == "__main__":
     )
 
     stop = {
-        "episodes_total": args.episodes_total
+        "episodes_total": args.episodes_total,
+        "timesteps_total": 50000,
         # "training_iteration": args.stop_iters,
-        # "timesteps_total": 50000,
         # "episode_reward_mean": args.stop_reward,
     }
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
                     None,
                     Tuple([env.observation_space, Discrete(4)]),
                     env.action_space,
-                    PPOConfig.overrides(gamma=0.0),
+                    PPOConfig.overrides(gamma=0.5),
                 ),
             },
             policy_mapping_fn=policy_mapping_fn,

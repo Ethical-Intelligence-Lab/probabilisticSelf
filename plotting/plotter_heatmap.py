@@ -31,10 +31,10 @@ game_titles = {
     "change_agent_game": "Switching Embodiments Game"
 }
 
-agent_titles = {'human': 'Human', 'self_class': 'Self Class', 'option_critic': 'OC'}
+agent_titles = {'human': 'Human', 'self_class': 'Self Class', 'option_critic': 'OC', 'a2c_training': "A2C", 'acer_training': 'ACER', 'trpo_training': 'TRPO'}
 
-agent_types = ['option_critic']
-game_types = ["change_agent", ]
+agent_types = ['a2c_training', 'acer_training', 'trpo_training']
+game_types = ["logic", ]
 
 
 def find_between( s, first, last ):
@@ -383,7 +383,7 @@ def compare_images(imageA, imageB, game_type, agent_type, title, folder_appx, fl
 if __name__ == "__main__":
     # Make heatmaps for all game and agent types
     fl100s = [-1, 0, 1] #, 1, 0
-    game_types = ["change_agent_game", ]
+    game_types = ["logic_game", ]
     for fl100 in fl100s:
         for game in game_types:
             for agent in agent_types:
@@ -454,7 +454,7 @@ if __name__ == "__main__":
 
     comparisons = {}
     # Initialize dictionaries:
-    for game in ["change_agent_game", ]:#"change_agent_game"]:
+    for game in ["logic_game", ]:#"change_agent_game"]:
         comparisons[game] = {}
         for fl in ["first_100", "s", "last_100"]: # First Hundred, All, Last Hundred
             comparisons[game][fl] = {}
@@ -463,7 +463,7 @@ if __name__ == "__main__":
 
     # Compare difference of differences:
     # Comparing "Human v. Self" with "RL Algorithms v. Self" for First Hundred, All, and Last Hundred Levels:::
-    for game in ["change_agent_game",  ]:#"change_agent_game"]:
+    for game in ["logic_game",  ]:#"change_agent_game"]:
         for fl in ["s", "first_100", "last_100"]: # All, First Hundred, Last Hundred
             print("******************** {} - {} ********************".format(game, fl))
             self_class_files = glob.glob("/export/scratch/auguralp/plots/heatmaps/" + game + "_normalized/" + "self_class" + "/" + "{}*.jpg".format(fl))

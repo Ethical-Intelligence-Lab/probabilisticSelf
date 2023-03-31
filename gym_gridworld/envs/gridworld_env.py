@@ -704,7 +704,8 @@ class GridworldEnv(gym.Env):
 
                         self.model.save_replay_buffer(rb_path)
 
-                    self.run.stop()
+                    if self.run:
+                        self.run.stop()
                     sys.exit(0)
 
                 # Modify the environment to 'modify_to'
@@ -920,7 +921,7 @@ class GridworldEnv(gym.Env):
 
     def get_grid_state(self):
         ''' get current grid state '''
-        return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.ns_states, self.s_state
+        return self.current_grid_map, self.available_states, self.agent_states, self.agent_target_state, self.ns_states, self.s_state, self.mock_s
 
     def get_agent_state(self):
         ''' get current agent state '''

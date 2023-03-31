@@ -10,7 +10,7 @@ from stable_baselines3 import DQN as DQN3, A2C as A2C3, PPO as PPO3
 from stable_baselines.common.cmd_util import make_vec_env
 from stable_baselines3.common.env_util import make_vec_env as make_vec_env3
 from params.default_params import DefaultParams, get_cmd_line_args
-import neptune.new as neptune
+#import neptune.new as neptune
 from dotenv import load_dotenv
 import tensorflow as tf
 import custom_callback
@@ -85,35 +85,36 @@ if __name__ == '__main__':
     if algo_params.get('n_cpu_tf_sess', False) != False:
         print("N-cpu = 1")
         algo_params['n_cpu_tf_sess'] = 1
+
+    # Random, Human, or Self Class
     while True:
-        if P['player'] in ['human', 'self_class', 'random']:
-            if P['player'] == 'random':
+        if P['player'] == 'random':
+            while True:
+                obs, reward, done, info = env.step(env.action_space.sample())
+                env._render()
+                if done:
+                    print('done')
+                    env.reset()
+        elif P['player'] == 'human':
+            while True:
                 while True:
-                    obs, reward, done, info = env.step(env.action_space.sample())
-                    env._render()
-                    if done:
-                        print('done')
-                        env.reset()
-            elif P['player'] == 'human':
-                while True:
-                    while True:
-                        prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
-                        if prelim_action in ['w', 'a', 's', 'd']:
-                            action = key_converter(prelim_action)
-                            break
-                        else:
-                            print("Please enter a valid key (w, a, s, or d).")
-                            continue
-                    obs, reward, done, info = env.step(action)
-                    if done:
-                        env.reset()
-            elif P['player'] == 'self_class':
-                while True:
-                    action = self_class.predict(env)
-                    obs, reward, done, info = env.step(action)
-                    if done:
-                        env.reset()
-            exit(0)
+                    prelim_action = input('Enter next action (w=up, s=down, a=left, d=right): ')
+                    if prelim_action in ['w', 'a', 's', 'd']:
+                        action = key_converter(prelim_action)
+                        break
+                    else:
+                        print("Please enter a valid key (w, a, s, or d).")
+                        continue
+                obs, reward, done, info = env.step(action)
+                if done:
+                    env.reset()
+        elif P['player'] == 'self_class':
+            while True:
+                action = self_class.predict(env)
+                obs, reward, done, info = env.step(action)
+                if done:
+                    env.reset()
+        exit(0)
 
 
         def class_for_name(module_name, class_name):

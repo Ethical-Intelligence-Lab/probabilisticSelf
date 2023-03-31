@@ -40,46 +40,80 @@ class Self_class():
             if move == last_action:
                 self.candidates.append(i)
 
-    def navigate(self, target, SELF):
+    def navigate(self, target, SELF, env):
         dist_vertical = target[0] - SELF[0]
         dist_horiz = target[1] - SELF[1]
 
-        if self.prefer_vertical:
-            if dist_vertical > 0:
-                return key_converter(1)
-            elif dist_vertical < 0:
-                return key_converter(0)
-            elif dist_horiz > 0:
-                if dist_horiz == 1:
-                    self.last_grid = []
-                    self.tried_keys = []
-                return key_converter(3)
-            elif dist_horiz < 0:
-                if dist_horiz == -1:
-                    self.last_grid = []
-                    self.tried_keys = []
-                return (key_converter(2))
+        def pick_move():
+            if env.game_type == 'contingency_extended':
+                if abs(dist_vertical) == 1 or abs(dist_horiz) == 1:
+
+                    if abs(dist_vertical) == 1 and dist_horiz > 0:
+                        # Do the same move to keep the distance of one horizontally, to avoid the mock self
+                        return key_converter(3)
+                    elif abs(dist_vertical) == 1 and dist_horiz < 0:
+                        return key_converter(2)
+                    elif abs(dist_horiz) == 1 and dist_vertical > 0:
+                        return key_converter(1)
+                    elif abs(dist_horiz) == 1 and dist_vertical < 0:
+                        return key_converter(0)
+
+            if self.prefer_vertical:
+                if dist_vertical > 0:
+                    next_move = key_converter(1)
+                elif dist_vertical < 0:
+                    next_move = key_converter(0)
+                elif dist_horiz > 0:
+                    if dist_horiz == 1 and dist_vertical == 0:
+                        self.last_grid = []
+                        self.tried_keys = []
+                    next_move = key_converter(3)
+                elif dist_horiz < 0:
+                    if dist_horiz == -1 and dist_vertical == 0:
+                        self.last_grid = []
+                        self.tried_keys = []
+                    next_move = (key_converter(2))
+            else:
+                if dist_horiz > 0:
+                    next_move = (key_converter(3))
+                elif dist_horiz < 0:
+                    next_move = (key_converter(2))
+                elif dist_vertical > 0:
+                    if dist_vertical == 1 and dist_horiz == 0:
+                        self.last_grid = []
+                        self.tried_keys = []
+                    next_move = key_converter(1)
+                elif dist_vertical < 0:
+                    if dist_vertical == -1 and dist_horiz == 0:
+                        self.last_grid = []
+                        self.tried_keys = []
+                    next_move = key_converter(0)
+            return next_move
+        
+        next_move = pick_move()
+            
+        # Avoid the non-self that is on the way
+        if env.game_type == 'contingency_extended':
+            if [SELF[0] + self.action_ref[next_move][0], SELF[1] + self.action_ref[next_move][1]] == env.mock_s.location:
+                # Try the other move
+                invalid_move = next_move
+                while next_move != invalid_move:
+                    print("Invalid move, trying")
+                    next_move = pick_move()
+
+                return next_move
+
+            return next_move
+
+
         else:
-            if dist_horiz > 0:
-                return (key_converter(3))
-            elif dist_horiz < 0:
-                return (key_converter(2))
-            elif dist_vertical > 0:
-                if dist_vertical == 1:
-                    self.last_grid = []
-                    self.tried_keys = []
-                return key_converter(1)
-            elif dist_vertical < 0:
-                if dist_vertical == -1:
-                    self.last_grid = []
-                    self.tried_keys = []
-                return key_converter(0)
+            return next_move
 
     def predict(self, env):
         action = None
         if env.game_type == 'logic':
             action = self.predict_logic(env)
-        if env.game_type == 'contingency':
+        if env.game_type in ['contingency', 'contingency_extended']:
             if env.shuffle_keys == False:
                 action = self.predict_contingency(env)
             else:
@@ -90,7 +124,7 @@ class Self_class():
 
     def predict_logic(self, env):
         # Get state
-        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+        grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
         around = [[], [], [], []]
         around_clear = [[], [], [], []]
 
@@ -99,7 +133,7 @@ class Self_class():
             diff = grid - self.last_grid
             if (sum(diff.flatten() != 0)):
                 print('navigating the self!')
-                action = self.navigate(target, SELF)
+                action = self.navigate(target, SELF, env)
 
                 return action
 
@@ -137,7 +171,7 @@ class Self_class():
         self.action_counter += 1
 
         # Get env state
-        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+        grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
 
         # Whenever environment resets, we start in self discovery mode
         if len(self.last_grid) == 0:
@@ -150,13 +184,17 @@ class Self_class():
         # Get current sorted agents
         cur_agents = []
         cur_agents.extend(non_self)
+
+        if mock_s.location != []:  # If mock self exists
+            non_self.append(mock_s.location)
+
         cur_agents.append(SELF)
         self.movements = []
         self.candidates = []
 
         if self.mode == 'navigation':
             print("*** Navigating ***")
-            action = self.navigate(target, SELF)
+            action = self.navigate(target, SELF, env)
             return action
 
         # (1) First action.. 
@@ -174,13 +212,13 @@ class Self_class():
 
             # (3) If only one agent moved in direction of keypress, navigate it to the reward 
             if (len(self.candidates) == 1):
-                if (self.candidates[0] == 3):
-                    print('*** Found myself! Navigating to the reward ***')
-                    self.mode = 'navigation'
-                    self.prev_action = self.navigate(target, SELF)
-                    self.prev_candidates = copy.deepcopy(self.candidates)
-                    self.candidates = []
-                    return self.prev_action
+                #import pdb; pdb.set_trace()
+                print('*** Found myself! Navigating to the reward ***')
+                self.mode = 'navigation'
+                self.prev_action = self.navigate(target, SELF, env)
+                self.prev_candidates = copy.deepcopy(self.candidates)
+                self.candidates = []
+                return self.prev_action
 
             elif len(self.candidates) > 1:
                 # (4) If > 1 agent moved in directon of keypress, take action in a different dimension 
@@ -198,12 +236,12 @@ class Self_class():
                     self.get_candidates(cur_agents)
                     candidate = set(self.candidates).intersection(self.prev_candidates)
                     final_candidate = candidate.pop()
-                    if final_candidate == 3:
-                        self.prev_action = self.navigate(target, SELF)
+                    if ('extended' in env.game_type and final_candidate == 4) or ('extended' not in env.game_type and final_candidate == 3):
+                        self.prev_action = self.navigate(target, SELF, env)
                         self.mode = 'navigation'
                         return self.prev_action
 
-    # Go back to self discovery if the agent has changed (moves into unexpected position)
+    # Go back to self discovery if the agent has changed (moved into unexpected position)
     def check_if_agent_is_correct(self, action):
         self.prev_candidates = []
 
@@ -257,7 +295,8 @@ class Self_class():
         self.action_counter += 1
 
         # Get env state
-        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+        grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
+        print(env.game_type)
         self.agent_locs.append(SELF)
 
         # Whenever environment resets, we start in self discovery mode
@@ -272,6 +311,7 @@ class Self_class():
         cur_agents = []
         cur_agents.extend(non_self)
         cur_agents.append(SELF)
+
         self.movements = []
         self.candidates = []
 
@@ -280,7 +320,7 @@ class Self_class():
         if self.mode == 'navigation':
             print("*** Navigating ***")
             self.check_if_agent_is_correct(self.action_ref[self.prev_action])
-            action = self.navigate(target, SELF)
+            action = self.navigate(target, SELF, env)
             return action
 
         # (1) First action..
@@ -298,10 +338,10 @@ class Self_class():
 
             # (3) If only one agent moved in direction of keypress, navigate it to the reward
             if (len(self.candidates) == 1):
-                if self.candidates[0] == 3:
+                if ("extended" in env.game_type and self.candidates[0] == 4) or ("extended" not in env.game_type and self.candidates[0] == 3):
                     print('*** Found myself! Navigating to the reward ***')
                     self.mode = 'navigation'
-                    self.prev_action = self.navigate(target, SELF)
+                    self.prev_action = self.navigate(target, SELF, env)
                     self.prev_candidates = copy.deepcopy(self.candidates)
                     self.candidates = []
                     return self.prev_action
@@ -347,10 +387,10 @@ class Self_class():
 
                     # If one candidate:
                     final_candidate = candidate.pop()
-                    if final_candidate == 3:
+                    if ("extended" in env.game_type and final_candidate == 4) or ("extended" not in env.game_type and final_candidate == 3):
                         print("Found self, going into navigation.")
                         self.prev_candidates = []
-                        self.prev_action = self.navigate(target, SELF)
+                        self.prev_action = self.navigate(target, SELF, env)
                         self.mode = 'navigation'
                         return self.prev_action
                     else:
@@ -371,7 +411,7 @@ class Self_class():
         print('action counter: ', self.action_counter)
 
         # Get env state
-        grid, avail, agents, target, non_self, SELF = env.get_grid_state()
+        grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
 
         # Whenever environment resets, we set self.mode to 'self discovery'
         if len(self.last_grid) == 0:
