@@ -121,7 +121,7 @@ class DefaultParams:
 
         elif self.params['player'] != 'human':  # Random or self class
             self.params['data_save_dir'] = root_path + 'data/' + self.params['game_type'] + game_str + \
-                                           self.params['player'] + '/' + "iter" + str(self.params['seed']) + '/'
+                                           ("keep_close" if self.params['keep_all_close'] else self.params['player']) + '/' + "iter" + str(self.params['seed']) + '/'
         else:  # Human
             letters = string.digits
             rand_id = ''.join(random.choice(letters) for i in range(10))

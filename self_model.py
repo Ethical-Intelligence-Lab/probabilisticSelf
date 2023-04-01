@@ -51,7 +51,6 @@ class Self_class():
         def pick_move():
             if env.game_type == 'contingency_extended':
                 if abs(dist_vertical) == 1 or abs(dist_horiz) == 1:
-
                     if abs(dist_vertical) == 1 and dist_horiz > 0:
                         # Do the same move to keep the distance of one horizontally, to avoid the mock self
                         return key_converter(3)
@@ -185,7 +184,7 @@ class Self_class():
                 self.game_type = env.game_type
 
         # Whenever environment resets, we start in self discovery mode
-        if len(self.last_grid) == 0:
+        if len(self.last_grid) == 0 or env.step_counter == 0:
             self.mode = 'self_discovery'
             self.prev_action = None
             self.prev_candidates = []
@@ -300,8 +299,21 @@ class Self_class():
 
         return actions[random.randint(0, len(actions) - 1)]
 
+    def keep_all_close(self, cur_agents, target, env):
+        distances = []
+        for agent in cur_agents:
+            distances.append(abs(abs(agent[0]) - abs(target[0])) + abs(abs(agent[1]) - abs(target[1])))
+
+        # Get the agent that's closest to the targer
+        min_distance_index = distances.index(min(distances))
+        closest_agent = cur_agents[min_distance_index]
+
+        #import pdb; pdb.set_trace()
+        return self.navigate(target, closest_agent, env)
+
+
+
     def predict_change_agent(self, env):
-        print("*-*-*-*---- PREDICTING ----*-*-*-*")
         self.action_counter += 1
 
         # Get env state
@@ -317,7 +329,7 @@ class Self_class():
         self.agent_locs.append(SELF)
 
         # Whenever environment resets, we start in self discovery mode
-        if len(self.last_grid) == 0:
+        if len(self.last_grid) == 0 or env.step_counter == 0:
             self.mode = 'self_discovery'
             self.prev_action = None
             self.prev_candidates = []
@@ -331,6 +343,9 @@ class Self_class():
         cur_agents = []
         cur_agents.extend(non_self)
         cur_agents.append(SELF)
+
+        if env.P['keep_all_close']:  # Function for keeping all agents closer to goal
+            return self.keep_all_close(cur_agents, target, env)
 
         self.movements = []
         self.candidates = []
@@ -434,7 +449,7 @@ class Self_class():
         grid, avail, agents, target, non_self, SELF, mock_s = env.get_grid_state()
 
         # Whenever environment resets, we set self.mode to 'self discovery'
-        if len(self.last_grid) == 0:
+        if len(self.last_grid) == 0 or env.step_counter == 0:
             self.mode = 'self_discovery'
             self.prev_action = None
             self.prev_candidates = []

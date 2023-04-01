@@ -69,5 +69,6 @@ params = {
     'modify_to': None,  # logic, contingency, change_agent, logic_extended, contingency_extended
     # change_agent_extended, change_agent_extended_2
     'neg_reward': False,
-    'n_cpu_tf_sess': 1
+    'n_cpu_tf_sess': 1,
+    'keep_all_close': False
 }
