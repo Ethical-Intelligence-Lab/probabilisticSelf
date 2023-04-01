@@ -10,7 +10,7 @@ pacman::p_load('ggpubr')
 # Manually enter directory path if you are not using Rstudio
 setwd(paste0(getwd(), '/stats'))
 
-games = c('change_agent_game_harder') #, 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+games = c('change_agent_game') #, 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
 
 game_datas <- c()
 all_stats <- c()
@@ -40,7 +40,7 @@ print_sig <- function(p) {
 # *-*-*-*-*-*-*-*-* BAYESIAN TESTS *-*-*-*-*-*-*-*-* #
 ## Human v. Self Class for the First Level Levels
 for (game in games) {
-    if(!(game %in% c('contingency_game_shuffled_1', 'logic_game'))) {  # Switching mappings and logic does not have perturbation task
+    if(!(game %in% c('contingency_game_shuffled_1', 'logic_game', 'change_agent_game'))) {  # Switching mappings and logic does not have perturbation task
         perturbation_c <- c(TRUE, FALSE)
     } else {
         perturbation_c <- c(FALSE)

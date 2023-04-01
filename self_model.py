@@ -345,6 +345,7 @@ class Self_class():
         cur_agents.append(SELF)
 
         if env.P['keep_all_close']:  # Function for keeping all agents closer to goal
+            self.prefer_vertical = True if random.randint(0, 1) == 1 else False
             return self.keep_all_close(cur_agents, target, env)
 
         self.movements = []
