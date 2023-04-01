@@ -2,16 +2,16 @@ import numpy as np
 
 def key_converter(key_pressed):    
     if (key_pressed == 'w') | (key_pressed == 0):
-        print('UP!')
+        #print('UP!')
         return 0
     elif (key_pressed == 's') | (key_pressed == 1):
-        print('DOWN!')
+        #print('DOWN!')
         return 1
     elif (key_pressed == 'a') | (key_pressed == 2):
-        print('LEFT!')
+        #print('LEFT!')
         return 2
     elif (key_pressed == 'd') | (key_pressed == 3):
-        print('RIGHT!')
+        #print('RIGHT!')
         return 3
 
 def euclid(arr1, arr2):
