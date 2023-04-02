@@ -7,39 +7,22 @@ pacman::p_load('BayesFactor')
 pacman::p_load('Dict')
 pacman::p_load('ggpubr')
 
-# Manually enter directory path if you are not using Rstudio
-setwd(paste0(getwd(), '/stats'))
+# Set working directors
+if(!grepl('stats', getwd())) {
+    setwd(paste0(getwd(), '/stats'))
+}
 
-games = c('contingency_game') #, 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+# Generate bayes factor for the given game
+generate_bfs <- function(game) {
+    game_datas <- c()
+    all_stats <- c()
+    all_bfs_binary <- c()
 
-game_datas <- c()
-all_stats <- c()
-all_bfs_binary <- c()
-
-for (game in games) {
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
-    game_data <- fromJSON(file = filename)
-    game_datas[[game]] <- game_data
-}
+    game_datas[[game]] <- fromJSON(file = filename)
 
-# Note. ‘.’= p < .1, ‘**’ = p < .01, ‘***’ = p < .001.
-print_sig <- function(p) {
-    if (p < 0.001) {
-        print("Significance: ***")
-    } else if (p < 0.01) {
-        print("Significance: **")
-    } else if (p < 0.05) {
-        print("Significance: *")
-    } else if (p < 0.1) {
-        print("Significance: .")
-    } else {
-        print("not significant")
-    }
-}
-
-# *-*-*-*-*-*-*-*-* BAYESIAN TESTS *-*-*-*-*-*-*-*-* #
-## Human v. Self Class for the First Level Levels
-for (game in games) {
+    # *-*-*-*-*-*-*-*-* BAYESIAN TESTS *-*-*-*-*-*-*-*-* #
+    ## Human v. Self Class for the First Level Levels
     if(!(game %in% c('contingency_game_shuffled_1', 'logic_game', 'change_agent_game'))) {  # Switching mappings and logic does not have perturbation task
         perturbation_c <- c(TRUE, FALSE)
     } else {
@@ -51,6 +34,12 @@ for (game in games) {
     }
 
     for(perturbation in perturbation_c) { # Two separate tests for perturbation task and regular
+        if(perturbation) {
+            print(paste0("Generating bayes factors for ", game, " perturbated"))
+        } else {
+            print(paste0("Generating bayes factors for ", game))
+        }
+        
         bfs_binary <- c()
         ts <- c()
         ps <- c()
@@ -64,23 +53,16 @@ for (game in games) {
             # Favors Alternative Hypothesis (mu =/= 0)
             if(perturbation) {
                 x <- game_datas[[game]]$human_extended[[level]]
+                y <- game_datas[[game]]$self_classshort_first_150[[level]]
             } else {
                 x <- game_datas[[game]]$human[[level]]
+                y <- game_datas[[game]]$self_class_first_150[[level]]
             }
             
-            y <- game_datas[[game]]$self_classshort_first_150[[level]]
-
-            print("Comparing ")
-            print(x)
-            print(" vs. ")
-            print(y)
             result <- 1 / ttestBF(x = x, y = y)
 
             var_result <- var.test(x, y)
             result_ttest <- t.test(x = x, y = y, var.equal = var_result$p.value > 0.05)
-            print(level)
-            print(result)
-            print(result_ttest)
 
             result_bf <- exp(result@bayesFactor$bf)
 
@@ -106,36 +88,42 @@ for (game in games) {
             all_stats[[game]][[perturbation_s]][['p-values']] <- ps
 
             all_bfs_binary[[game]][[perturbation_s]] <- bfs_binary
-       }
+        }
     }
+
+
+    ### Save binary bayes results
+    json_data <- toJSON(all_bfs_binary)
+    write(json_data, paste0(game, "_bfs.json"))
+
 }
 
+## *-*-*-* GENERATE BAYES FACTORS *-*-*-* ##
+for(game in c('logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game', 'change_agent_game_harder')) {
+    generate_bfs(game)
+}
 
-### Save binary bayes results
-json_data <- toJSON(all_bfs_binary)
-write(json_data, paste0(game, "_bfs.json"))
-
-
-### Did humans do more steps after the perturbation?
-if( game %in% c('contingency_game', 'change_agent_game') ) {
-    print("Did humans do more steps after the perturbation?")
-    if (game == 'change_agent_game') {
-        level_means <- lapply(game_datas[[game]][['human_extended']], mean)
-        var_result <- var.test(unlist(level_means[0:19]), unlist(level_means[20:30]))
-        result_ttest <- t.test(x = unlist(level_means[0:19]), y = unlist(level_means[20:30]), var.equal = var_result$p.value > 0.05)
-        print(result_ttest)
-        print(cohen.d(unlist(level_means[0:19]), unlist(level_means[20:30])))
+################ T-Tests Comparing Last Level of Humans v. RL Agents ################
+# Note. ‘.’= p < .1, ‘**’ = p < .01, ‘***’ = p < .001.
+print_sig <- function(p) {
+    if (p < 0.001) {
+        print("Significance: ***")
+    } else if (p < 0.01) {
+        print("Significance: **")
+    } else if (p < 0.05) {
+        print("Significance: *")
+    } else if (p < 0.1) {
+        print("Significance: .")
     } else {
-        level_means <- lapply(game_datas[[game]][['human_extended']], mean)
-        var_result <- var.test(unlist(level_means[0:99]), unlist(level_means[100:150]))
-        result_ttest <- t.test(x = unlist(level_means[0:99]), y = unlist(level_means[100:150]), var.equal = var_result$p.value > 0.05)
-        print(result_ttest)
-        print(cohen.d(unlist(level_means[0:99]), unlist(level_means[100:150])))
+        print("not significant")
     }
 }
 
-################ T-Tests ################
-for (game in games) {
+for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+    game_datas <- c()
+    filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
+    game_datas[[game]] <- fromJSON(file = filename)
+
     print(paste("*-*-*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*-*-*"))
 
     print("**** LAST *****")
@@ -265,116 +253,7 @@ for (game in games) {
     print_sig(result_ttest$p.value)
 
     summary(result)
-    print(result_ttest)
-
-
-    if(FALSE) {
-        print("***** First Level ******")
-        print("Human vs DQN (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$dqn_training_first_150[[1]])
-        var_result <- var.test(game_d$human[[1]], game_d$dqn_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$dqn_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-        print("Self vs DQN (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$dqn_training_first_150[[1]])
-        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$dqn_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$dqn_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-        print("Human vs PPO2 (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$ppo2_training_first_150[[1]])
-        var_result <- var.test(game_d$human[[1]], game_d$ppo2_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$ppo2_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-        print("Self vs. PPO2 (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$ppo2_training_first_150[[1]])
-        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$ppo2_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$ppo2_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-        print("Human vs TRPO (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$trpo_training_first_150[[1]])
-        var_result <- var.test(game_d$human[[1]], game_d$trpo_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$trpo_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-
-        print("Self vs TRPO (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$trpo_training_first_150[[1]])
-        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$trpo_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$trpo_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-
-        print("Human vs ACER (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$acer_training_first_150[[1]])
-        var_result <- var.test(game_d$human[[1]], game_d$acer_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$acer_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-
-        print("Self vs ACER (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$acer_training_first_150[[1]])
-        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$acer_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$acer_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-        print("Human vs A2C (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$human[[1]], y = game_d$a2c_training_first_150[[1]])
-        var_result <- var.test(game_d$human[[1]], game_d$a2c_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$human[[1]], y = game_d$a2c_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-
-
-        print("Self vs A2C (First Level):")
-
-        result <- 1 / ttestBF(x = game_d$self_class_first_150[[1]], y = game_d$a2c_training_first_150[[1]])
-        var_result <- var.test(game_d$self_class_first_150[[1]], game_d$a2c_training_first_150[[1]])
-        result_ttest <- t.test(x = game_d$self_class_first_150[[1]], y = game_d$a2c_training_first_150[[1]], var.equal = var_result$p.value > 0.05)
-        print_sig(result_ttest$p.value)
-
-        summary(result)
-        print(result_ttest)
-    }
-    
+    print(result_ttest)    
 }
 
 
@@ -405,11 +284,15 @@ if(FALSE) {
 
 ################## SELF FINDING STUDIES ##################
 
-if (game %in% c('logic_game')) { # , 'contingency_game', 'contingency_game_shuffled_1'
-    print(paste("*-*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*-*"))
+game_datas <- c()
+for(game in c('logic_game', 'contingency_game', 'contingency_game_shuffled_1')) {
+    filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
+    game_datas[[game]] <- fromJSON(file = filename)
 
+    print(paste0("*-*-*-*-*-*-*-*", game, "*-*-*-*-*-*-*-*"))
     ## Check if participants performed differently in the self-finding game compared to the original run
     if(game != 'logic_game') {
+        print("Checking if participants performed differently in the self-finding game compared to the original run")
         human_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$human))
         human_sf_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$data_sf))
 
@@ -418,17 +301,15 @@ if (game %in% c('logic_game')) { # , 'contingency_game', 'contingency_game_shuff
         print(cohen.d(human_lvl_means_cont, human_sf_lvl_means_cont))
     }
     
-    # Correlating no. steps until self-orienting with no. steps to complete a level, for each participant
+    # Correlations for artificial agents:
     if(game == 'logic_game') {
         human_sf_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$human))
-
-        # Correlations for artificial agents:
         for(ai in c('dqn_training', 'a2c_training', 'trpo_training', 'acer_training', 'ppo2_training', 'option_critic', 'random', 'self_class')) {
-            print(paste("*-*-*-*", ai, "*-*-*-*"))
+            print(paste("*-*-*-* ", ai, " *-*-*-*"))
             print(cor.test(game_datas[game][[1]][[paste0(ai, '_all')]][1900:2000], read.csv(paste0('self_orienting_', game, '.csv'))[[paste0(ai, '_m')]][1900:2000]))
 
             plot <- ggplot(data = data.frame("step_count" = game_datas[game][[1]][[paste0(ai, '_all')]][1900:2000], "self_orienting" = read.csv(paste0('self_orienting_', game, '.csv'))[[paste0(ai, '_m')]][1900:2000]),
-                   aes(x = step_count, y = self_orienting)) +
+                aes(x = step_count, y = self_orienting)) +
             geom_point(alpha = 0.2) +
             xlab(paste0("Total Step Count ", ai)) +
             ylab("No. Steps Until Self Orienting") +
@@ -445,13 +326,14 @@ if (game %in% c('logic_game')) { # , 'contingency_game', 'contingency_game_shuff
         }
     }
 
+    ############ Scatter plot ############
     self_orienting_steps <- read.csv(paste0('self_orienting_', game, '.csv'))$level_means
     self_orienting_steps <- self_orienting_steps[!is.na(self_orienting_steps)]
     print(cor.test(human_sf_lvl_means_cont, self_orienting_steps))
 
     # Creating the plot
     plot <- ggplot(data = data.frame("step_count" = human_sf_lvl_means_cont, "self_orienting" = self_orienting_steps),
-                   aes(x = step_count, y = self_orienting)) +
+                aes(x = step_count, y = self_orienting)) +
         geom_point(alpha = 0.2) +
         xlab("Total Step Count") +
         ylab("No. Steps Until Self Orienting") +
@@ -481,10 +363,12 @@ if (game %in% c('logic_game')) { # , 'contingency_game', 'contingency_game_shuff
 
 }
 
+
+
 ########################################## PERTURBATIONS ##########################################
 
 # After-Perturbation Comparisons
-games <- c("change_agent_game_harder") # "contingency_game"
+games <- c("contingency_game", "change_agent_game_harder") # "contingency_game"
 game_datas_pert <- c()
 for(game in games) {
     filename <- paste("./data_", game, "_after_perturbation.json", sep = "", collapse = NULL)
@@ -495,17 +379,16 @@ for(game in games) {
 
 for(game in games) {
     print(paste("*-*-*-*-", game, "-*-*-*-*"))
+    print("Did humans perform similarly before vs. after perturbation: ")
+    var_result <- var.test(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150])
+    result_ttest <- t.test(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150], var.equal = var_result$p.value > 0.05)
+    print(result_ttest)
+    print(cohen.d(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150]))
 
     for(agent_type in c("a2c_training", "ppo2_training", "acer_training", "dqn_training", "trpo_training", "option_critic")) {
         if(agent_type == "option_critic" & game == "change_agent_game_harder") {
             next
         }
-
-        print("Did humans perform similarly before vs. after perturbation: ")
-        var_result <- var.test(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150])
-        result_ttest <- t.test(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150], var.equal = var_result$p.value > 0.05)
-        print(result_ttest)
-        print(cohen.d(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150]))
 
         if(FALSE) {
             print(paste0("Comparing to just 50 levels after-perturbation: ", agent_type, " vs. human"))
