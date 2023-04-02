@@ -314,7 +314,6 @@ class Self_class():
 
 
     def predict_change_agent(self, env):
-        self.prefer_vertical = True if random.randint(0, 1) == 1 else False
         self.action_counter += 1
 
         # Get env state
@@ -363,6 +362,7 @@ class Self_class():
         # (1) First action..
         elif self.prev_action == None:
             print('*** Taking first action ***')
+            self.prefer_vertical = True if random.randint(0, 1) == 1 else False
             self.prev_agents = copy.deepcopy(cur_agents)
             self.prev_action = key_converter(random.randint(0, 3))
             return self.prev_action
