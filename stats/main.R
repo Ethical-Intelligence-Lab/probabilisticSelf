@@ -10,7 +10,7 @@ pacman::p_load('ggpubr')
 # Manually enter directory path if you are not using Rstudio
 setwd(paste0(getwd(), '/stats'))
 
-games = c('change_agent_game') #, 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+games = c('contingency_game') #, 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
 
 game_datas <- c()
 all_stats <- c()
@@ -68,7 +68,7 @@ for (game in games) {
                 x <- game_datas[[game]]$human[[level]]
             }
             
-            y <- game_datas[[game]]$self_class_first_150[[level]]
+            y <- game_datas[[game]]$self_classshort_first_150[[level]]
 
             print("Comparing ")
             print(x)

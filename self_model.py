@@ -171,6 +171,7 @@ class Self_class():
         return key_converter(action)  # use this to index next key
 
     def predict_contingency(self, env):
+        self.prefer_vertical = True if random.randint(0, 1) == 1 else False
         self.action_counter += 1
 
         # Get env state
@@ -210,7 +211,6 @@ class Self_class():
         # (1) First action.. 
         elif self.prev_action == None:
             print('*** Taking first action ***')
-            self.prefer_vertical = True if random.randint(0, 1) == 1 else False
             self.prev_agents = copy.deepcopy(cur_agents)
             self.prev_action = 0  # move up (note: it's arbitrary which direction we move first)
             return self.prev_action
@@ -314,6 +314,8 @@ class Self_class():
 
 
     def predict_change_agent(self, env):
+        self.prefer_vertical = True if random.randint(0, 1) == 1 else False
+        
         self.action_counter += 1
 
         # Get env state
@@ -362,7 +364,6 @@ class Self_class():
         # (1) First action..
         elif self.prev_action == None:
             print('*** Taking first action ***')
-            self.prefer_vertical = True if random.randint(0, 1) == 1 else False
             self.prev_agents = copy.deepcopy(cur_agents)
             self.prev_action = key_converter(random.randint(0, 3))
             return self.prev_action
@@ -443,6 +444,7 @@ class Self_class():
                 return self.prev_action
 
     def predict_shuffled(self, env):
+        self.prefer_vertical = True if random.randint(0, 1) == 1 else False
         self.action_counter += 1
         print('action counter: ', self.action_counter)
 
@@ -468,7 +470,6 @@ class Self_class():
         # (1) First action.. 
         if (self.mode == 'self_discovery') & (self.prev_action == None):
             print('*** Taking first action ***')
-            self.prefer_vertical = True if random.randint(0, 1) == 1 else False
             self.prev_actions = []
             self.prev_agents = copy.deepcopy(cur_agents)
             self.prev_action = 0  # (note: it's arbitrary which direction we move first)
