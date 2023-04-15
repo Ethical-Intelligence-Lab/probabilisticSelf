@@ -254,38 +254,35 @@ for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'conti
 
     summary(result)
     print(result_ttest)    
+
+    if(game == 'contingency_game') {
+        print("On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels")
+        human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
+        self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_150))
+
+        vr <- var.test(human_means_cont, self_means_cont)
+        print(t.test(human_means_cont, self_means_cont, var.equal = vr$p.value > 0.05))
+        print(cohen.d(human_means_cont, self_means_cont))
+    }
+
+    if(game == 'contingency_game_shuffled_1') {
+        # Switching Mappings Game
+        print("On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels")
+        human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
+        self_means_sm <- colMeans(do.call(rbind, game_datas$
+            contingency_game_shuffled_1$
+            self_class_first_150))
+
+        vr <- var.test(human_means_sm, self_means_sm)
+        print(t.test(human_means_sm, self_means_sm, var.equal = vr$p.value > 0.05))
+        print(cohen.d(human_means_sm, self_means_sm))
+    }
 }
-
-
-## Check whether the distributions of steps for the two games are
-## different from each other using independent samples t-test
-
-if(FALSE) {
-    # Contingency Game
-    # On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels
-    human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
-    self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_150))
-
-    vr <- var.test(human_means_cont, self_means_cont)
-    t.test(human_means_cont, self_means_cont, var.equal = vr$p.value > 0.05)
-    cohen.d(human_means_cont, self_means_cont)
-
-    # Switching Mappings Game
-    human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
-    self_means_sm <- colMeans(do.call(rbind, game_datas$
-        contingency_game_shuffled_1$
-        self_class_first_150))
-
-    vr <- var.test(human_means_sm, self_means_sm)
-    t.test(human_means_sm, self_means_sm, var.equal = vr$p.value > 0.05)
-    cohen.d(human_means_sm, self_means_sm)
-}
-
 
 ################## SELF FINDING STUDIES ##################
 
 game_datas <- c()
-for(game in c('logic_game', 'contingency_game', 'contingency_game_shuffled_1')) {
+for(game in c('logic_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1'
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_datas[[game]] <- fromJSON(file = filename)
 
@@ -368,7 +365,7 @@ for(game in c('logic_game', 'contingency_game', 'contingency_game_shuffled_1')) 
 ########################################## PERTURBATIONS ##########################################
 
 # After-Perturbation Comparisons
-games <- c("contingency_game", "change_agent_game_harder") # "contingency_game"
+games <- c("change_agent_game_harder") # "contingency_game", "change_agent_game_harder"
 game_datas_pert <- c()
 for(game in games) {
     filename <- paste("./data_", game, "_after_perturbation.json", sep = "", collapse = NULL)
@@ -398,11 +395,36 @@ for(game in games) {
             print(cohen.d(game_datas_pert[[game]][[paste0(agent_type, "_all")]][2001:2050], game_datas_pert[[game]][["human"]][101:150]))
         }
 
-        print(paste0("Comparing to all 2000 levels averaged at every 40-level interval: ", agent_type, " vs. human"))
+        if(TRUE) {
+            print(paste0("Comparing to all 2000 levels averaged at every 40-level interval: ", agent_type, " vs. human"))
+            var_result <- var.test(game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], game_datas_pert[[game]][["human"]][101:150])
+            result_ttest <- t.test(x=game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], y=game_datas_pert[[game]][["human"]][101:150], var.equal = var_result$p.value > 0.05)
+            print(result_ttest)
+            print(cohen.d(game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], game_datas_pert[[game]][["human"]][101:150]))
+        }
+    }
 
-        var_result <- var.test(game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], game_datas_pert[[game]][["human"]][101:150])
-        result_ttest <- t.test(x=game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], y=game_datas_pert[[game]][["human"]][101:150], var.equal = var_result$p.value > 0.05)
-        print(result_ttest)
-        print(cohen.d(game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], game_datas_pert[[game]][["human"]][101:150]))
+    for(agent_type in c("self_class", "human", "a2c_training", "ppo2_training", "acer_training", "dqn_training", "trpo_training", "option_critic")) {
+        if(agent_type == "option_critic" & game == "change_agent_game_harder") {
+            next
+        }
+
+        #### Comparing 50 levels before perturbation to all levels after perturbation (averaged)
+        if(FALSE) {
+            if(agent_type != "human") {
+                print(paste0("Comparing 50 levels before-perturbation to after-perturbation: ", agent_type))
+                var_result <- var.test(game_datas_pert[[game]][[paste0(agent_type, "_all")]][1951:2000], game_datas_pert[[game]][[paste0(agent_type, "_all")]][2001:2050])
+                result_ttest <- t.test(game_datas_pert[[game]][[paste0(agent_type, "_all")]][1951:2000], game_datas_pert[[game]][[paste0(agent_type, "_all")]][2001:2050], var.equal = var_result$p.value > 0.05)
+                print(result_ttest)
+                print(cohen.d(game_datas_pert[[game]][[paste0(agent_type, "_all")]][1951:2000], game_datas_pert[[game]][[paste0(agent_type, "_all")]][2001:2050]))
+            } else {
+                print(paste0("Comparing 50 levels before-perturbation to after-perturbation: ", agent_type))
+                var_result <- var.test(game_datas_pert[[game]][[agent_type]][51:100], game_datas_pert[[game]][[agent_type]][101:150])
+                result_ttest <- t.test(game_datas_pert[[game]][[agent_type]][51:100], game_datas_pert[[game]][[agent_type]][101:150], var.equal = var_result$p.value > 0.05)
+                print(result_ttest)
+                print(cohen.d(game_datas_pert[[game]][[agent_type]][51:100], game_datas_pert[[game]][[agent_type]][101:150]))
+            }
+        }
+        
     }
 }
