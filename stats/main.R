@@ -119,6 +119,7 @@ print_sig <- function(p) {
     }
 }
 
+# ********** t-tests For Comparing the Last Level of the Self Class and Human vs. the RL algorithms **********
 for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
     game_datas <- c()
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
