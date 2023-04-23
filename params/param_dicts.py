@@ -70,5 +70,6 @@ params = {
     # change_agent_extended, change_agent_extended_2
     'neg_reward': False,
     'n_cpu_tf_sess': 1,
-    'keep_all_close': False
+    'keep_all_close': False,
+    'navigate_once_in_two_lvls': False  ## Make mock self navigate only once in two levels
 }
