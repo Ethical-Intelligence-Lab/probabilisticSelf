@@ -301,11 +301,17 @@ class Self_class():
 
     def keep_all_close(self, cur_agents, target, env):
         distances = []
+
         for agent in cur_agents:
             distances.append(abs(abs(agent[0]) - abs(target[0])) + abs(abs(agent[1]) - abs(target[1])))
 
-        # Get the agent that's closest to the targer
-        min_distance_index = distances.index(min(distances))
+        # Randomly pick first or second closest
+        sorted_d = copy.deepcopy(distances)
+        sorted_d.sort()
+        
+        import pdb; pdb.set_trace()
+        min_distance_index = distances.index(sorted_d[random.randint(0, 1)])
+
         closest_agent = cur_agents[min_distance_index]
 
         #import pdb; pdb.set_trace()
