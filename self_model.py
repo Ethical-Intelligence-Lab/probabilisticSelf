@@ -308,13 +308,10 @@ class Self_class():
         # Randomly pick first or second closest
         sorted_d = copy.deepcopy(distances)
         sorted_d.sort()
-        
-        import pdb; pdb.set_trace()
+
         min_distance_index = distances.index(sorted_d[random.randint(0, 1)])
 
         closest_agent = cur_agents[min_distance_index]
-
-        #import pdb; pdb.set_trace()
         return self.navigate(target, closest_agent, env)
 
 
