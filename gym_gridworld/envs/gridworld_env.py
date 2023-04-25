@@ -34,6 +34,7 @@ class MockSelf:
         self.rushing_to_goal = True
         self.location = []
         self.navigate_once_in_two = False
+        self.ten_r = False
 
     def set_location(self, loc):
         self.location = loc
@@ -49,10 +50,9 @@ class MockSelf:
 
     # Navigate towards reward
     def navigate(self, level_count):
-        # Move randomly
-        if self.navigate_once_in_two and int(str(level_count)[-1]) < 5:
+        # Move randomly, i.e., easier perturbation task
+        if (self.ten_r and len(str(level_count)) == 1) or (self.ten_r and int(str(level_count)[-2]) % 2 == 0):
             return random.randint(0, 3)
-        
 
         dist_vertical = 10 - self.location[0]
         dist_horiz = 10 - self.location[1]
@@ -165,6 +165,7 @@ class GridworldEnv(gym.Env):
         self.different_self_color = P['different_self_color']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
         self.mock_s.navigate_once_in_two = P['navigate_once_in_two_lvls']
+        self.mock_s.ten_r = P['ten_r']
 
         if self.verbose:
             print('making environment')
@@ -503,7 +504,7 @@ class GridworldEnv(gym.Env):
             stay = False
             if "extended_2" in self.game_type and nxt_ns_states[
                 i] == self.mock_s.get_location():  # Move the mock self towards the goal, if not already there and then move away
-                action = self.mock_s.navigate(self.level_count)
+                action = self.mock_s.navigate(self.level_counter)
                 next_color = self.current_grid_map[nxt_ns_states[i][0] + self.action_pos_dict[action][0],
                                                    nxt_ns_states[i][1] + self.action_pos_dict[action][1]]
 
