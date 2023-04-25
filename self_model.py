@@ -309,7 +309,11 @@ class Self_class():
         sorted_d = copy.deepcopy(distances)
         sorted_d.sort()
 
-        min_distance_index = distances.index(sorted_d[random.randint(0, 1)])
+        #if random.randint(0, 1) == 0:
+        #    min_distance_index = random.randint(0, len(distances) - 1)
+        #else:
+        
+        min_distance_index = distances.index(sorted_d[0])
 
         closest_agent = cur_agents[min_distance_index]
         return self.navigate(target, closest_agent, env)

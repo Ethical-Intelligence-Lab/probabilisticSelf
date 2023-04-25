@@ -71,5 +71,6 @@ params = {
     'neg_reward': False,
     'n_cpu_tf_sess': 1,
     'keep_all_close': False,
-    'navigate_once_in_two_lvls': False  ## Make mock self navigate only once in two levels
+    'navigate_once_in_two_lvls': False,  ## Make mock self navigate only once in two levels
+    'ten_r': False  ## Make mock self navigate only once in two levels
 }
