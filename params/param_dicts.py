@@ -71,6 +71,6 @@ params = {
     'neg_reward': False,
     'n_cpu_tf_sess': 1,
     'keep_all_close': False,
-    'navigate_once_in_two_lvls': False,  ## Make mock self navigate only once in two levels
+    'switch_harder_100_lvls': False,  ## Switch to the harder perturbation every 50 levels
     'ten_r': False  ## Make mock self navigate only once in two levels
 }
