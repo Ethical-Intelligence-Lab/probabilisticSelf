@@ -247,7 +247,7 @@ class GridworldEnv(gym.Env):
 
     def step(self, action):
         if self.verbose:
-            print('taking a step')
+            print('taking a step {}'.format(str(action)))
         if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type in ['contingency', 'contingency_extended']:
