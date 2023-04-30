@@ -3,6 +3,8 @@ import math
 import random
 from utils.keys import *
 import copy
+import json
+import statistics
 
 
 class Self_class():
@@ -24,6 +26,7 @@ class Self_class():
         self.movements = []
         self.mode = 'self_discovery'
         self.prefer_vertical = False
+        self.controlling_true_self = {lvl: [] for lvl in range(0, 54)} # Used for the proximity algorithm, to keep track of when the true self is being controlled
 
         random.seed(self.seed)
 
@@ -305,17 +308,33 @@ class Self_class():
         for agent in cur_agents:
             distances.append(abs(abs(agent[0]) - abs(target[0])) + abs(abs(agent[1]) - abs(target[1])))
 
-        # Randomly pick first or second closest
         sorted_d = copy.deepcopy(distances)
         sorted_d.sort()
-
-        #if random.randint(0, 1) == 0:
-        #    min_distance_index = random.randint(0, len(distances) - 1)
-        #else:
         
         min_distance_index = distances.index(sorted_d[0])
-
         closest_agent = cur_agents[min_distance_index]
+
+        if 'change_agent' in env.game_type and env.P['levels_count'] == 2 and env.P['n_levels'] == 34:
+            level_count = env.level_counter + ((env.levels_count) * 34)
+
+            if level_count == 54 and env.levels_count == 1:
+                print("here")
+                for lvl in self.controlling_true_self.keys():
+                    print(lvl)
+                    self.controlling_true_self[lvl] = statistics.mean(self.controlling_true_self[lvl])
+
+                # Save the controlling_true_self list as a json file
+                with open('./data/change_agent_game_harder/controlling_true_self_{}.json'.format(env.P['seed']), 'w') as fp:
+                    json.dump(self.controlling_true_self, fp)
+                    exit(0)
+            else:
+                # Check whether closest agent is the self, each time when the self changes
+                if (closest_agent == self.agent_locs[self.action_counter - 1]):
+                    print("Closest agent is self")
+                    self.controlling_true_self[level_count].append(1)
+                else:
+                    self.controlling_true_self[level_count].append(0)
+
         return self.navigate(target, closest_agent, env)
 
 
@@ -342,9 +361,6 @@ class Self_class():
             self.prev_candidates = []
 
         self.last_grid = copy.deepcopy(grid)
-
-        #if env.game_type == "change_agent_extended_2":
-        #    import pdb; pdb.set_trace()
 
         # Get current sorted agents
         cur_agents = []

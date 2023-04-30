@@ -137,3 +137,12 @@ print("Recruited: " , len(data))
 print("Female proportion: ,", len(data[(data['gender'] == '2')]) / len(data))
 print("Mean age: ", (data['age'].astype(int).mean()))
 print("Mean Duration: ", (data['Duration (in seconds)'].astype(int).mean()) / 60)
+
+##### Switching Embodiments self centering #####
+print("****** Switching Embodiments Self Centering ******")
+data = pd.read_csv('Switching Embodiments - Self Centering.csv')
+data = data[(data['finished_game'] == 'yes') & (data['workerId'] != 'A_WORKER_ID') & (data['workerId'] != '') & (data['workerId'].notnull()) & (data['att1'] == 'Paul') & (data['att2'] == 'Purple')]
+print("Recruited: " , len(data))
+print("Female proportion: ,", len(data[(data['gender'] == 'Female')]) / len(data))
+print("Mean age: ", (data['age'].astype(int).mean()))
+print("Mean Duration: ", (data['Duration (in seconds)'].astype(int).mean()) / 60)
