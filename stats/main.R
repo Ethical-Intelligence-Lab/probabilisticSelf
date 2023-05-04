@@ -289,32 +289,71 @@ for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'conti
 # Create plotter function
 corr_violin_plotter <- function(df_plot, game, plot_type = "regular") {
     p <- ggplot(df_plot, aes(x=index, y=corr)) + 
-    geom_violin(size=1.25) + geom_jitter(shape=16, position=position_jitter(0.2), size=2) +
+    geom_violin(size=1.25, adjust = .5) + geom_jitter(shape=16, position=position_jitter(0.2), size=2) +
     #geom_point(alpha = 0.2) +
     xlab("") +
-    ylab("Correlations") +
+    ylab("Correlation") +
     #theme_bw(base_size = 28) +
     coord_fixed() +
     theme_bw(base_size = 22) +
     stat_summary(fun.data = "mean_se", color = "black",
             size = 0.4, fun.args = list(mult = 1),
             position = position_dodge(width = 0.9)) +
-    stat_summary(fun.data = "mean_se", color = "black",
-            fun.args = list(mult = 1),
-            position = position_dodge(width = 0.9),
-            geom = "errorbar", width = 0.2) +
-            geom_hline(yintercept=0, size=0.25)
-
-    if(game != "change_agent_game") {
-        p <- p + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
-    axis.text.x=element_blank(),
-    axis.ticks.x=element_blank())
+    stat_summary(fun.data = mean_cl_boot, color = "black",
+            geom = "errorbar", position=position_dodge(0.9), width = 0.2) +
+            geom_hline(yintercept=0, size=0.25) 
+            
+    if(game == 'change_agent_game') {
+        p <- p + ylim(-0.06, 1)
     } else {
-            p <- p + theme_bw(base_size = 30) + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
-    axis.ticks.x=element_blank())
+        p <- p + ylim(0, 1)
+    }
+
+    
+    p <- p + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+    if(FALSE) {
+        if(game != "change_agent_game") {
+            p <- p + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
+                            axis.text.x=element_blank(),
+                            axis.ticks.x=element_blank())
+        } else {
+                p <- p + theme_bw(base_size = 30) + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
+                axis.ticks.x=element_blank())
+        }
     }
     
     return(p)
+}
+
+### Calculate correlation for all participants
+# Create function
+get_participant_correlation <- function(self_orient_data, participant_id, agent_type = "") {
+    c_participant <- self_orient_data[self_orient_data$participant == participant_id,]
+
+    if(game != "logic_game") {
+        c_participant <- c_participant[!is.na(c_participant$self_finding_steps),]
+    }
+
+    if(game == "change_agent_game") {
+        return( list(cor( na.omit(c_participant[c_participant$level, 'self_finding_steps']), na.omit(c_participant[c_participant$level, 'steps']) ), 
+                        cor( na.omit(c_participant[c_participant$level, 'prop_selected_correctly']), na.omit(c_participant[c_participant$level, 'steps']) )) )
+    } else if(game == "logic_game") {
+        if(agent_type == "human") {
+            return(list(cor( na.omit(c_participant[c_participant$level < 100, paste0(agent_type, '_self_finding_steps')]), na.omit(c_participant[c_participant$level < 100, paste0(agent_type, '_total_steps')] ))))
+        } else if(agent_type %in% c("random", "self_class")) {
+            return(list(cor( na.omit(c_participant[, paste0(agent_type, '_self_finding_steps')]),
+                                na.omit(c_participant[, paste0(agent_type, '_total_steps')] ))))
+        } else {
+            return(list(cor( na.omit(c_participant[c_participant$level > 1900, paste0(agent_type, '_self_finding_steps')]),
+                                na.omit(c_participant[c_participant$level > 1900, paste0(agent_type, '_total_steps')] ))))
+        }
+    } else {
+        return(list(cor( na.omit(c_participant$self_finding_steps), na.omit(c_participant$steps) )))
+    }
 }
 
 
@@ -351,31 +390,6 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
     ###### SCATTER PLOTS ######
     self_orient_data <- read.csv(paste0('self_orienting_', game, '.csv'))
 
-    ### Calculate correlation for all participants
-    # Create function
-    get_participant_correlation <- function(participant_id, agent_type = "") {
-        c_participant <- self_orient_data[self_orient_data$participant == participant_id,]
-
-        if(game != "logic_game") {
-            c_participant <- c_participant[!is.na(c_participant$self_finding_steps),]
-        }
-
-        if(game == "change_agent_game") {
-            return( list(cor( c_participant$self_finding_steps, c_participant$steps ), 
-                         cor( c_participant$prop_selected_correctly, c_participant$steps ) ))
-        } else if(game == "logic_game") {
-            if(agent_type == "human") {
-                return(list(cor( c_participant[c_participant$level < 100, paste0(agent_type, '_self_finding_steps')], c_participant[c_participant$level < 100, paste0(agent_type, '_total_steps')] )))
-            } else if(agent_type %in% c("random", "self_class")) {
-                return(list(cor( c_participant[, paste0(agent_type, '_self_finding_steps')], c_participant[, paste0(agent_type, '_total_steps')] )))
-            } else {
-                return(list(cor( c_participant[c_participant$level > 1900, paste0(agent_type, '_self_finding_steps')], c_participant[c_participant$level > 1900, paste0(agent_type, '_total_steps')] )))
-            }
-        } else {
-            return(list(cor( c_participant$self_finding_steps, c_participant$steps )))
-        }
-    }
-
     # Get correlation values for each participant
     if(game == "change_agent_game") { self_orient_data['cor_prop_selected'] <- NA } # Only in last game
 
@@ -394,7 +408,7 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
             print(paste("*-*-*-*-*-* ", agent, " *-*-*-*-*-*"))
 
             for(participant in 0: n_participant) {
-                corrs <- get_participant_correlation(participant, agent)
+                corrs <- get_participant_correlation(self_orient_data, participant, agent)
                 self_orient_data[self_orient_data$participant == participant, paste0('cor_sf_steps_', agent)] <- corrs[[1]]
             }
 
@@ -410,7 +424,7 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
         }
     } else {
         for(participant in 0: n_participant) {
-            corrs <- get_participant_correlation(participant)
+            corrs <- get_participant_correlation(self_orient_data, participant)
 
             self_orient_data[self_orient_data$participant == participant, 'cor_sf_steps'] <- corrs[[1]]
             if(game == "change_agent_game") { self_orient_data[self_orient_data$participant == participant, 'cor_prop_selected'] <- corrs[[2]] }
@@ -434,9 +448,12 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
     #################### Violin Plot ####################
     # Violin plot of the correlations
     if(game == "change_agent_game") {
-        d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected'])
-        d2 <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps'])    
-        df_plot <- data.frame("corr" = c(d, d2), "index" = factor(c(rep("Self Orienting\nAccuracy", length(d)), rep("Self Orienting\nSteps", length(d2)))))
+        #d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected'])
+        #d2 <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps'])    
+        #df_plot <- data.frame("corr" = c(d, d2), "index" = factor(c(rep("Self Orienting\nAccuracy", length(d)), rep("Self Orienting\nSteps", length(d2)))))
+
+        d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps'])
+        df_plot <- data.frame("corr" = d, "index" = rep(0, length(d)))
     } else if(game == "logic_game") {
         d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps_human'])
         df_plot <- data.frame("corr" = d, "index" = rep(0, length(d)))
@@ -444,16 +461,9 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
         d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps'])
         df_plot <- data.frame("corr" = d, "index" = rep(0, length(d)))
     }
-    
-    
 
     p <- corr_violin_plotter(df_plot, game)
-
-    if(game == 'change_agent_game') {
-        ggsave(paste0("scatter_self_orient_", game, ".png"), plot = p, units = "cm", width=27.0, height=11.1, dpi=1000)
-    } else {
-        ggsave(paste0("scatter_self_orient_", game, ".png"), plot = p, units = "cm", width=13.5, height=11.1, dpi=1000)
-    }
+    ggsave(paste0("scatter_self_orient_", game, ".png"), plot = p, units = "cm", width=13.5, height=11.1, dpi=1000)
 
     # Taking mean of each participant across all levels
     average_levels <- aggregate(self_orient_data, list(self_orient_data$level), mean, na.rm=TRUE)
@@ -464,16 +474,19 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
 
         # Comparing before perturbation and after perturbation to the proximity algorithm
         # Before perturbation
+        print("Human vs. keep close algorithm before perturbation")
         vr <- var.test(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34])
         print(t.test(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34], var.equal = vr$p.value > 0.05))
         print(cohen.d(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34]))
 
         # After perturbation
+        print("Human vs. keep close algorithm after perturbation")
         vr <- var.test(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53])
         print(t.test(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53], var.equal = vr$p.value > 0.05))
         print(cohen.d(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53]))
 
         # Humans before vs. after perturbation
+        print("Humans before vs. after perturbation for accuracy on finding real self")
         vr <- var.test(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53])
         print(t.test(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53], var.equal = vr$p.value > 0.05))
         print(cohen.d(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53]))
