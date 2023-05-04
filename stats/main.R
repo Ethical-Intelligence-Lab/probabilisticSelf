@@ -264,7 +264,7 @@ for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'conti
     if(game == 'contingency_game') {
         print("On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels")
         human_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$human))
-        self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_150))
+        self_means_cont <- colMeans(do.call(rbind, game_datas$contingency_game$self_class_first_150[1:100]))
 
         vr <- var.test(human_means_cont, self_means_cont)
         print(t.test(human_means_cont, self_means_cont, var.equal = vr$p.value > 0.05))
@@ -277,7 +277,7 @@ for (game in c('change_agent_game')) { #'logic_game', 'contingency_game', 'conti
         human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
         self_means_sm <- colMeans(do.call(rbind, game_datas$
             contingency_game_shuffled_1$
-            self_class_first_150))
+            self_class_first_150[1:100]))
 
         vr <- var.test(human_means_sm, self_means_sm)
         print(t.test(human_means_sm, self_means_sm, var.equal = vr$p.value > 0.05))
@@ -413,7 +413,7 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
             }
 
             # Chance level (assuming zero for no relationship)
-            chance_level <- mean(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_random')]))
+            chance_level <- 0# mean(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_random')]))
 
             print("Comparing self finding step correlations against chance: ")
             if(agent != "self_class") { # t-test gives error on self class since all is same, so skip that
@@ -438,11 +438,11 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
         print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps']), mu = chance_level))
 
         # Perform the one-sample t-test
-        if(game == "change_agent_game") {
-            print("Comparing select proportion correlations against chance: ")
-            print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected']), mu = chance_level))
-            print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected']), mu = chance_level))
-        }
+        #if(game == "change_agent_game") {
+        #    print("Comparing select proportion correlations against chance: ")
+        #    print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected']), mu = chance_level))
+        #    print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_prop_selected']), mu = chance_level))
+        #}
     }
 
     #################### Violin Plot ####################
@@ -470,26 +470,26 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
     
     if(game == 'change_agent_game') {
         # Compare the propotion of correct self finding to that of the proximity algorithm
-        selected_correct_proximity <- read.csv('keep_close_control_prop.csv')$keep_close_control_prop
+        sf_steps_proximity <- read.csv('keep_close_control_step.csv')$keep_close_control_step
 
         # Comparing before perturbation and after perturbation to the proximity algorithm
         # Before perturbation
         print("Human vs. keep close algorithm before perturbation")
-        vr <- var.test(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34])
-        print(t.test(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34], var.equal = vr$p.value > 0.05))
-        print(cohen.d(average_levels$prop_selected_correctly[1:34], selected_correct_proximity[1:34]))
+        vr <- var.test(average_levels$self_finding_steps[1:34], sf_steps_proximity[1:34])
+        print(t.test(average_levels$self_finding_steps[1:34], sf_steps_proximity[1:34], var.equal = vr$p.value > 0.05))
+        print(cohen.d(average_levels$self_finding_steps[1:34], sf_steps_proximity[1:34]))
 
         # After perturbation
         print("Human vs. keep close algorithm after perturbation")
-        vr <- var.test(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53])
-        print(t.test(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53], var.equal = vr$p.value > 0.05))
-        print(cohen.d(average_levels$prop_selected_correctly[35:53], selected_correct_proximity[35:53]))
+        vr <- var.test(average_levels$self_finding_steps[35:53], sf_steps_proximity[35:53])
+        print(t.test(average_levels$self_finding_steps[35:53], sf_steps_proximity[35:53], var.equal = vr$p.value > 0.05))
+        print(cohen.d(average_levels$self_finding_steps[35:53], sf_steps_proximity[35:53]))
 
         # Humans before vs. after perturbation
-        print("Humans before vs. after perturbation for accuracy on finding real self")
-        vr <- var.test(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53])
-        print(t.test(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53], var.equal = vr$p.value > 0.05))
-        print(cohen.d(average_levels$prop_selected_correctly[1:34], average_levels$prop_selected_correctly[35:53]))
+        print("Humans before vs. after perturbation for sf steps")
+        vr <- var.test(average_levels$self_finding_steps[1:34], average_levels$self_finding_steps[35:53])
+        print(t.test(average_levels$self_finding_steps[1:34], average_levels$self_finding_steps[35:53], var.equal = vr$p.value > 0.05))
+        print(cohen.d(average_levels$self_finding_steps[1:34], average_levels$self_finding_steps[35:53]))
     }
 }
 
