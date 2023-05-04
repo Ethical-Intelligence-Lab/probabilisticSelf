@@ -318,22 +318,25 @@ class Self_class():
             level_count = env.level_counter + ((env.levels_count) * 34)
 
             if level_count == 54 and env.levels_count == 1:
-                print("here")
                 for lvl in self.controlling_true_self.keys():
                     print(lvl)
                     self.controlling_true_self[lvl] = statistics.mean(self.controlling_true_self[lvl])
 
                 # Save the controlling_true_self list as a json file
-                with open('./data/change_agent_game_harder/controlling_true_self_{}.json'.format(env.P['seed']), 'w') as fp:
+                with open('./data/change_agent_game_harder/controlling_true_self_{}_step.json'.format(env.P['seed']), 'w') as fp:
                     json.dump(self.controlling_true_self, fp)
                     exit(0)
             else:
-                # Check whether closest agent is the self, each time when the self changes
-                if (closest_agent == self.agent_locs[self.action_counter - 1]):
-                    print("Closest agent is self")
-                    self.controlling_true_self[level_count].append(1)
-                else:
-                    self.controlling_true_self[level_count].append(0)
+                ### In the new self-finding cycle, check whether the closest agent is the true self
+                ### If it is, store that step and ignore the ones until next self-finding cycle
+                ### If it is not, append 7 to the list before the next self-finding cycle
+                if closest_agent == self.agent_locs[self.action_counter - 1] and len(self.controlling_true_self[level_count]) == 0:
+                    self.controlling_true_self[level_count].append(self.action_counter % 7)
+
+                ### Did not find the self in the current cycle, append 7 to the list before the next self-finding cycle
+                if self.action_counter % 7 == 6 and len(self.controlling_true_self[level_count]) == 0:
+                    self.controlling_true_self[level_count].append(7)
+
 
         return self.navigate(target, closest_agent, env)
 
