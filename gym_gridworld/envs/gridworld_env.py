@@ -270,7 +270,7 @@ class GridworldEnv(gym.Env):
         ''' append level-specific data '''
         self.level_self_actions.append(action)
         self.level_s_locs.append(self.s_state)
-        self.level_ns_locs.append(self.ns_states)
+        self.level_ns_locs.append(copy.deepcopy(self.ns_states))
 
         # Update agent position(s)
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
@@ -349,7 +349,7 @@ class GridworldEnv(gym.Env):
         ''' append level-specific data '''
         # self.level_self_actions.append(action) <-
         self.level_s_locs.append(self.s_state)
-        self.level_ns_locs.append(self.ns_states)
+        self.level_ns_locs.append(copy.deepcopy(self.ns_states))
 
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
@@ -496,7 +496,7 @@ class GridworldEnv(gym.Env):
 
         ''' append level-specific data '''
         self.level_s_locs.append(self.s_state)
-        self.level_ns_locs.append(self.ns_states)
+        self.level_ns_locs.append(copy.deepcopy(self.ns_states))
 
         nxt_s_state = (self.s_state[0] + self.action_pos_dict[action][0],
                        self.s_state[1] + self.action_pos_dict[action][1])
