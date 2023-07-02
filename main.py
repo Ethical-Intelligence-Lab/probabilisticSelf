@@ -97,7 +97,7 @@ if __name__ == '__main__':
             if P['player'] == 'random':
                 while True:
                     obs, reward, done, info = env.step(env.action_space.sample())
-                    env._render()
+                    #env._render()
                     if done:
                         print('done')
                         env.reset()

@@ -12,10 +12,12 @@ pacman::p_load('lsr')
 ##### Most of the data files that we use here are generated in the "plotter_curves.ipynb" file. #####
 #####################################################################################################
 
-# Set working directors
-if(!grepl('stats', getwd())) {
-    setwd(paste0(getwd(), '/stats'))
-}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #set working directory to current directory
+
+# Set working directory if running from vscode
+#if(!grepl('stats', getwd())) {
+#    setwd(paste0(getwd(), '/stats'))
+#}
 
 # Generate bayes factor for the given game
 generate_bfs <- function(game) {
@@ -264,7 +266,7 @@ get_participant_correlation <- function(self_orient_data, participant_id, agent_
 
 
 game_datas <- c()
-for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_datas[[game]] <- fromJSON(file = filename)
 
@@ -318,12 +320,14 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
                 self_orient_data[self_orient_data$participant == participant, paste0('cor_sf_steps_', agent)] <- corrs[[1]]
             }
 
-            chance_level <- 0
-            print("Comparing self finding step correlations against chance: ")
-            if(agent != "self_class") { # t-test gives error on self class since all is same, so skip that
-                print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), mu=chance_level))
-                print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), mu=chance_level))
-                print(wilcox.test(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), mu = chance_level))
+            print("Comparing self finding step correlations against random agent: ")
+            if(agent != "self_class") { # t-test gives error on self class since all are the same, so skip that
+                print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), 
+                             na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_random')])))
+                print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), 
+                              na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_random')])))
+                print(wilcox.test(na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_', agent)]), 
+                                  na.omit(self_orient_data[self_orient_data$level == 0, paste0('cor_sf_steps_random')])))
             }
         }
     } else {
@@ -335,11 +339,18 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
             if(game == "change_agent_game") { self_orient_data[self_orient_data$participant == participant, 'cor_prop_selected'] <- corrs[[2]] }
         }
         
-        # Chance level (zero for no relationship)
-        chance_level <- 0
-        print("Comparing self finding step correlations against chance: ")
-        print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps']), mu = chance_level))
-        print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps']), mu = chance_level))
+        
+        cors_rand <- c()
+        # Calculate correlation for the random agent for each seed:
+        for(seed in 1: n_participant) {
+          cor_seed <- cor(t(as.data.frame(game_datas[[game]]$random_sf_first_150[1:100]))[, seed],
+                          t(as.data.frame(game_datas[[game]]$random_first_150[1:100]))[, seed])
+          cors_rand <- c(cors_rand, cor_seed)
+        }
+        
+        print("Comparing self finding step correlations against random agent: ")
+        print(t.test(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps']), cors_rand))
+        print(cohensD(na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps']), cors_rand))
     }
 
     # Setting up data for different games
