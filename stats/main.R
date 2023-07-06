@@ -266,7 +266,7 @@ get_participant_correlation <- function(self_orient_data, participant_id, agent_
 
 
 game_datas <- c()
-for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_datas[[game]] <- fromJSON(file = filename)
 
@@ -342,7 +342,8 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
         
         cors_rand <- c()
         # Calculate correlation for the random agent for each seed:
-        for(seed in 1: n_participant) {
+        if(game == "change_agent_game") {np <- 18} else {np <- n_participant}
+        for(seed in 1: np) {
           cor_seed <- cor(t(as.data.frame(game_datas[[game]]$random_sf_first_150[1:100]))[, seed],
                           t(as.data.frame(game_datas[[game]]$random_first_150[1:100]))[, seed])
           cors_rand <- c(cors_rand, cor_seed)
