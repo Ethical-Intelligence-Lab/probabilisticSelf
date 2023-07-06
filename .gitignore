@@ -26,3 +26,8 @@ fn_code/
 logs/
 runs/
 *.zip
+survey_results/.DS_Store
+.DS_Store
+stats/.RData
+stats/.Rhistory
+stats/old_mainR.R
