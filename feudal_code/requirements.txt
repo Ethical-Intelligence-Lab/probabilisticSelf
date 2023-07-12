@@ -1,4 +1,0 @@
-numpy
-torch==0.4
-gym[atari]
-tensorboardX
