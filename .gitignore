@@ -2,6 +2,8 @@
 env/
 models/
 data/
+data_clean/
+data_old/
 saved_models/
 .neptune
 useless/
