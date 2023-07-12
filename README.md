@@ -5,7 +5,7 @@ Testing what a self is for. Comparison of random, RL, theory-based agents, custo
 Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 [How You Act Tells a Lot: Privacy-Leakage Attack on Deep Reinforcement Learning](https://arxiv.org/abs/1904.11082)
 
-## Requirements
+## Requirements for running RL agents (except Option-Critic)
 
 - Windows, OS X, or Linux 
 - Python 3.6 (later versions might be fine)
@@ -61,7 +61,9 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 - Available in the project's OSF repository. Simply unzip the .zip folder in the project repo, such that the 'data' directory is visible. 
 
 
-## Setup for HRL:
-- Create Python 3.9 environment.
+## Setup for Running Option-Critic:
+- Create a Python 3.9 environment.
 - Install the requirements in `requirements_hrl.txt`
 - Install ray nightly from the wheel `pip install -U LINK_TO_WHEEL.whl`. You can find the links to install the wheel here: https://docs.ray.io/en/latest/ray-overview/installation.html
+- Set sb to False in `gym_gridworld/gridworld_env.py`
+- Run `main_option_critic.py` with the desired parameters.
