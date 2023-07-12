@@ -688,6 +688,8 @@ class GridworldEnv(gym.Env):
             with open(
                     root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * self.n_levels) + ".json",
                     'w') as fp:
+                # Remove 'map' from final data
+                final_data['data'].pop('map', None)
                 json.dump(final_data, fp)
                 print("Data save dir: ", root_dir + self.metadata['data_save_dir'])
                 print(root_dir + self.metadata['data_save_dir'] + self.metadata['exp_name'] + str(self.levels_count * self.n_levels) + ".json")

@@ -127,7 +127,7 @@ print_sig <- function(p) {
 }
 
 # ********** t-tests For Comparing the Last Level of the Self Class and Human vs. the RL algorithms (Table S1-4) **********
-for (game in c('change_agent_game')) { # Options: 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for (game in c('contingency_game')) { # Options: 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
     print(paste("**********  ", game, "  **********"))
     game_datas <- c()
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
@@ -266,7 +266,7 @@ get_participant_correlation <- function(self_orient_data, participant_id, agent_
 
 
 game_datas <- c()
-for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_datas[[game]] <- fromJSON(file = filename)
 
@@ -311,7 +311,7 @@ for(game in c('change_agent_game')) { #, 'logic_game', 'contingency_game', 'cont
 
     if(game == "logic_game") {
         # Correlations for each artificial agent and humans
-        for(agent in c('random', 'human', 'dqn_training', 'a2c_training', 'trpo_training', 'acer_training', 'ppo2_training', 'option_critic', 'self_class')) {
+        for(agent in c('random', 'human', 'dqn_training', 'a2c_training', 'trpo_training', 'acer_training', 'ppo2_training', 'option_critic')) {
             self_orient_data[paste0('cor_sf_steps_', agent)] <- NA
             print(paste("*-*-*-*-*-* ", agent, " *-*-*-*-*-*"))
 
