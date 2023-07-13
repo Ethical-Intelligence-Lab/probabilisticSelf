@@ -1,6 +1,0 @@
-scikit-learn
-matplotlib
-pandas
-scipy
-scikit-image==0.17.2
-rpy2
