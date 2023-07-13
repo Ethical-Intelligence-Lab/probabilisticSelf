@@ -6,9 +6,11 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 [How You Act Tells a Lot: Privacy-Leakage Attack on Deep Reinforcement Learning](https://arxiv.org/abs/1904.11082)
 
 ## Requirements if you only want to reproduce the results and plots
-- Python 3.10
-- pip install -r requirements_analysis.txt
-- For statistical analyses, we used R 4.3.1
+- For statistical analyses, we used R 4.3.1. Main analysis file is in `stats/main.R`
+- For plotting, we used Python 3.10.12.
+        - pip install -r requirements_analysis.txt
+        - Plotters are in `/plotting/` folder. 
+        - (No need to download additional files)
 
 ## Requirements for running RL agents (except Option-Critic)
 
