@@ -7,15 +7,17 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 
 ## Requirements if you only want to reproduce the results and plots
 - For statistical analyses, we used R 4.3.1. Main analysis file is in `stats/main.R`
-- For plotting, we used Python 3.10.12.
-        - pip install -r requirements_analysis.txt
-        - Plotters are in `/plotting/` folder. 
-        - (No need to download additional files)
+- For plotting, we used Python 3.10.12.\
+        - Create a virtual environment with Python 3.10.12, preferably using conda.\
+        - `pip install -r requirements_analysis.txt` \
+        - Install packages required to run jupyter notebooks. \
+        - Code for Plotters are in `/plotting/` folder. For curve plots, run `plotter_curves.ipynb`, for bar charts run `plotter_bar_charts.ipynb`, for heatmaps run `plotter_heatmap.ipynb`. \
+        - There is no need to download additional files for plotting curves and bar charts. For the heatmaps, you need the download the data files from here: https://osf.io/bwzth/, and put it in the root directory.
 
 ## Requirements for running RL agents (except Option-Critic)
 
 - Windows, OS X, or Linux 
-- Python 3.6 (later versions might be fine)
+- Python 3.6 (Cannot download this in ARM macs, so use a virtual machine)
 - Tensorflow
 - See `requirements.txt` for all other dependencies. 
 - Gpu not necessary
@@ -69,6 +71,7 @@ Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 
 
 ## Setup for Running Option-Critic:
+- Option-critic code was adapted from: https://github.com/lweitkamp/option-critic-pytorch
 - Create a Python 3.9 environment.
 - Install the requirements in `requirements_hrl.txt`
 - Install ray nightly from the wheel `pip install -U LINK_TO_WHEEL.whl`. You can find the links to install the wheel here: https://docs.ray.io/en/latest/ray-overview/installation.html
