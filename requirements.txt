@@ -5,7 +5,7 @@ attrs==20.3.0
 bravado==11.0.2
 bravado-core==5.17.0
 cached-property==1.5.2
-certifi==2020.6.20
+certifi==2023.7.22
 chardet==4.0.0
 click==7.1.2
 cloudpickle==1.6.0
