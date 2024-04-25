@@ -14,11 +14,6 @@ pacman::p_load('lsr')
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #set working directory to current directory
 
-# Set working directory if running from vscode
-#if(!grepl('stats', getwd())) {
-#    setwd(paste0(getwd(), '/stats'))
-#}
-
 # Generate bayes factor for the given game
 generate_bfs <- function(game) {
     game_datas <- c()
@@ -29,14 +24,14 @@ generate_bfs <- function(game) {
     game_datas[[game]] <- fromJSON(file = filename)
 
     # *-*-*-*-*-*-*-*-* BAYESIAN TESTS *-*-*-*-*-*-*-*-* #
-    ## Human v. Self Class for the First Level Levels
-    if(!(game %in% c('contingency_game_shuffled_1', 'logic_game', 'change_agent_game'))) {  # Switching mappings and logic does not have perturbation task
+    ## Human v. Self Class for the First Level
+    if(!(game %in% c('switching_mappings_game_1', 'logic_game', 'switching_embodiments_game'))) {  # Switching mappings and logic does not have perturbation task
         perturbation_c <- c(TRUE, FALSE)
     } else {
         perturbation_c <- c(FALSE)
     }
 
-    if(game == "change_agent_game_harder") {
+    if(game == "switching_embodiments_game_self_finding") {
         perturbation_c <- c(TRUE)
     }
 
@@ -54,7 +49,7 @@ generate_bfs <- function(game) {
 
         if(perturbation) { levels <- 1:150 } else { levels <- 1:100 }
 
-        if (game == "change_agent_game" && perturbation) { levels <- 1:30 } # 30 Levels in change_agent_game perturbation
+        if (game == "switching_embodiments_game" && perturbation) { levels <- 1:30 } # 30 Levels in switching_embodiments_game perturbation
         
         for (level in levels) {
             # Favors Alternative Hypothesis (mu =/= 0)
@@ -106,7 +101,7 @@ generate_bfs <- function(game) {
 }
 
 ## *-*-*-* GENERATE BAYES FACTORS *-*-*-* ##
-for(game in c('logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game', 'change_agent_game_harder')) {
+for(game in c('logic_game', 'contingency_game', 'switching_mappings_game_1', 'switching_embodiments_game', 'switching_embodiments_game_self_finding')) {
     generate_bfs(game)
 }
 
@@ -127,7 +122,7 @@ print_sig <- function(p) {
 }
 
 # ********** t-tests For Comparing the Last Level of the Self Class and Human vs. the RL algorithms (Table S1-4) **********
-for (game in c('contingency_game')) { # Options: 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for (game in c('logic_game', 'contingency_game', 'switching_mappings_game_1', 'switching_embodiments_game')) { # Options: 'logic_game', 'contingency_game', 'switching_mappings_game_1', 'switching_embodiments_game'
     print(paste("**********  ", game, "  **********"))
     game_datas <- c()
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
@@ -173,12 +168,12 @@ for (game in c('contingency_game')) { # Options: 'logic_game', 'contingency_game
         print(cohen.d(human_means_cont, self_means_cont))
     }
 
-    if(game == 'contingency_game_shuffled_1') {
+    if(game == 'switching_mappings_game_1') {
         # Switching Mappings Game
         print("On average, humans took significantly more steps than the self-class to solve each level over the first 100 levels")
-        human_means_sm <- colMeans(do.call(rbind, game_datas$contingency_game_shuffled_1$human))
+        human_means_sm <- colMeans(do.call(rbind, game_datas$switching_mappings_game_1$human))
         self_means_sm <- colMeans(do.call(rbind, game_datas$
-            contingency_game_shuffled_1$
+            switching_mappings_game_1$
             self_class_first_150[1:100]))
 
         vr <- var.test(human_means_sm, self_means_sm)
@@ -197,10 +192,8 @@ for (game in c('contingency_game')) { # Options: 'logic_game', 'contingency_game
 corr_violin_plotter <- function(df_plot, game, plot_type = "regular") {
     p <- ggplot(df_plot, aes(x=index, y=corr)) + 
     geom_violin(size=1.25, adjust = .5) + geom_jitter(shape=16, position=position_jitter(0.2), size=2) +
-    #geom_point(alpha = 0.2) +
     xlab("") +
     ylab("Correlation") +
-    #theme_bw(base_size = 28) +
     coord_fixed() +
     theme_bw(base_size = 22) +
     stat_summary(fun.data = "mean_se", color = "black",
@@ -210,7 +203,7 @@ corr_violin_plotter <- function(df_plot, game, plot_type = "regular") {
             geom = "errorbar", position=position_dodge(0.9), width = 0.2) +
             geom_hline(yintercept=0, size=0.25) 
             
-    if(game == 'change_agent_game') {
+    if(game == 'switching_embodiments_game') {
         p <- p + ylim(-0.06, 1)
     } else {
         p <- p + ylim(0, 1)
@@ -223,7 +216,7 @@ corr_violin_plotter <- function(df_plot, game, plot_type = "regular") {
 
 
     if(FALSE) {
-        if(game != "change_agent_game") {
+        if(game != "switching_embodiments_game") {
             p <- p + theme(legend.position = "none", axis.line = element_line(color = 'black', size=0.25), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.border = element_blank(), axis.text.y=element_text(colour="black"), axis.ticks.length=unit(0.013,"inch"), axis.ticks.y=element_line(size=unit(0.2,"inch")), axis.line.x.bottom=element_line(size=0), axis.title.x=element_blank(),
                             axis.text.x=element_blank(),
                             axis.ticks.x=element_blank())
@@ -245,7 +238,7 @@ get_participant_correlation <- function(self_orient_data, participant_id, agent_
         c_participant <- c_participant[!is.na(c_participant$self_finding_steps),]
     }
 
-    if(game == "change_agent_game") {
+    if(game == "switching_embodiments_game") {
         return( list(cor( na.omit(c_participant[c_participant$level, 'self_finding_steps']), na.omit(c_participant[c_participant$level, 'steps']) ), 
                         cor( na.omit(c_participant[c_participant$level, 'prop_selected_correctly']), na.omit(c_participant[c_participant$level, 'steps']) )) )
     } else if(game == "logic_game") {
@@ -266,7 +259,7 @@ get_participant_correlation <- function(self_orient_data, participant_id, agent_
 
 
 game_datas <- c()
-for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'contingency_game_shuffled_1', 'change_agent_game'
+for(game in c('logic_game', 'contingency_game', 'switching_mappings_game_1', 'switching_embodiments_game')) { #, 'logic_game', 'contingency_game', 'switching_mappings_game_1', 'switching_embodiments_game'
     filename <- paste("./data_", game, ".json", sep = "", collapse = NULL)
     game_datas[[game]] <- fromJSON(file = filename)
 
@@ -275,7 +268,7 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
     if(game != 'logic_game') {
         print("Checking if participants performed differently in the self-finding game compared to the original run")
 
-        if(game == 'change_agent_game') {
+        if(game == 'switching_embodiments_game') {
             # Before perturbation
             human_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$human))[1:34]
             human_sf_lvl_means_cont <- colMeans(do.call(cbind, game_datas[game][[1]]$data_sf))[1:34]
@@ -298,14 +291,14 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
     self_orient_data <- read.csv(paste0('self_orienting_', game, '.csv'))
 
     # Get correlation values for each participant
-    if(game == "change_agent_game") { self_orient_data['cor_prop_selected'] <- NA } # Only in last game
+    if(game == "switching_embodiments_game") { self_orient_data['cor_prop_selected'] <- NA } # Only in last game
 
     if(game != "logic_game") {
         self_orient_data['cor_sf_steps'] <- NA
     }
 
     n_participant <- 20
-    if(game == "change_agent_game") {
+    if(game == "switching_embodiments_game") {
         n_participant <- 19
     }
 
@@ -336,13 +329,13 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
             corrs <- get_participant_correlation(self_orient_data, participant)
 
             self_orient_data[self_orient_data$participant == participant, 'cor_sf_steps'] <- corrs[[1]]
-            if(game == "change_agent_game") { self_orient_data[self_orient_data$participant == participant, 'cor_prop_selected'] <- corrs[[2]] }
+            if(game == "switching_embodiments_game") { self_orient_data[self_orient_data$participant == participant, 'cor_prop_selected'] <- corrs[[2]] }
         }
         
         
         cors_rand <- c()
         # Calculate correlation for the random agent for each seed:
-        if(game == "change_agent_game") {np <- 18} else {np <- n_participant}
+        if(game == "switching_embodiments_game") {np <- 18} else {np <- n_participant}
         for(seed in 1: np) {
           cor_seed <- cor(t(as.data.frame(game_datas[[game]]$random_sf_first_150[1:100]))[, seed],
                           t(as.data.frame(game_datas[[game]]$random_first_150[1:100]))[, seed])
@@ -355,7 +348,7 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
     }
 
     # Setting up data for different games
-    if(game == "change_agent_game") {
+    if(game == "switching_embodiments_game") {
         d <- na.omit(self_orient_data[self_orient_data$level == 0, 'cor_sf_steps'])
         df_plot <- data.frame("corr" = d, "index" = rep(0, length(d)))
     } else if(game == "logic_game") {
@@ -373,7 +366,7 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
     # Taking mean of each participant across all levels (for comparing humans to proximity)
     average_levels <- aggregate(self_orient_data, list(self_orient_data$level), mean, na.rm=TRUE)
     
-    if(game == 'change_agent_game') {
+    if(game == 'switching_embodiments_game') {
         # Humans before vs. after perturbation
         print("Humans before vs. after perturbation for self-finding steps")
         vr <- var.test(average_levels$self_finding_steps[1:34], average_levels$self_finding_steps[35:53])
@@ -403,7 +396,7 @@ for(game in c('contingency_game')) { #, 'logic_game', 'contingency_game', 'conti
 ########################################## PERTURBATIONS ##########################################
 
 # After-Perturbation Comparisons
-games <- c("change_agent_game_harder") # "contingency_game", "change_agent_game_harder"
+games <- c("contingency_game", "switching_embodiments_game_self_finding")
 game_datas_pert <- c()
 for(game in games) {
     filename <- paste("./data_", game, "_after_perturbation.json", sep = "", collapse = NULL)
@@ -421,7 +414,7 @@ for(game in games) {
     print(cohen.d(game_datas_pert[[game]][["human"]][1:100], game_datas_pert[[game]][["human"]][101:150]))
 
     for(agent_type in c("a2c_training", "ppo2_training", "acer_training", "dqn_training", "trpo_training", "option_critic")) {
-        if(agent_type == "option_critic" & game == "change_agent_game_harder") { next }
+        if(agent_type == "option_critic" & game == "switching_embodiments_game_self_finding") { next }
 
         print(paste0("Comparing to all 2000 levels averaged at every 40-level interval: ", agent_type, " vs. human"))
         var_result <- var.test(game_datas_pert[[game]][[paste0(agent_type, "_averaged")]][51:100], game_datas_pert[[game]][["human"]][101:150])

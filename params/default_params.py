@@ -83,8 +83,8 @@ class DefaultParams:
         if self.params['different_self_color']:
             game_str = game_str + "_diff_color"
 
-        if self.params['modify_to'] == 'change_agent_extended_2':
-            game_str = game_str + '_harder'
+        if self.params['modify_to'] == 'switching_embodiments_extended_2':
+            game_str = game_str + '_self_finding'
 
         game_str = game_str + "-agent_loc_constant/" if not self.params['agent_location_random'] else game_str + "/"
         if self.params['player'] not in ['human', 'random', 'self_class']:

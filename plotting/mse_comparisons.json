@@ -1077,7 +1077,7 @@
             "keep_close": []
         }
     },
-    "contingency_game_shuffled_1": {
+    "switching_mappings_game_1": {
         "first_100": {
             "human": [
                 5858.839190983092,
@@ -1616,7 +1616,7 @@
             "keep_close": []
         }
     },
-    "change_agent_game": {
+    "switching_embodiments_game": {
         "first_100": {
             "human": [
                 5255.211409942162,

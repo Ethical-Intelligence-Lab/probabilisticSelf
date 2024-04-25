@@ -7,14 +7,14 @@ csvreader = csv.reader(file)
 rows = []
 col_names = None
 data = {'logic': {'genders': [], 'ages': [], 'duration': []}, 'contingency': {'genders': [], 'ages': [], 'duration': []},
-        'shuffle': {'genders': [], 'ages': [], 'duration': []}, 'change_agent': {'genders': [], 'ages': [], 'duration': []}
+        'shuffle': {'genders': [], 'ages': [], 'duration': []}, 'switching_embodiments': {'genders': [], 'ages': [], 'duration': []}
         }
 
 attention = {'logic': {'passed': [], 'failed': [], 'finished_game_and_passed': [], 'finished_game_and_failed': []},
              'contingency': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
                              'finished_game_and_failed': []},
              'shuffle': {'passed': [], 'failed': [], 'finished_game_and_passed': [], 'finished_game_and_failed': []},
-             'change_agent': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
+             'switching_embodiments': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
                               'finished_game_and_failed': []}
              }
 
@@ -23,7 +23,7 @@ comprehension = {'logic': {'passed': [], 'failed': [], 'finished_game_and_passed
                                  'finished_game_and_failed': []},
                  'shuffle': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
                              'finished_game_and_failed': []},
-                 'change_agent': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
+                 'switching_embodiments': {'passed': [], 'failed': [], 'finished_game_and_passed': [],
                                   'finished_game_and_failed': []}
                  }
 
@@ -71,9 +71,9 @@ print("Female proportion: ,", len(data[(data['Q4'] == 'Female')]) / len(data))
 print("Mean age: ", (data['Q6'].astype(int).mean()))
 print("Mean Duration: ", (data['Duration (in seconds)'].astype(int).mean()) / 60)
 
-##### Shuffle Keys #####
-print("****** Shuffle Keys Self Centering ******")
-data = pd.read_csv('Shuffle Keys - Self Centering.csv')
+##### Swithcing Mappings #####
+print("****** Swithcing Mappings Self Centering ******")
+data = pd.read_csv('Swithcing Mappings - Self Centering.csv')
 data = data[(data['finished_game'] == 'yes') & (data['workerId'] != 'A_WORKER_ID') & (data['workerId'] != '') & (data['workerId'].notnull())]
 print("Recruited: " , len(data))
 print("Female proportion: ,", len(data[(data['Q4'] == 'Female')]) / len(data))

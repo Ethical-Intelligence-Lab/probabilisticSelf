@@ -477,7 +477,7 @@
             }
         }
     },
-    "contingency_game_shuffled_1": {
+    "switching_mappings_game_1": {
         "first_100": {
             "human": {
                 "dof": 38.0,
@@ -716,7 +716,7 @@
             }
         }
     },
-    "change_agent_game": {
+    "switching_embodiments_game": {
         "first_100": {
             "human": {
                 "dof": 34.0,

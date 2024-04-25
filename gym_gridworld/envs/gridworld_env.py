@@ -33,7 +33,7 @@ class MockSelf:
     def __init__(self):
         self.rushing_to_goal = True
         self.location = []
-        self.switch_harder_100 = False
+        self.switch_self_finding_100 = False
         self.ten_r = False
 
     def set_location(self, loc):
@@ -50,7 +50,7 @@ class MockSelf:
 
     # Navigate towards reward
     def navigate(self, level_count, levels_count):
-        if self.switch_harder_100: # Switch between harder and easier perturbation task
+        if self.switch_self_finding_100: # Switch between harder and easier perturbation task
             if levels_count % 2 == 0:
                 return random.randint(0, 3)    
         elif (self.ten_r and len(str(level_count)) == 1) or (self.ten_r and int(str(level_count)[-2]) % 2 == 0):
@@ -166,7 +166,7 @@ class GridworldEnv(gym.Env):
         self.agent_location_random = P['agent_location_random']
         self.different_self_color = P['different_self_color']
         self.this_file_path = os.path.dirname(os.path.realpath(__file__))
-        self.mock_s.switch_harder_100 = P['switch_harder_100_lvls']
+        self.mock_s.switch_self_finding_100 = P['switch_self_finding_100_lvls']
         self.mock_s.ten_r = P['ten_r']
 
         if self.verbose:
@@ -180,13 +180,13 @@ class GridworldEnv(gym.Env):
             self.agent_start_locs = [[1, 1], [1, 7], [7, 1], [7, 7]]
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
-                                'change_agent_extended_1', 'change_agent_extended_2']:
+        elif self.game_type in ['contingency', 'switching_embodiments', 'contingency_extended', 'switching_embodiments_extended',
+                                'switching_embodiments_extended_1', 'switching_embodiments_extended_2']:
             self.agent_start_locs = [[6, 6], [6, 14], [14, 6], [14, 14]]
 
             if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
                 rn = random.randint(0, 3)
-                self.grid_map_path = os.path.join(self.this_file_path, 'change_agent_extended/plan{}.txt'.format(rn))
+                self.grid_map_path = os.path.join(self.this_file_path, 'switching_embodiments_extended/plan{}.txt'.format(rn))
 
                 # Set the location of the mock self, to keep track of it
                 if rn == 0:
@@ -252,9 +252,9 @@ class GridworldEnv(gym.Env):
             new_obs, rew, done, info = self.step_logic(action)
         elif self.game_type in ['contingency', 'contingency_extended']:
             new_obs, rew, done, info = self.step_contingency(action)
-        elif self.game_type in ['change_agent', 'change_agent_extended', 'change_agent_extended_2',
-                                'change_agent_extended_1']:
-            new_obs, rew, done, info = self.step_change_agent(action)
+        elif self.game_type in ['switching_embodiments', 'switching_embodiments_extended', 'switching_embodiments_extended_2',
+                                'switching_embodiments_extended_1']:
+            new_obs, rew, done, info = self.step_switching_embodiments(action)
 
         return new_obs, rew, done, info
 
@@ -456,7 +456,7 @@ class GridworldEnv(gym.Env):
 
     ''' change the self to another possible self every 7 steps '''
 
-    def change_agent(self):
+    def switching_embodiments(self):
         if self.step_counter % 7 != 0:
             return
 
@@ -477,10 +477,10 @@ class GridworldEnv(gym.Env):
 
         self.ns_states[rand_num] = [int(temp[0]), int(temp[1])]
 
-    def step_change_agent(self, action):
+    def step_switching_embodiments(self, action):
         # print('moving', action)
         if self.step_counter != 0:
-            self.change_agent()
+            self.switching_embodiments()
         self.total_steps_counter += 1
         self.step_counter += 1
         info = {}
@@ -744,12 +744,12 @@ class GridworldEnv(gym.Env):
         if self.game_type == 'logic' or self.game_type == 'logic_extended' or self.game_type == 'logic_extended_h':
             self.grid_map_path = os.path.join(self.this_file_path,
                                               self.game_type + '/plan' + str(random.randint(0, 9)) + '.txt')
-        elif self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
-                                'change_agent_extended_2', 'change_agent_extended_1']:
+        elif self.game_type in ['contingency', 'switching_embodiments', 'contingency_extended', 'switching_embodiments_extended',
+                                'switching_embodiments_extended_2', 'switching_embodiments_extended_1']:
 
             if 'extended_1' in self.game_type or 'extended_2' in self.game_type:  # Mock self moves toward goal
                 rn = random.randint(0, 3)
-                self.grid_map_path = os.path.join(self.this_file_path, 'change_agent_extended/plan{}.txt'.format(rn))
+                self.grid_map_path = os.path.join(self.this_file_path, 'switching_embodiments_extended/plan{}.txt'.format(rn))
 
                 # Set the location of the mock self, to keep track of it
                 if rn == 0:
@@ -812,8 +812,8 @@ class GridworldEnv(gym.Env):
 
         self.current_grid_map = copy.deepcopy(self.start_grid_map)
         self.observation = self._gridmap_to_observation(self.start_grid_map)
-        if self.game_type in ['contingency', 'change_agent', 'contingency_extended', 'change_agent_extended',
-                              'change_agent_extended_2', 'change_agent_extended_1']:
+        if self.game_type in ['contingency', 'switching_embodiments', 'contingency_extended', 'switching_embodiments_extended',
+                              'switching_embodiments_extended_2', 'switching_embodiments_extended_1']:
             self.get_ns_limits()  # get new oscillation limits for non-self agents
 
         self._render()
@@ -886,7 +886,7 @@ class GridworldEnv(gym.Env):
         if self.step_counter != 0:
             plt.title(actionDict[self.level_self_actions[self.step_counter - 1]])
 
-        if self.step_counter != 0 and self.game_type == "change_agent_extended_2" and self.step_counter % 7 == 0:
+        if self.step_counter != 0 and self.game_type == "switching_embodiments_extended_2" and self.step_counter % 7 == 0:
             plt.suptitle("CHANGE")
 
         fig.canvas.draw()

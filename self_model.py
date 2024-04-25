@@ -124,8 +124,8 @@ class Self_class():
                 action = self.predict_contingency(env)
             else:
                 action = self.predict_shuffled(env)
-        if env.game_type in ['change_agent', 'change_agent_extended_1', 'change_agent_extended_2']:
-            action = self.predict_change_agent(env)
+        if env.game_type in ['switching_embodiments', 'switching_embodiments_extended_1', 'switching_embodiments_extended_2']:
+            action = self.predict_switching_embodiments(env)
         return action
 
     def predict_logic(self, env):
@@ -314,7 +314,7 @@ class Self_class():
         min_distance_index = distances.index(sorted_d[0])
         closest_agent = cur_agents[min_distance_index]
 
-        if 'change_agent' in env.game_type and env.P['levels_count'] == 2 and env.P['n_levels'] == 34:
+        if 'switching_embodiments' in env.game_type and env.P['levels_count'] == 2 and env.P['n_levels'] == 34:
             level_count = env.level_counter + ((env.levels_count) * 34)
 
             if level_count == 54 and env.levels_count == 1:
@@ -323,7 +323,7 @@ class Self_class():
                     self.controlling_true_self[lvl] = statistics.mean(self.controlling_true_self[lvl])
 
                 # Save the controlling_true_self list as a json file
-                with open('./data/change_agent_game_harder/controlling_true_self_{}_step.json'.format(env.P['seed']), 'w') as fp:
+                with open('./data/switching_embodiments_game_self_finding/controlling_true_self_{}_step.json'.format(env.P['seed']), 'w') as fp:
                     json.dump(self.controlling_true_self, fp)
                     exit(0)
             else:
@@ -342,7 +342,7 @@ class Self_class():
 
 
 
-    def predict_change_agent(self, env):
+    def predict_switching_embodiments(self, env):
         self.action_counter += 1
 
         # Get env state
