@@ -1,6 +1,6 @@
 # probabilisticSelf2
 
-Testing what a self is for. Comparison of random, RL, theory-based agents, custom self class, and humans. 
+Testing what a self is for. Comparison of random, RL, theory-based agents, custom self class, and humans. You can play the games here: https://akaanug.github.io/selfgames.github.io/
 
 Environment was adapted from: https://github.com/xinleipan/gym-gridworld
 [How You Act Tells a Lot: Privacy-Leakage Attack on Deep Reinforcement Learning](https://arxiv.org/abs/1904.11082)
